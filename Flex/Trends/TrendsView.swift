@@ -1,5 +1,5 @@
 //
-//  HomeView.swift
+//  TrendsView.swift
 //  Flex
 //
 //  Created by Rob Harrell on 1/27/24.
@@ -7,12 +7,12 @@
 
 import SwiftUI
 
-struct HomeView: View {
+struct TrendsView: View {
     var body: some View {
-        Text("Hello, Home!")
+        Text("Hello, Trends!")
     }
 }
 
 #Preview {
-    HomeView()
+    TrendsView()
 }

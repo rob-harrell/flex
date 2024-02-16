@@ -14,19 +14,21 @@
 		D4005A992B65F69F00652FCA /* FlexUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4005A982B65F69F00652FCA /* FlexUITests.swift */; };
 		D4005A9B2B65F69F00652FCA /* FlexUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4005A9A2B65F69F00652FCA /* FlexUITestsLaunchTests.swift */; };
 		D4005AA82B65F6F600652FCA /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4005AA72B65F6F600652FCA /* MainTabView.swift */; };
-		D4005AAF2B6620FC00652FCA /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4005AAE2B6620FC00652FCA /* HomeView.swift */; };
-		D4005AB12B66213200652FCA /* SpendingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4005AB02B66213200652FCA /* SpendingView.swift */; };
+		D4005AB12B66213200652FCA /* BudgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4005AB02B66213200652FCA /* BudgetView.swift */; };
 		D4005AB32B66216900652FCA /* BalancesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4005AB22B66216900652FCA /* BalancesView.swift */; };
-		D4005AB52B66217C00652FCA /* BudgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4005AB42B66217C00652FCA /* BudgetView.swift */; };
+		D4005AB52B66217C00652FCA /* TrendsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4005AB42B66217C00652FCA /* TrendsView.swift */; };
 		D4005AB72B67162800652FCA /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4005AB62B67162800652FCA /* SettingsView.swift */; };
 		D4005ABA2B671BFA00652FCA /* AccountSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4005AB92B671BFA00652FCA /* AccountSettingsView.swift */; };
 		D4005ABC2B671C1B00652FCA /* NotificationSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4005ABB2B671C1B00652FCA /* NotificationSettingsView.swift */; };
 		D4005ABE2B671C3100652FCA /* BankConnectionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4005ABD2B671C3100652FCA /* BankConnectionsView.swift */; };
-		D4005AC02B67236400652FCA /* SpendingHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4005ABF2B67236300652FCA /* SpendingHeaderView.swift */; };
-		D4005AC62B67245800652FCA /* SpendingFilterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4005AC52B67245800652FCA /* SpendingFilterView.swift */; };
-		D4005AC82B67247000652FCA /* SpendingCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4005AC72B67247000652FCA /* SpendingCalendarView.swift */; };
-		D4005ACA2B67248200652FCA /* SpendingDetailSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4005AC92B67248200652FCA /* SpendingDetailSheetView.swift */; };
-		D4005ACC2B67249400652FCA /* SpendingViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4005ACB2B67249400652FCA /* SpendingViewModel.swift */; };
+		D4005AC02B67236400652FCA /* BudgetHeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4005ABF2B67236300652FCA /* BudgetHeaderView.swift */; };
+		D4005AC62B67245800652FCA /* BudgetFilterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4005AC52B67245800652FCA /* BudgetFilterView.swift */; };
+		D4005AC82B67247000652FCA /* BudgetCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4005AC72B67247000652FCA /* BudgetCalendarView.swift */; };
+		D4005ACA2B67248200652FCA /* BudgetDetailSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4005AC92B67248200652FCA /* BudgetDetailSheetView.swift */; };
+		D4005ACC2B67249400652FCA /* BudgetViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4005ACB2B67249400652FCA /* BudgetViewModel.swift */; };
+		D49D59CF2B7815E4001C0D0A /* SharedViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49D59CE2B7815E4001C0D0A /* SharedViewModel.swift */; };
+		D49D59D12B785501001C0D0A /* MonthSelectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49D59D02B785501001C0D0A /* MonthSelectorView.swift */; };
+		D4DD3F112B7C701500D6E987 /* BudgetBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4DD3F102B7C701500D6E987 /* BudgetBarView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,19 +59,21 @@
 		D4005A982B65F69F00652FCA /* FlexUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlexUITests.swift; sourceTree = "<group>"; };
 		D4005A9A2B65F69F00652FCA /* FlexUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlexUITestsLaunchTests.swift; sourceTree = "<group>"; };
 		D4005AA72B65F6F600652FCA /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
-		D4005AAE2B6620FC00652FCA /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
-		D4005AB02B66213200652FCA /* SpendingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpendingView.swift; sourceTree = "<group>"; };
+		D4005AB02B66213200652FCA /* BudgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetView.swift; sourceTree = "<group>"; };
 		D4005AB22B66216900652FCA /* BalancesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BalancesView.swift; sourceTree = "<group>"; };
-		D4005AB42B66217C00652FCA /* BudgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetView.swift; sourceTree = "<group>"; };
+		D4005AB42B66217C00652FCA /* TrendsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrendsView.swift; sourceTree = "<group>"; };
 		D4005AB62B67162800652FCA /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		D4005AB92B671BFA00652FCA /* AccountSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountSettingsView.swift; sourceTree = "<group>"; };
 		D4005ABB2B671C1B00652FCA /* NotificationSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSettingsView.swift; sourceTree = "<group>"; };
 		D4005ABD2B671C3100652FCA /* BankConnectionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BankConnectionsView.swift; sourceTree = "<group>"; };
-		D4005ABF2B67236300652FCA /* SpendingHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpendingHeaderView.swift; sourceTree = "<group>"; };
-		D4005AC52B67245800652FCA /* SpendingFilterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpendingFilterView.swift; sourceTree = "<group>"; };
-		D4005AC72B67247000652FCA /* SpendingCalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpendingCalendarView.swift; sourceTree = "<group>"; };
-		D4005AC92B67248200652FCA /* SpendingDetailSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpendingDetailSheetView.swift; sourceTree = "<group>"; };
-		D4005ACB2B67249400652FCA /* SpendingViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpendingViewModel.swift; sourceTree = "<group>"; };
+		D4005ABF2B67236300652FCA /* BudgetHeaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetHeaderView.swift; sourceTree = "<group>"; };
+		D4005AC52B67245800652FCA /* BudgetFilterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetFilterView.swift; sourceTree = "<group>"; };
+		D4005AC72B67247000652FCA /* BudgetCalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetCalendarView.swift; sourceTree = "<group>"; };
+		D4005AC92B67248200652FCA /* BudgetDetailSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetDetailSheetView.swift; sourceTree = "<group>"; };
+		D4005ACB2B67249400652FCA /* BudgetViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetViewModel.swift; sourceTree = "<group>"; };
+		D49D59CE2B7815E4001C0D0A /* SharedViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedViewModel.swift; sourceTree = "<group>"; };
+		D49D59D02B785501001C0D0A /* MonthSelectorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthSelectorView.swift; sourceTree = "<group>"; };
+		D4DD3F102B7C701500D6E987 /* BudgetBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetBarView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -123,9 +127,8 @@
 				D4005A7D2B65F69D00652FCA /* FlexApp.swift */,
 				D4005AA72B65F6F600652FCA /* MainTabView.swift */,
 				D4005AAD2B661D9000652FCA /* Balances */,
-				D4005AAC2B661D7600652FCA /* Budget */,
-				D4005AAB2B661D6700652FCA /* Spending */,
-				D4005AA92B661A8800652FCA /* Home */,
+				D4005AAC2B661D7600652FCA /* Trends */,
+				D4005AAB2B661D6700652FCA /* Budget */,
 				D4005AB82B671B8600652FCA /* Settings */,
 				D4005A812B65F69E00652FCA /* Assets.xcassets */,
 				D4005AC12B67240900652FCA /* Shared */,
@@ -159,32 +162,26 @@
 			path = FlexUITests;
 			sourceTree = "<group>";
 		};
-		D4005AA92B661A8800652FCA /* Home */ = {
+		D4005AAB2B661D6700652FCA /* Budget */ = {
 			isa = PBXGroup;
 			children = (
-				D4005AAE2B6620FC00652FCA /* HomeView.swift */,
-			);
-			path = Home;
-			sourceTree = "<group>";
-		};
-		D4005AAB2B661D6700652FCA /* Spending */ = {
-			isa = PBXGroup;
-			children = (
-				D4005AB02B66213200652FCA /* SpendingView.swift */,
-				D4005ABF2B67236300652FCA /* SpendingHeaderView.swift */,
-				D4005AC72B67247000652FCA /* SpendingCalendarView.swift */,
-				D4005AC92B67248200652FCA /* SpendingDetailSheetView.swift */,
-				D4005ACB2B67249400652FCA /* SpendingViewModel.swift */,
-			);
-			path = Spending;
-			sourceTree = "<group>";
-		};
-		D4005AAC2B661D7600652FCA /* Budget */ = {
-			isa = PBXGroup;
-			children = (
-				D4005AB42B66217C00652FCA /* BudgetView.swift */,
+				D4005AB02B66213200652FCA /* BudgetView.swift */,
+				D4005AC52B67245800652FCA /* BudgetFilterView.swift */,
+				D4005ABF2B67236300652FCA /* BudgetHeaderView.swift */,
+				D4DD3F102B7C701500D6E987 /* BudgetBarView.swift */,
+				D4005AC72B67247000652FCA /* BudgetCalendarView.swift */,
+				D4005AC92B67248200652FCA /* BudgetDetailSheetView.swift */,
+				D4005ACB2B67249400652FCA /* BudgetViewModel.swift */,
 			);
 			path = Budget;
+			sourceTree = "<group>";
+		};
+		D4005AAC2B661D7600652FCA /* Trends */ = {
+			isa = PBXGroup;
+			children = (
+				D4005AB42B66217C00652FCA /* TrendsView.swift */,
+			);
+			path = Trends;
 			sourceTree = "<group>";
 		};
 		D4005AAD2B661D9000652FCA /* Balances */ = {
@@ -219,7 +216,7 @@
 		D4005AC22B67243200652FCA /* Components */ = {
 			isa = PBXGroup;
 			children = (
-				D4005AC52B67245800652FCA /* SpendingFilterView.swift */,
+				D49D59D02B785501001C0D0A /* MonthSelectorView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -227,6 +224,7 @@
 		D4005AC32B67243A00652FCA /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				D49D59CE2B7815E4001C0D0A /* SharedViewModel.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -368,21 +366,23 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D4005AC62B67245800652FCA /* SpendingFilterView.swift in Sources */,
+				D4005AC62B67245800652FCA /* BudgetFilterView.swift in Sources */,
 				D4005AB72B67162800652FCA /* SettingsView.swift in Sources */,
-				D4005AC02B67236400652FCA /* SpendingHeaderView.swift in Sources */,
+				D4005AC02B67236400652FCA /* BudgetHeaderView.swift in Sources */,
 				D4005AB32B66216900652FCA /* BalancesView.swift in Sources */,
-				D4005AB52B66217C00652FCA /* BudgetView.swift in Sources */,
-				D4005AAF2B6620FC00652FCA /* HomeView.swift in Sources */,
-				D4005AB12B66213200652FCA /* SpendingView.swift in Sources */,
-				D4005ACA2B67248200652FCA /* SpendingDetailSheetView.swift in Sources */,
+				D49D59D12B785501001C0D0A /* MonthSelectorView.swift in Sources */,
+				D49D59CF2B7815E4001C0D0A /* SharedViewModel.swift in Sources */,
+				D4005AB52B66217C00652FCA /* TrendsView.swift in Sources */,
+				D4005AB12B66213200652FCA /* BudgetView.swift in Sources */,
+				D4005ACA2B67248200652FCA /* BudgetDetailSheetView.swift in Sources */,
 				D4005ABA2B671BFA00652FCA /* AccountSettingsView.swift in Sources */,
 				D4005ABE2B671C3100652FCA /* BankConnectionsView.swift in Sources */,
-				D4005AC82B67247000652FCA /* SpendingCalendarView.swift in Sources */,
+				D4005AC82B67247000652FCA /* BudgetCalendarView.swift in Sources */,
 				D4005ABC2B671C1B00652FCA /* NotificationSettingsView.swift in Sources */,
 				D4005AA82B65F6F600652FCA /* MainTabView.swift in Sources */,
 				D4005A7E2B65F69D00652FCA /* FlexApp.swift in Sources */,
-				D4005ACC2B67249400652FCA /* SpendingViewModel.swift in Sources */,
+				D4DD3F112B7C701500D6E987 /* BudgetBarView.swift in Sources */,
+				D4005ACC2B67249400652FCA /* BudgetViewModel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

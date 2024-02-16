@@ -8,88 +8,77 @@
 import SwiftUI
 
 struct MainTabView: View {
-    @State private var selectedTab: Tab = .home
-    @State private var showingSettings = false
+    @State private var selectedTab: Tab = .budget
+    @State private var showingMonthSelection = false
+    @StateObject var sharedViewModel = SharedViewModel()
     
-    let spendingViewModel = SpendingViewModel()
-
+    //Modify tab bar size
+    init() {
+        UITabBarItem.appearance().setTitleTextAttributes([NSAttributedString.Key.font: UIFont.systemFont(ofSize: 12)], for: .normal)
+        UITabBarItem.appearance().setTitleTextAttributes([NSAttributedString.Key.font: UIFont.systemFont(ofSize: 12)], for: .selected)
+    }
+    
     var body: some View {
         NavigationView {
             TabView(selection: $selectedTab) {
-                HomeView()
+                BudgetView(sharedViewModel: sharedViewModel)
                     .tabItem {
-                        Label("Home", systemImage: "house")
-                    }
-                    .tag(Tab.home)
-
-                SpendingView(viewModel: spendingViewModel)
-                    .tabItem {
-                        Label("Spending", systemImage: "banknote")
-                    }
-                    .tag(Tab.spending)
-
-                BudgetView()
-                    .tabItem {
-                        Label("Budget", systemImage: "list.bullet")
+                        Label("Budget", image: "Budget")
                     }
                     .tag(Tab.budget)
 
                 BalancesView()
                     .tabItem {
-                        Label("Balances", systemImage: "chart.bar")
+                        Label("Balances", image: "Balances")
                     }
                     .tag(Tab.balances)
-            }
-            .padding(.bottom, 10) // Adds padding to the bottom of the TabView
-            .navigationBarItems(trailing: Button(action: {
-                showingSettings = true
-            }) {
-                Image(systemName: "gear")
-                    .imageScale(.large)
-                    .padding(.top, 60)
-            })
-            .fullScreenCover(isPresented: $showingSettings) {
+                
+                TrendsView()
+                    .tabItem {
+                        Label("Trends", image: "Trends")
+                    }
+                    .tag(Tab.trends)
+                
                 SettingsView()
+                    .tabItem {
+                        Label("Settings", image: "Settings")
+                    }
+                    .tag(Tab.settings)
             }
             .toolbar {
-                ToolbarItem(placement: .principal) {
-                    titleViewForSelectedTab(selectedTab)
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: {
+                        showingMonthSelection.toggle()
+                    }) {
+                        HStack {
+                            Text(sharedViewModel.stringForDate(sharedViewModel.selectedMonth, format: "MMMM yyyy"))
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                            Image(systemName: "chevron.down")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                        }
+                    }
+                    .sheet(isPresented: $showingMonthSelection) {
+                        MonthSelectorView(showingMonthSelection: $showingMonthSelection, sharedViewModel: sharedViewModel)
+                    }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                        Button(action: {
+                            // Handle the button tap
+                        }) {
+                            Image("Bell")
+                        }
                 }
             }
-        }
-    }
-    
-    // Function to return the appropriate title view based on the selected tab
-    @ViewBuilder
-    private func titleViewForSelectedTab(_ tab: Tab) -> some View {
-        HStack {
-            VStack(alignment: .leading) {
-                switch tab {
-                case .home:
-                    Text("Home Page")
-                case .spending:
-                    SpendingHeaderView(viewModel: spendingViewModel)
-                case .budget:
-                    Text("Budget Page")
-                case .balances:
-                    Text("Balances Page")
-                }
-            }
-            .padding(.leading, 10)
-            .padding(.top, 150)
-            .font(.title)
-            .fontWeight(.semibold)
-
-            Spacer() // This pushes the content to the left
         }
     }
         
-
     enum Tab {
-        case home
-        case spending
         case budget
         case balances
+        case trends
+        case settings
     }
 }
 

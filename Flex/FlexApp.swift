@@ -12,7 +12,6 @@ struct FlexApp: App {
     var body: some Scene {
         WindowGroup {
             MainTabView()
-                .accentColor(Color.black) // Global accent
         }
     }
 }
