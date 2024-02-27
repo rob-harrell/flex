@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "plaid-link-ios",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/plaid/plaid-link-ios",
+      "state" : {
+        "revision" : "b82d5d833f91c9c32e96c8b555da9f4341a8b14c",
+        "version" : "5.2.1"
+      }
+    }
+  ],
+  "version" : 2
+}
