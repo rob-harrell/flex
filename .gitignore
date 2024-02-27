@@ -1,0 +1,20 @@
+# Ignore .env files
+server/.env
+
+# Xcode
+.DS_Store
+build/
+DerivedData/
+.idea/
+*.pbxuser
+*.xcworkspace
+xcuserdata/
+
+# macOS
+*.DS_Store
+
+# Swift Package Manager
+/.build/
+
+# CocoaPods
+Pods/
