@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import LinkKit
 
 struct SettingsView: View {
     // Sample bank connections
@@ -16,14 +17,17 @@ struct SettingsView: View {
     @State private var email: String = ""
     @State private var username: String = ""
     @State private var userphone: String = ""
-    @StateObject var viewModel: PlaidLinkViewModel
+    @StateObject private var viewModel: PlaidLinkViewModel
+    @State private var isPresentingLink = false
+    
+    
     let communicator: ServerCommunicator
-
+    
     init(communicator: ServerCommunicator) {
         self.communicator = communicator
         self._viewModel = StateObject(wrappedValue: PlaidLinkViewModel(communicator: communicator))
     }
-
+    
     var body: some View {
         NavigationView {
             List {
@@ -52,7 +56,7 @@ struct SettingsView: View {
                             .frame(width: 250)
                     }
                 }
-
+                
                 Section(header: Text("Bank Connections")) {
                     ForEach(bankConnections) { connection in
                         HStack {
@@ -81,8 +85,8 @@ struct SettingsView: View {
                     }
                     Button(action: {
                         print("connection button tapped")
-                        viewModel.fetchLinkToken() {
-                            viewModel.startLink()
+                        viewModel.fetchLinkToken {
+                                isPresentingLink = true
                         }
                     }) {
                         Text("Add Connection")
@@ -95,10 +99,26 @@ struct SettingsView: View {
                                     .stroke(Color.gray, lineWidth: 1)
                             )
                     }
+                    .sheet(
+                        isPresented: $isPresentingLink,
+                        onDismiss: {
+                            isPresentingLink = false
+                        },
+                        content: {
+                            let createResult = createHandler()
+                            switch createResult {
+                            case .failure(let createError):
+                                Text("Link Creation Error: \(createError.localizedDescription)")
+                                    .font(.title2)
+                            case .success(let handler):
+                                LinkController(handler: handler)
+                            }
+                        }
+                    )
                     .buttonStyle(PlainButtonStyle())
                     .padding(.horizontal)
                 }
-
+                
                 Section(header: Text("Logout")){
                     Button(action: {
                         // Handle the button tap
@@ -106,10 +126,10 @@ struct SettingsView: View {
                     }) {
                         HStack {
                             Text("Sign out")
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .padding()
-                            .background(Color.clear)
-                            .foregroundColor(.red)
+                                .frame(maxWidth: .infinity, alignment: .center)
+                                .padding()
+                                .background(Color.clear)
+                                .foregroundColor(.red)
                         }
                     }
                     .buttonStyle(PlainButtonStyle())
@@ -124,6 +144,17 @@ struct SettingsView: View {
             viewModel.fetchUserStatus()
         }
     }
+  
+    private func createHandler() -> Result<Handler, Error> {
+        guard let linkToken = viewModel.linkToken else {
+            let error = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey : "Link token is not set"])
+            return .failure(error)
+        }
+        let configuration = viewModel.createLinkConfiguration(linkToken: linkToken)
+
+        // This only results in an error if the token is malformed.
+        return Plaid.create(configuration).mapError { $0 as Error }
+    }
 }
 
 struct BankConnection: Identifiable {
@@ -133,6 +164,7 @@ struct BankConnection: Identifiable {
     var status: String
     var lastUpdated: Date
 }
+
 
 #Preview {
     SettingsView(communicator: ServerCommunicator())

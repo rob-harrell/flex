@@ -64,12 +64,12 @@ app.post("/server/generate_link_token", async (req, res, next) => {
       user: {
         client_user_id: userId,
       },
-      client_name: "iOS Demo",
+      client_name: "Flex",
       country_codes: ["US"],
       language: "en",
       products: ["auth"],
       webhook: "https://sample-webhook-uri.com",
-      redirect_uri: "https://example.com/plaid/redirect/index.html",
+      redirect_uri: "https://rob-harrell.github.io/flex/",
     });
     // The redirect_uri above should match a Redirect URI in your Dashboard, or this request
     // will fail.
