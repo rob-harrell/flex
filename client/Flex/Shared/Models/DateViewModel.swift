@@ -7,7 +7,7 @@
 
 import Foundation
 
-class SharedViewModel: ObservableObject {
+class DateViewModel: ObservableObject {
     @Published var selectedMonth: Date
     @Published var selectedDay: Date
     @Published var currentMonth: Date

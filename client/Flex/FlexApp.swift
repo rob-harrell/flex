@@ -9,9 +9,9 @@ import SwiftUI
 
 @main
 struct FlexApp: App {
-    @StateObject var sharedViewModel = SharedViewModel()
+    @StateObject var sharedViewModel = DateViewModel()
     @StateObject var userViewModel = UserViewModel()
-    @StateObject var budgetViewModel = BudgetViewModel(sharedViewModel: SharedViewModel())
+    @StateObject var budgetViewModel = BudgetViewModel(sharedViewModel: DateViewModel())
 
     var body: some Scene {
         WindowGroup {

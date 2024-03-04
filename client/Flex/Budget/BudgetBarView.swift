@@ -9,7 +9,7 @@ import SwiftUI
 
 struct BudgetBarView: View {
     @EnvironmentObject var userViewModel: UserViewModel
-    @EnvironmentObject var sharedViewModel: SharedViewModel
+    @EnvironmentObject var sharedViewModel: DateViewModel
     @EnvironmentObject var budgetViewModel: BudgetViewModel
     @Binding var selectedFilter: BudgetFilter
     

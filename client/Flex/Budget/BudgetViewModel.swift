@@ -12,7 +12,7 @@ class BudgetViewModel: ObservableObject {
     @Published var spendingData: [Date: Double] = [:]
     @Published var monthlyIncome: Double = 5000.0 // User-set monthly income
                 
-    var sharedViewModel: SharedViewModel
+    var sharedViewModel: DateViewModel
     
     // Computed properties to calculate total expenses
     var totalExpensesPerDay: [Date: Double] {
@@ -52,7 +52,7 @@ class BudgetViewModel: ObservableObject {
         return monthlyIncome - expensesMonthToDate
     }
 
-    init(sharedViewModel: SharedViewModel) {
+    init(sharedViewModel: DateViewModel) {
         self.sharedViewModel = sharedViewModel
         generateSpendingData()
     }

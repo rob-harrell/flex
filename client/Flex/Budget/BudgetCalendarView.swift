@@ -9,7 +9,7 @@ import SwiftUI
 
 struct BudgetCalendarView: View {
     @EnvironmentObject var userViewModel: UserViewModel
-    @EnvironmentObject var sharedViewModel: SharedViewModel
+    @EnvironmentObject var sharedViewModel: DateViewModel
     @EnvironmentObject var budgetViewModel: BudgetViewModel
     @State private var selectedDate: Date?
     @State private var scrollPosition: Int?

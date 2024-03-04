@@ -9,7 +9,7 @@ import SwiftUI
 
 struct BudgetView: View {
     @EnvironmentObject var userViewModel: UserViewModel
-    @EnvironmentObject var sharedViewModel: SharedViewModel
+    @EnvironmentObject var sharedViewModel: DateViewModel
     @EnvironmentObject var budgetViewModel: BudgetViewModel
 
     @State private var selectedFilter: BudgetFilter = .total
@@ -31,5 +31,5 @@ struct BudgetView: View {
 }
 
 #Preview {
-    BudgetView().environmentObject(SharedViewModel())
+    BudgetView().environmentObject(DateViewModel())
 }

@@ -9,7 +9,7 @@ import SwiftUI
 
 struct MainTabView: View {
     @EnvironmentObject var userViewModel: UserViewModel
-    @EnvironmentObject var sharedViewModel: SharedViewModel
+    @EnvironmentObject var sharedViewModel: DateViewModel
     @EnvironmentObject var budgetViewModel: BudgetViewModel
     @State private var selectedTab: Tab = .budget
     @State private var showingMonthSelection = false
@@ -86,7 +86,7 @@ struct MainTabView_Previews: PreviewProvider {
     static var previews: some View {
         MainTabView()
             .environmentObject(UserViewModel())
-            .environmentObject(SharedViewModel())
-            .environmentObject(BudgetViewModel(sharedViewModel: SharedViewModel()))
+            .environmentObject(DateViewModel())
+            .environmentObject(BudgetViewModel(sharedViewModel: DateViewModel()))
     }
 }

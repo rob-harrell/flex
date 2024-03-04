@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct MonthSelectorView: View {
-    @EnvironmentObject var sharedViewModel: SharedViewModel
+    @EnvironmentObject var sharedViewModel: DateViewModel
     @Binding var showingMonthSelection: Bool
 
     var body: some View {
