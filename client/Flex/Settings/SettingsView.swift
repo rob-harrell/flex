@@ -10,10 +10,7 @@ import LinkKit
 
 struct SettingsView: View {
     @EnvironmentObject var userViewModel: UserViewModel
-    @StateObject private var viewModel = PlaidLinkViewModel()
-    @State private var email: String = ""
-    @State private var username: String = ""
-    @State private var userphone: String = ""
+    @StateObject private var plaidLinkViewModel = PlaidLinkViewModel()
     @State private var isPresentingLink = false
     
     var body: some View {
@@ -23,7 +20,7 @@ struct SettingsView: View {
                     HStack {
                         Text("Email").fontWeight(.medium)
                         Spacer()
-                        TextField("Email", text: $email)
+                        TextField("Email", text: $userViewModel.email)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .textContentType(.emailAddress)
                             .keyboardType(.emailAddress)
@@ -32,14 +29,14 @@ struct SettingsView: View {
                     HStack {
                         Text("Username").fontWeight(.medium)
                         Spacer()
-                        TextField("Username", text: $username)
+                        TextField("Username", text: $userViewModel.username)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .frame(width: 250)
                     }
                     HStack {
                         Text("Phone").fontWeight(.medium)
                         Spacer()
-                        TextField("Userphone", text: $userphone)
+                        TextField("Userphone", text: $userViewModel.phone)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .frame(width: 250)
                     }
@@ -73,7 +70,7 @@ struct SettingsView: View {
                     }
                     Button(action: {
                         print("connection button tapped")
-                        viewModel.fetchLinkToken {
+                        plaidLinkViewModel.fetchLinkToken {
                                 isPresentingLink = true
                         }
                     }) {
@@ -129,16 +126,18 @@ struct SettingsView: View {
             .navigationBarTitle("Settings")
         }
         .onAppear {
-            viewModel.fetchUserStatus()
+            plaidLinkViewModel.fetchUserStatus()
+            userViewModel.fetchUserInfo()
+            userViewModel.fetchBankConnections()
         }
     }
   
     private func createHandler() -> Result<Handler, Error> {
-        guard let linkToken = viewModel.linkToken else {
+        guard let linkToken = plaidLinkViewModel.linkToken else {
             let error = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey : "Link token is not set"])
             return .failure(error)
         }
-        let configuration = viewModel.createLinkConfiguration(linkToken: linkToken)
+        let configuration = plaidLinkViewModel.createLinkConfiguration(linkToken: linkToken)
 
         // This only results in an error if the token is malformed.
         return Plaid.create(configuration).mapError { $0 as Error }
