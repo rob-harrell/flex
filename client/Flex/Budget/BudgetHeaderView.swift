@@ -8,8 +8,9 @@
 import SwiftUI
 
 struct BudgetHeaderView: View {
-    @ObservedObject var budgetViewModel: BudgetViewModel
-    @ObservedObject var sharedViewModel: SharedViewModel
+    @EnvironmentObject var userViewModel: UserViewModel
+    @EnvironmentObject var sharedViewModel: SharedViewModel
+    @EnvironmentObject var budgetViewModel: BudgetViewModel
     @Binding var selectedFilter: BudgetFilter
         
     var body: some View {
@@ -56,5 +57,5 @@ struct BudgetHeaderView: View {
 }
 
 #Preview {
-    BudgetHeaderView(budgetViewModel: BudgetViewModel(sharedViewModel: SharedViewModel()), sharedViewModel: SharedViewModel(), selectedFilter: .constant(.total))
+    BudgetHeaderView(selectedFilter: .constant(.total))
 }

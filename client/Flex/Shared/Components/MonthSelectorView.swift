@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct MonthSelectorView: View {
+    @EnvironmentObject var sharedViewModel: SharedViewModel
     @Binding var showingMonthSelection: Bool
-    @ObservedObject var sharedViewModel: SharedViewModel
 
     var body: some View {
         VStack {
@@ -76,5 +76,5 @@ struct MonthSelectorView: View {
 }
 
 #Preview {
-    MonthSelectorView(showingMonthSelection: .constant(false), sharedViewModel: SharedViewModel())
+    MonthSelectorView(showingMonthSelection: .constant(false))
 }

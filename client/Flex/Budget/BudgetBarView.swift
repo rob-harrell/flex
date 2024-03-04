@@ -8,8 +8,9 @@
 import SwiftUI
 
 struct BudgetBarView: View {
-    @ObservedObject var budgetViewModel: BudgetViewModel
-    @ObservedObject var sharedViewModel: SharedViewModel
+    @EnvironmentObject var userViewModel: UserViewModel
+    @EnvironmentObject var sharedViewModel: SharedViewModel
+    @EnvironmentObject var budgetViewModel: BudgetViewModel
     @Binding var selectedFilter: BudgetFilter
     
     private var percentageSpent: Double {
@@ -52,5 +53,5 @@ struct BudgetBarView: View {
 }
 
 #Preview {
-    BudgetBarView(budgetViewModel: BudgetViewModel(sharedViewModel: SharedViewModel()), sharedViewModel: SharedViewModel(), selectedFilter: .constant(.total))
+    BudgetBarView(selectedFilter: .constant(.total))
 }

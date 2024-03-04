@@ -8,15 +8,16 @@
 import SwiftUI
 
 struct MainTabView: View {
+    @EnvironmentObject var userViewModel: UserViewModel
+    @EnvironmentObject var sharedViewModel: SharedViewModel
+    @EnvironmentObject var budgetViewModel: BudgetViewModel
     @State private var selectedTab: Tab = .budget
     @State private var showingMonthSelection = false
-    @StateObject var sharedViewModel = SharedViewModel()
-    let communicator: ServerCommunicator
-    
+
     var body: some View {
         NavigationView {
             TabView(selection: $selectedTab) {
-                BudgetView(sharedViewModel: sharedViewModel)
+                BudgetView()
                     .tabItem {
                         Label("Budget", image: "Budget")
                     }
@@ -34,7 +35,7 @@ struct MainTabView: View {
                     }
                     .tag(Tab.trends)
                 
-                SettingsView(communicator: communicator)
+                SettingsView()
                     .tabItem {
                         Label("Settings", image: "Settings")
                     }
@@ -59,7 +60,7 @@ struct MainTabView: View {
                         }
                     }
                     .sheet(isPresented: $showingMonthSelection) {
-                        MonthSelectorView(showingMonthSelection: $showingMonthSelection, sharedViewModel: sharedViewModel)
+                        MonthSelectorView(showingMonthSelection: $showingMonthSelection)
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -81,6 +82,11 @@ struct MainTabView: View {
     }
 }
 
-#Preview {
-    MainTabView(communicator: ServerCommunicator())
+struct MainTabView_Previews: PreviewProvider {
+    static var previews: some View {
+        MainTabView()
+            .environmentObject(UserViewModel())
+            .environmentObject(SharedViewModel())
+            .environmentObject(BudgetViewModel(sharedViewModel: SharedViewModel()))
+    }
 }

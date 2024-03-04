@@ -8,13 +8,9 @@
 import SwiftUI
 
 struct BudgetView: View {
-    @ObservedObject var sharedViewModel: SharedViewModel
-    @StateObject private var budgetViewModel: BudgetViewModel
-
-    init(sharedViewModel: SharedViewModel) {
-        self.sharedViewModel = sharedViewModel
-        self._budgetViewModel = StateObject(wrappedValue: BudgetViewModel(sharedViewModel: sharedViewModel))
-    }
+    @EnvironmentObject var userViewModel: UserViewModel
+    @EnvironmentObject var sharedViewModel: SharedViewModel
+    @EnvironmentObject var budgetViewModel: BudgetViewModel
 
     @State private var selectedFilter: BudgetFilter = .total
         
@@ -23,17 +19,17 @@ struct BudgetView: View {
             BudgetFilterView(selectedFilter: $selectedFilter)
                 .padding(.horizontal)
                 .padding(.bottom, 4)
-            BudgetHeaderView(budgetViewModel: budgetViewModel, sharedViewModel: sharedViewModel, selectedFilter: $selectedFilter)
+            BudgetHeaderView(selectedFilter: $selectedFilter)
                 .padding(.horizontal)
-            BudgetBarView(budgetViewModel: budgetViewModel, sharedViewModel: sharedViewModel, selectedFilter: $selectedFilter)
+            BudgetBarView(selectedFilter: $selectedFilter)
                 .padding(.top, 24)
                 .padding(.bottom, 44)
-            BudgetCalendarView(budgetViewModel: budgetViewModel, sharedViewModel: sharedViewModel)
+            BudgetCalendarView()
         }
         .padding(.top, 4)
     }
 }
 
 #Preview {
-    BudgetView(sharedViewModel: SharedViewModel())
+    BudgetView().environmentObject(SharedViewModel())
 }

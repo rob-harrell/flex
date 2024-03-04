@@ -9,24 +9,12 @@ import SwiftUI
 import LinkKit
 
 struct SettingsView: View {
-    // Sample bank connections
-    @State private var bankConnections: [BankConnection] = [
-        BankConnection(name: "My Account", institution: "Bank 1", status: "Connected", lastUpdated: Date()),
-        BankConnection(name: "My Other Account", institution: "Bank 2", status: "Disconnected", lastUpdated: Date())
-    ]
+    @EnvironmentObject var userViewModel: UserViewModel
+    @StateObject private var viewModel = PlaidLinkViewModel()
     @State private var email: String = ""
     @State private var username: String = ""
     @State private var userphone: String = ""
-    @StateObject private var viewModel: PlaidLinkViewModel
     @State private var isPresentingLink = false
-    
-    
-    let communicator: ServerCommunicator
-    
-    init(communicator: ServerCommunicator) {
-        self.communicator = communicator
-        self._viewModel = StateObject(wrappedValue: PlaidLinkViewModel(communicator: communicator))
-    }
     
     var body: some View {
         NavigationView {
@@ -58,7 +46,7 @@ struct SettingsView: View {
                 }
                 
                 Section(header: Text("Bank Connections")) {
-                    ForEach(bankConnections) { connection in
+                    ForEach(userViewModel.bankConnections) { connection in
                         HStack {
                             Image(systemName: "circle.fill") // Replace with your logo
                                 .resizable()
@@ -68,15 +56,15 @@ struct SettingsView: View {
                                 Text(connection.name)
                                     .font(.headline)
                                     .fontWeight(.medium)
-                                Text(connection.institution)
+                                Text(connection.bank_name)
                                     .font(.subheadline)
                                     .foregroundColor(.gray)
                             }
                             Spacer()
                             VStack(alignment: .trailing) {
-                                Text(connection.status)
+                                Text(connection.is_active ? "Active" : "Inactive")
                                     .font(.subheadline)
-                                Text("Last updated: \(connection.lastUpdated, formatter: DateFormatter())")
+                                Text("Last updated: \(connection.updated, formatter: DateFormatter())")
                                     .font(.subheadline)
                                     .foregroundColor(.gray)
                             }
@@ -157,15 +145,8 @@ struct SettingsView: View {
     }
 }
 
-struct BankConnection: Identifiable {
-    var id = UUID()
-    var name: String
-    var institution: String
-    var status: String
-    var lastUpdated: Date
-}
-
 
 #Preview {
-    SettingsView(communicator: ServerCommunicator())
+    SettingsView()
+        .environmentObject(UserViewModel())
 }

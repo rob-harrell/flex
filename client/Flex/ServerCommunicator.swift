@@ -11,6 +11,8 @@ import Foundation
 /// Just a helper class that simplifies some of the work involved in calling our server
 ///
 class ServerCommunicator {
+    
+    static let shared = ServerCommunicator()
 
     enum HTTPMethod: String {
         case get = "GET"

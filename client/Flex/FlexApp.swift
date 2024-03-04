@@ -9,11 +9,16 @@ import SwiftUI
 
 @main
 struct FlexApp: App {
-    let communicator = ServerCommunicator()
-    
+    @StateObject var sharedViewModel = SharedViewModel()
+    @StateObject var userViewModel = UserViewModel()
+    @StateObject var budgetViewModel = BudgetViewModel(sharedViewModel: SharedViewModel())
+
     var body: some Scene {
         WindowGroup {
-            MainTabView(communicator: communicator)
+            MainTabView()
+                .environmentObject(userViewModel)
+                .environmentObject(sharedViewModel)
+                .environmentObject(budgetViewModel)
         }
     }
 }

@@ -8,8 +8,9 @@
 import SwiftUI
 
 struct BudgetCalendarView: View {
-    @ObservedObject var budgetViewModel: BudgetViewModel
-    @ObservedObject var sharedViewModel: SharedViewModel
+    @EnvironmentObject var userViewModel: UserViewModel
+    @EnvironmentObject var sharedViewModel: SharedViewModel
+    @EnvironmentObject var budgetViewModel: BudgetViewModel
     @State private var selectedDate: Date?
     @State private var scrollPosition: Int?
     
@@ -103,5 +104,5 @@ struct BudgetCalendarView: View {
 
 
 #Preview {
-    BudgetCalendarView(budgetViewModel: BudgetViewModel(sharedViewModel: SharedViewModel()), sharedViewModel: SharedViewModel())
+    BudgetCalendarView()
 }
