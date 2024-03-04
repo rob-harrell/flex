@@ -16,7 +16,7 @@ class PlaidLinkViewModel: ObservableObject {
     @Published var userId: String = ""
     
     func fetchUserStatus() {
-        ServerCommunicator.shared.callMyServer(path: "/server/get_user_info", httpMethod: .get) {
+        ServerCommunicator.shared.callMyServer(path: "/user/get_user_info", httpMethod: .get) {
             (result: Result<UserStatusResponse, ServerCommunicator.Error>) in
             
             switch result {
@@ -30,7 +30,7 @@ class PlaidLinkViewModel: ObservableObject {
     }
 
     func fetchLinkToken(completion: @escaping () -> Void) {
-        ServerCommunicator.shared.callMyServer(path: "/server/generate_link_token", httpMethod: .post) { (result: Result<LinkTokenCreateResponse, ServerCommunicator.Error>) in
+        ServerCommunicator.shared.callMyServer(path: "/plaid/generate_link_token", httpMethod: .post) { (result: Result<LinkTokenCreateResponse, ServerCommunicator.Error>) in
             switch result {
                 case .success(let response):
                     self.linkToken = response.linkToken
@@ -70,7 +70,7 @@ class PlaidLinkViewModel: ObservableObject {
     }
 
     private func exchangePublicTokenForAccessToken(_ publicToken: String) {
-        ServerCommunicator.shared.callMyServer(path: "/server/swap_public_token", httpMethod: .post, params: ["public_token": publicToken]) { (result: Result<SwapPublicTokenResponse, ServerCommunicator.Error>) in
+        ServerCommunicator.shared.callMyServer(path: "/plaid/swap_public_token", httpMethod: .post, params: ["public_token": publicToken]) { (result: Result<SwapPublicTokenResponse, ServerCommunicator.Error>) in
             switch result {
                 case .success:
                     self.isLinkActive = false
