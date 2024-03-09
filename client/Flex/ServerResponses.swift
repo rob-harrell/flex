@@ -29,8 +29,9 @@ struct BankConnection: Codable, Identifiable {
     let item_id: String
     let name: String
     let masked_account_number: String
-    let created: Date
-    let updated: Date
+    let friendly_acount_name: String
+    let created: String
+    let updated: String
     let bank_name: String
     let is_active: Bool
 }

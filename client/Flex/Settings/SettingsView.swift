@@ -61,7 +61,7 @@ struct SettingsView: View {
                             VStack(alignment: .trailing) {
                                 Text(connection.is_active ? "Active" : "Inactive")
                                     .font(.subheadline)
-                                Text("Last updated: \(connection.updated, formatter: DateFormatter())")
+                                Text("Last updated: \(connection.updated)")
                                     .font(.subheadline)
                                     .foregroundColor(.gray)
                             }
@@ -126,7 +126,6 @@ struct SettingsView: View {
             .navigationBarTitle("Settings")
         }
         .onAppear {
-            plaidLinkViewModel.fetchUserStatus()
             userViewModel.fetchUserInfo()
             userViewModel.fetchBankConnections()
         }

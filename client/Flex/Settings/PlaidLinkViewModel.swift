@@ -12,9 +12,10 @@ class PlaidLinkViewModel: ObservableObject {
     var linkToken: String?
     var onLinkFinished: (() -> Void)?
     @Published var isLinkActive = false
-    @Published var userStatus: UserConnectionStatus = .disconnected
-    @Published var userId: String = ""
+    //@Published var userStatus: UserConnectionStatus = .disconnected
+    //@Published var userId: String = ""
     
+    /*
     func fetchUserStatus() {
         ServerCommunicator.shared.callMyServer(path: "/user/get_user_info", httpMethod: .get) {
             (result: Result<UserStatusResponse, ServerCommunicator.Error>) in
@@ -28,6 +29,7 @@ class PlaidLinkViewModel: ObservableObject {
             }
         }
     }
+     */
 
     func fetchLinkToken(completion: @escaping () -> Void) {
         ServerCommunicator.shared.callMyServer(path: "/plaid/generate_link_token", httpMethod: .post) { (result: Result<LinkTokenCreateResponse, ServerCommunicator.Error>) in
