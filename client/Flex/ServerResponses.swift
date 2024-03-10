@@ -36,11 +36,6 @@ struct BankConnection: Codable, Identifiable {
     let is_active: Bool
 }
 
-struct UserStatusResponse: Codable {
-    let userStatus: UserConnectionStatus
-    let userId: String
-}
-
  struct LinkTokenCreateResponse: Codable {
     let linkToken: String
     let expiration: String

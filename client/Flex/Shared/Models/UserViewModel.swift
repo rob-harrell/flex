@@ -21,7 +21,7 @@ class UserViewModel: ObservableObject {
     @Published var bankConnections: [BankConnection] = []
     
     // Hardcoded user ID
-    private let userId = "1"
+    let userId = "1"
 
     struct BankConnection: Identifiable, Codable {
         var id: Int

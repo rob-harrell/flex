@@ -70,7 +70,8 @@ struct SettingsView: View {
                     }
                     Button(action: {
                         print("connection button tapped")
-                        plaidLinkViewModel.fetchLinkToken {
+                        let userId = userViewModel.userId
+                        plaidLinkViewModel.fetchLinkToken (userId: userId) {
                                 isPresentingLink = true
                         }
                     }) {
@@ -136,7 +137,7 @@ struct SettingsView: View {
             let error = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey : "Link token is not set"])
             return .failure(error)
         }
-        let configuration = plaidLinkViewModel.createLinkConfiguration(linkToken: linkToken)
+        let configuration = plaidLinkViewModel.createLinkConfiguration(linkToken: linkToken, userId: userViewModel.userId)
 
         // This only results in an error if the token is malformed.
         return Plaid.create(configuration).mapError { $0 as Error }

@@ -12,27 +12,9 @@ class PlaidLinkViewModel: ObservableObject {
     var linkToken: String?
     var onLinkFinished: (() -> Void)?
     @Published var isLinkActive = false
-    //@Published var userStatus: UserConnectionStatus = .disconnected
-    //@Published var userId: String = ""
-    
-    /*
-    func fetchUserStatus() {
-        ServerCommunicator.shared.callMyServer(path: "/user/get_user_info", httpMethod: .get) {
-            (result: Result<UserStatusResponse, ServerCommunicator.Error>) in
-            
-            switch result {
-                case .success(let serverResponse):
-                    self.userId = serverResponse.userId
-                    self.userStatus = serverResponse.userStatus
-                case .failure(let error):
-                    print(error)
-            }
-        }
-    }
-     */
 
-    func fetchLinkToken(completion: @escaping () -> Void) {
-        ServerCommunicator.shared.callMyServer(path: "/plaid/generate_link_token", httpMethod: .post) { (result: Result<LinkTokenCreateResponse, ServerCommunicator.Error>) in
+    func fetchLinkToken(userId: String, completion: @escaping () -> Void) {
+        ServerCommunicator.shared.callMyServer(path: "/plaid/generate_link_token", httpMethod: .post, params: ["userId": userId]) { (result: Result<LinkTokenCreateResponse, ServerCommunicator.Error>) in
             switch result {
                 case .success(let response):
                     self.linkToken = response.linkToken
@@ -46,10 +28,10 @@ class PlaidLinkViewModel: ObservableObject {
         }
     }
 
-    func createLinkConfiguration(linkToken: String) -> LinkTokenConfiguration {
+    func createLinkConfiguration(linkToken: String, userId: String) -> LinkTokenConfiguration {
         var linkTokenConfig = LinkTokenConfiguration(token: linkToken) { success in
             print("Link was finished successfully! \(success)")
-            self.exchangePublicTokenForAccessToken(success.publicToken)
+            self.exchangePublicTokenForAccessToken(success.publicToken, userId: userId)
             self.onLinkFinished?()
             DispatchQueue.main.async {
                 self.isLinkActive = false
@@ -71,8 +53,8 @@ class PlaidLinkViewModel: ObservableObject {
         return linkTokenConfig
     }
 
-    private func exchangePublicTokenForAccessToken(_ publicToken: String) {
-        ServerCommunicator.shared.callMyServer(path: "/plaid/swap_public_token", httpMethod: .post, params: ["public_token": publicToken]) { (result: Result<SwapPublicTokenResponse, ServerCommunicator.Error>) in
+    private func exchangePublicTokenForAccessToken(_ publicToken: String, userId: String) {
+        ServerCommunicator.shared.callMyServer(path: "/plaid/swap_public_token", httpMethod: .post, params: ["public_token": publicToken, "userId": userId]) { (result: Result<SwapPublicTokenResponse, ServerCommunicator.Error>) in
             switch result {
                 case .success:
                     self.isLinkActive = false
