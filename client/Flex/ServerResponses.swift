@@ -34,6 +34,7 @@ struct BankConnection: Codable, Identifiable {
     let updated: String
     let bank_name: String
     let is_active: Bool
+    let logo_path: String
 }
 
  struct LinkTokenCreateResponse: Codable {

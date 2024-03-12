@@ -27,11 +27,12 @@ class UserViewModel: ObservableObject {
         var id: Int
         var name: String
         var masked_account_number: String
-        var friendly_account_name: String
+        var friendly_account_name: String?
         var created: String
         var updated: String
         var bank_name: String
         var is_active: Bool
+        var logo_path: String
     }
     
     func fetchUserInfo() {

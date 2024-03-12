@@ -30,7 +30,7 @@ router.post("/generate_link_token", async (req, res, next) => {
       client_name: "Flex",
       country_codes: ["US"],
       language: "en",
-      products: ["auth"],
+      products: ["auth", "transactions"],
       webhook: "https://sample-webhook-uri.com",
       redirect_uri: "https://rob-harrell.github.io/flex/",
     });
@@ -72,10 +72,16 @@ router.post("/swap_public_token", async (req, res, next) => {
       is_active: true,
     };
 
-    const newItem = await userServices.createItemRecord(itemData);
+    let newItem = await userServices.createItemRecord(itemData);
 
-    // Call the getAuth function
-    await userServices.getAuth(newItem.id, accessToken, plaidClient);
+    // Call the getAuth function and get the institution_id
+    const institutionId = await userServices.getAuth(newItem.id, accessToken, plaidClient);
+
+    // Add the institution_id to itemData
+    itemData.institution_id = institutionId;
+
+    // Update the item record with the institution_id
+    newItem = await userServices.createItemRecord(itemData);
 
     res.json({ success: true });
   } catch (error) {

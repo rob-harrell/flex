@@ -21,12 +21,14 @@ async function getUserAccounts(userId) {
         accounts.name, 
         accounts.masked_account_number, 
         accounts.friendly_account_name,
-        items.bank_name, 
+        institutions.institution_name as bank_name, 
+        institutions.logo_path,
         items.is_active,
         TO_CHAR(accounts.created, 'Mon DD YY') as created,
         TO_CHAR(accounts.updated, 'Mon DD YY') as updated
       FROM items
       INNER JOIN accounts ON items.id = accounts.item_id
+      INNER JOIN institutions ON items.institution_id = institutions.id
       WHERE items.user_id = $1
     `, [userId]);
     return accounts;
@@ -34,28 +36,48 @@ async function getUserAccounts(userId) {
 
 async function createItem(itemData) {
     const item = await db.one(`
-      INSERT INTO items(user_id, access_token, plaid_item_id, bank_name, is_active)
+      INSERT INTO items(user_id, access_token, plaid_item_id, institution_id, is_active)
       VALUES($1, $2, $3, $4, $5)
       RETURNING *
-    `, [itemData.user_id, itemData.access_token, itemData.plaid_item_id, itemData.bank_name, itemData.is_active]);
-    
-    console.log(`Successfully stored item with id: ${item.id}`);
-    
+    `, [itemData.user_id, itemData.access_token, itemData.plaid_item_id, itemData.institution_id, itemData.is_active]);   
     return item;
+}
+
+async function getInstitutionByPlaidId(plaidInstitutionId) {
+    try {
+      const institution = await db.oneOrNone('SELECT * FROM institutions WHERE plaid_institution_id = $1', [plaidInstitutionId]);
+      return institution;
+    } catch (error) {
+      console.error(`Error getting institution by Plaid ID: ${error}`);
+      return null;
+    }
+}
+  
+async function createInstitution(institutionData) {
+    try {
+      const institution = await db.one(`
+        INSERT INTO institutions(plaid_institution_id, institution_name, logo_path)
+        VALUES($1, $2, $3)
+        RETURNING *
+      `, [institutionData.plaid_institution_id, institutionData.institution_name, institutionData.logo_path]);
+           
+      return institution;
+    } catch (error) {
+      console.error(`Error creating institution: ${error}`);
+      return null;
+    }
 }
 
 async function updateItem(itemId, data) {
     const item = await db.one(`
       UPDATE items
-      SET bank_name = $1
+      SET institution_id = $1
       WHERE id = $2
       RETURNING *
-    `, [data.bank_name, itemId]);
-  
-    console.log(`Successfully updated item with id: ${itemId}`);
-  
+    `, [data.institution_id, itemId]);
+   
     return item;
-  }
+}
 
   async function createAccount(accountData) {
     const { item_id, name, masked_account_number, plaid_account_id } = accountData;
@@ -64,11 +86,8 @@ async function updateItem(itemId, data) {
        VALUES($1, $2, $3, $4)
        RETURNING *`,
       [item_id, name, masked_account_number, plaid_account_id]
-    );
-  
-    console.log(`Successfully created account with id: ${account.id}`);
-  
+    );  
     return account;
   }
   
-  module.exports = { getUserRecord, getUserAccounts, createItem, updateItem, createAccount };
+  module.exports = { getUserRecord, getUserAccounts, createItem, updateItem, createAccount, getInstitutionByPlaidId, createInstitution };

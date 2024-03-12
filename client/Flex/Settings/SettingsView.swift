@@ -12,6 +12,7 @@ struct SettingsView: View {
     @EnvironmentObject var userViewModel: UserViewModel
     @StateObject private var plaidLinkViewModel = PlaidLinkViewModel()
     @State private var isPresentingLink = false
+    @State private var linkController: LinkController?
     
     var body: some View {
         NavigationView {
@@ -45,10 +46,21 @@ struct SettingsView: View {
                 Section(header: Text("Bank Connections")) {
                     ForEach(userViewModel.bankConnections) { connection in
                         HStack {
-                            Image(systemName: "circle.fill") // Replace with your logo
-                                .resizable()
-                                .frame(width: 40, height: 40)
-                                .foregroundColor(.blue)
+                            AsyncImage(url: URL(string: "http://localhost:8000/assets/institution_logos/\(connection.logo_path)")!) { phase in
+                                        switch phase {
+                                        case .empty:
+                                            ProgressView()
+                                        case .success(let image):
+                                            image.resizable()
+                                        case .failure:
+                                            Image(systemName: "exclamationmark.triangle")
+                                        @unknown default:
+                                            EmptyView()
+                                        }
+                                    }
+                                    .frame(width: 40, height: 40)
+                                // Rest of your code...
+
                             VStack(alignment: .leading) {
                                 Text(connection.name)
                                     .font(.headline)
@@ -89,6 +101,7 @@ struct SettingsView: View {
                         isPresented: $isPresentingLink,
                         onDismiss: {
                             isPresentingLink = false
+                            userViewModel.fetchBankConnections()
                         },
                         content: {
                             let createResult = createHandler()
