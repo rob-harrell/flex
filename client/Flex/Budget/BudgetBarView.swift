@@ -54,4 +54,7 @@ struct BudgetBarView: View {
 
 #Preview {
     BudgetBarView(selectedFilter: .constant(.total))
+        .environmentObject(UserViewModel())
+        .environmentObject(DateViewModel())
+        .environmentObject(BudgetViewModel(sharedViewModel: DateViewModel()))
 }

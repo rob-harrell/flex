@@ -58,4 +58,8 @@ struct BudgetHeaderView: View {
 
 #Preview {
     BudgetHeaderView(selectedFilter: .constant(.total))
+        .environmentObject(UserViewModel())
+        .environmentObject(DateViewModel())
+        .environmentObject(BudgetViewModel(sharedViewModel: DateViewModel()))
 }
+

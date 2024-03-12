@@ -105,4 +105,7 @@ struct BudgetCalendarView: View {
 
 #Preview {
     BudgetCalendarView()
+        .environmentObject(UserViewModel())
+        .environmentObject(DateViewModel())
+        .environmentObject(BudgetViewModel(sharedViewModel: DateViewModel()))
 }

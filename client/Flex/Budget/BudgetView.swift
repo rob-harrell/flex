@@ -31,5 +31,8 @@ struct BudgetView: View {
 }
 
 #Preview {
-    BudgetView().environmentObject(DateViewModel())
+    BudgetView()
+        .environmentObject(UserViewModel())
+        .environmentObject(DateViewModel())
+        .environmentObject(BudgetViewModel(sharedViewModel: DateViewModel()))
 }
