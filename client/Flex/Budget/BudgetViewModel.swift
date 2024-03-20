@@ -57,6 +57,62 @@ class BudgetViewModel: ObservableObject {
         generateSpendingData()
     }
     
+    
+    // Stub functions to fetch data from Core Data
+   private func fetchAccountsFromCoreData() {
+       // Fetch accounts from Core Data and update relevant properties
+   }
+
+   private func fetchBalancesFromCoreData() {
+       // Fetch balances from Core Data and update relevant properties
+   }
+
+   private func fetchTransactionsFromCoreData() {
+       // Fetch transactions from Core Data and update relevant properties
+   }
+
+   private func fetchAllDataFromCoreData() {
+       fetchAccountsFromCoreData()
+       fetchBalancesFromCoreData()
+       fetchTransactionsFromCoreData()
+   }
+
+   // Stub functions to fetch data from the server
+   func fetchAccountsFromServer(completion: @escaping () -> Void) {
+       // Fetch accounts from the server, store them in Core Data, and then call completion()
+   }
+
+   func fetchBalancesFromServer(completion: @escaping () -> Void) {
+       // Fetch balances from the server, store them in Core Data, and then call completion()
+   }
+
+   func fetchTransactionsFromServer(completion: @escaping () -> Void) {
+       // Fetch transactions from the server, store them in Core Data, and then call completion()
+   }
+
+   func fetchAllDataFromServer(completion: @escaping () -> Void) {
+       let group = DispatchGroup()
+
+       group.enter()
+       fetchAccountsFromServer() {
+           group.leave()
+       }
+
+       group.enter()
+       fetchBalancesFromServer() {
+           group.leave()
+       }
+
+       group.enter()
+       fetchTransactionsFromServer() {
+           group.leave()
+       }
+
+       group.notify(queue: .main) {
+           completion()
+       }
+   }
+    
     // Function to generate dummy spending data for the past 12 months
     private func generateSpendingData() {
         for monthDates in sharedViewModel.dates {

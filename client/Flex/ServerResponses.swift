@@ -13,25 +13,33 @@ enum UserConnectionStatus: String, Codable {
 }
 
 struct UserInfoResponse: Codable {
-    let id: Int
-    let username: String
-    let firstname: String
-    let lastname: String
-    let email: String
+    let id: Int64
+    let firstName: String
+    let lastName: String
     let phone: String
-    let monthly_income: Double
-    let monthly_fixed_spend: Double
+    let monthlyIncome: Double
+    let monthlyFixedSpend: Double
+    let birthDate: String
+    let sessionToken: String
+    
+    enum CodingKeys: String, CodingKey {
+        case id, phone
+        case monthlyIncome = "monthly_income"
+        case monthlyFixedSpend = "monthly_fixed_spend"
+        case birthDate = "birth_date"
+        case firstName = "firstname"
+        case lastName = "lastname"
+        case sessionToken = "session_token"
+    }
 }
 
 struct BankConnection: Codable, Identifiable {
-    let id: Int
+    let id: Int64
     let account_id: String
     let item_id: String
     let name: String
     let masked_account_number: String
     let friendly_acount_name: String
-    let created: String
-    let updated: String
     let bank_name: String
     let is_active: Bool
     let logo_path: String

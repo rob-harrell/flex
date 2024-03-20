@@ -28,6 +28,8 @@
 		D4129F1C2B8C2CE300BB2B7D /* ServerResponses.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4129F1B2B8C2CE300BB2B7D /* ServerResponses.swift */; };
 		D4129F202B8EBF0600BB2B7D /* LinkController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4129F1F2B8EBF0600BB2B7D /* LinkController.swift */; };
 		D45892832B8AB09600A8BA32 /* LinkKit in Frameworks */ = {isa = PBXBuildFile; productRef = D45892822B8AB09600A8BA32 /* LinkKit */; };
+		D46EDED92BA51721002FF9BE /* FlexClientDataModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = D46EDED72BA51721002FF9BE /* FlexClientDataModel.xcdatamodeld */; };
+		D46EDF0B2BA93FF3002FF9BE /* CoreDataStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46EDF0A2BA93FF3002FF9BE /* CoreDataStack.swift */; };
 		D48EF48E2B95759000117E8B /* UserViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D48EF48D2B95759000117E8B /* UserViewModel.swift */; };
 		D49D59CF2B7815E4001C0D0A /* DateViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49D59CE2B7815E4001C0D0A /* DateViewModel.swift */; };
 		D49D59D12B785501001C0D0A /* MonthSelectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49D59D02B785501001C0D0A /* MonthSelectorView.swift */; };
@@ -75,6 +77,8 @@
 		D4129F192B8C21B300BB2B7D /* ServerCommunicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerCommunicator.swift; sourceTree = "<group>"; };
 		D4129F1B2B8C2CE300BB2B7D /* ServerResponses.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerResponses.swift; sourceTree = "<group>"; };
 		D4129F1F2B8EBF0600BB2B7D /* LinkController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LinkController.swift; sourceTree = "<group>"; };
+		D46EDED82BA51721002FF9BE /* FlexClientDataModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = FlexClientDataModel.xcdatamodel; sourceTree = "<group>"; };
+		D46EDF0A2BA93FF3002FF9BE /* CoreDataStack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataStack.swift; sourceTree = "<group>"; };
 		D48EF48D2B95759000117E8B /* UserViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserViewModel.swift; sourceTree = "<group>"; };
 		D49D59CE2B7815E4001C0D0A /* DateViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateViewModel.swift; sourceTree = "<group>"; };
 		D49D59D02B785501001C0D0A /* MonthSelectorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthSelectorView.swift; sourceTree = "<group>"; };
@@ -141,6 +145,8 @@
 				D4005A832B65F69E00652FCA /* Preview Content */,
 				D4129F192B8C21B300BB2B7D /* ServerCommunicator.swift */,
 				D4129F1B2B8C2CE300BB2B7D /* ServerResponses.swift */,
+				D46EDED72BA51721002FF9BE /* FlexClientDataModel.xcdatamodeld */,
+				D46EDF0A2BA93FF3002FF9BE /* CoreDataStack.swift */,
 			);
 			path = Flex;
 			sourceTree = "<group>";
@@ -380,6 +386,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D46EDF0B2BA93FF3002FF9BE /* CoreDataStack.swift in Sources */,
 				D4005AC62B67245800652FCA /* BudgetFilterView.swift in Sources */,
 				D4129F202B8EBF0600BB2B7D /* LinkController.swift in Sources */,
 				D4005AB72B67162800652FCA /* SettingsView.swift in Sources */,
@@ -394,6 +401,7 @@
 				D4005ACA2B67248200652FCA /* BudgetDetailSheetView.swift in Sources */,
 				D4005AC82B67247000652FCA /* BudgetCalendarView.swift in Sources */,
 				D48EF48E2B95759000117E8B /* UserViewModel.swift in Sources */,
+				D46EDED92BA51721002FF9BE /* FlexClientDataModel.xcdatamodeld in Sources */,
 				D4129F1A2B8C21B300BB2B7D /* ServerCommunicator.swift in Sources */,
 				D4005AA82B65F6F600652FCA /* MainTabView.swift in Sources */,
 				D4005A7E2B65F69D00652FCA /* FlexApp.swift in Sources */,
@@ -743,6 +751,19 @@
 			productName = LinkKit;
 		};
 /* End XCSwiftPackageProductDependency section */
+
+/* Begin XCVersionGroup section */
+		D46EDED72BA51721002FF9BE /* FlexClientDataModel.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				D46EDED82BA51721002FF9BE /* FlexClientDataModel.xcdatamodel */,
+			);
+			currentVersion = D46EDED82BA51721002FF9BE /* FlexClientDataModel.xcdatamodel */;
+			path = FlexClientDataModel.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
 	};
 	rootObject = D4005A722B65F69D00652FCA /* Project object */;
 }

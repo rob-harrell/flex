@@ -6,19 +6,32 @@
 //
 
 import SwiftUI
+import CoreData
+
+class AppViewModel: ObservableObject {
+    @Published var sharedViewModel: DateViewModel
+    @Published var userViewModel = UserViewModel()
+    @Published var budgetViewModel: BudgetViewModel
+
+    init() {
+        let sharedViewModel = DateViewModel()
+        self.sharedViewModel = sharedViewModel
+        self.budgetViewModel = BudgetViewModel(sharedViewModel: sharedViewModel)
+    }
+}
 
 @main
 struct FlexApp: App {
-    @StateObject var sharedViewModel = DateViewModel()
-    @StateObject var userViewModel = UserViewModel()
-    @StateObject var budgetViewModel = BudgetViewModel(sharedViewModel: DateViewModel())
+    @StateObject var appViewModel = AppViewModel()
+    @StateObject var coreDataStack = CoreDataStack.shared
 
     var body: some Scene {
         WindowGroup {
             MainTabView()
-                .environmentObject(userViewModel)
-                .environmentObject(sharedViewModel)
-                .environmentObject(budgetViewModel)
+                .environmentObject(appViewModel.userViewModel)
+                .environmentObject(appViewModel.sharedViewModel)
+                .environmentObject(appViewModel.budgetViewModel)
+                .environment(\.managedObjectContext, coreDataStack.persistentContainer.viewContext)
         }
     }
 }

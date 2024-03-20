@@ -1,5 +1,17 @@
-const { getUserRecord, getUserAccounts, createItem, updateItem, getInstitutionByPlaidId, createInstitution, createAccount } = require("../db/database");
+const { createUser: createDbUser, updateUser: updateDbUser, getUserRecord, getUserAccounts, createItem, updateItem, getInstitutionByPlaidId, createInstitution, createAccount } = require("../db/database");
 const { saveImage } = require('./institutionServices.js');
+
+async function createUser(userData) {
+  console.log("called createUser on server");
+  const user = await createDbUser(userData);
+  return user;
+}
+
+async function updateUser(userData) {
+  console.log("called updateUser on server");
+  const user = await updateDbUser(userData);
+  return user;
+}
 
 async function getUserData(userId) {
   const user = await getUserRecord(userId);
@@ -69,4 +81,4 @@ async function createItemRecord(itemData) {
   return item;
 }
 
-module.exports = { getUserData, getBankAccounts, createItemRecord, getAuth };
+module.exports = { getUserData, getBankAccounts, createUser, updateUser, createItemRecord, getAuth };

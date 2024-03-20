@@ -13,24 +13,25 @@ struct SettingsView: View {
     @StateObject private var plaidLinkViewModel = PlaidLinkViewModel()
     @State private var isPresentingLink = false
     @State private var linkController: LinkController?
+    @State private var birthDate = Date()
     
     var body: some View {
         NavigationView {
             List {
                 Section(header: Text("Account")) {
                     HStack {
-                        Text("Email").fontWeight(.medium)
+                        Text("First Name").fontWeight(.medium)
                         Spacer()
-                        TextField("Email", text: $userViewModel.email)
+                        TextField("First Name", text: $userViewModel.firstName)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .textContentType(.emailAddress)
                             .keyboardType(.emailAddress)
                             .frame(width: 250)
                     }
                     HStack {
-                        Text("Username").fontWeight(.medium)
+                        Text("Last Name").fontWeight(.medium)
                         Spacer()
-                        TextField("Username", text: $userViewModel.username)
+                        TextField("Last Name", text: $userViewModel.lastName)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .frame(width: 250)
                     }
@@ -41,12 +42,56 @@ struct SettingsView: View {
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .frame(width: 250)
                     }
+                    HStack {
+                        Text("Birth Date").fontWeight(.medium)
+                        Spacer()
+                        DatePicker("Birthdate", selection: $birthDate, displayedComponents: .date)
+                            .datePickerStyle(GraphicalDatePickerStyle())
+                            .frame(width: 250)
+                    }
+                    Button(action: {
+                        let dateFormatter = DateFormatter()
+                        dateFormatter.dateFormat = "yyyy-MM-dd"
+                        let birthDateStr = dateFormatter.string(from: birthDate)
+                        userViewModel.createUser(firstName: userViewModel.firstName, lastName: userViewModel.lastName, phone: userViewModel.phone, birthDate: birthDateStr, sessionToken: "TestToken", monthlyIncome: 8000.0, monthlyFixedSpend: 6000.0)
+                    }) {
+                        Text("Create user")
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .padding()
+                            .background(Color.clear)
+                            .foregroundColor(.black)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke(Color.gray, lineWidth: 1)
+                            )
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    .padding(.horizontal)
+
+                    Button(action: {
+                        let dateFormatter = DateFormatter()
+                        dateFormatter.dateFormat = "yyyy-MM-dd"
+                        let birthDateStr = dateFormatter.string(from: birthDate)
+                        userViewModel.updateUser(firstName: userViewModel.firstName, lastName: userViewModel.lastName, phone: userViewModel.phone, birthDate: birthDateStr, monthlyIncome: 8000.0, monthlyFixedSpend: 6000.0)
+                    }) {
+                        Text("Update user")
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .padding()
+                            .background(Color.clear)
+                            .foregroundColor(.black)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .stroke(Color.gray, lineWidth: 1)
+                            )
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    .padding(.horizontal)
                 }
                 
                 Section(header: Text("Bank Connections")) {
                     ForEach(userViewModel.bankConnections) { connection in
                         HStack {
-                            AsyncImage(url: URL(string: "http://localhost:8000/assets/institution_logos/\(connection.logo_path)")!) { phase in
+                            AsyncImage(url: URL(string: "http://localhost:8000/assets/institution_logos/\(connection.logoPath)")!) { phase in
                                         switch phase {
                                         case .empty:
                                             ProgressView()
@@ -65,24 +110,21 @@ struct SettingsView: View {
                                 Text(connection.name)
                                     .font(.headline)
                                     .fontWeight(.medium)
-                                Text(connection.bank_name)
+                                Text(connection.bankName)
                                     .font(.subheadline)
                                     .foregroundColor(.gray)
                             }
                             Spacer()
                             VStack(alignment: .trailing) {
-                                Text(connection.is_active ? "Active" : "Inactive")
+                                Text(connection.isActive ? "Active" : "Inactive")
                                     .font(.subheadline)
-                                Text("Last updated: \(connection.updated)")
-                                    .font(.subheadline)
-                                    .foregroundColor(.gray)
                             }
                         }
                         .padding(.vertical, 5)
                     }
                     Button(action: {
                         print("connection button tapped")
-                        let userId = userViewModel.userId
+                        let userId = userViewModel.id
                         plaidLinkViewModel.fetchLinkToken (userId: userId) {
                                 isPresentingLink = true
                         }
@@ -101,7 +143,7 @@ struct SettingsView: View {
                         isPresented: $isPresentingLink,
                         onDismiss: {
                             isPresentingLink = false
-                            userViewModel.fetchBankConnections()
+                            userViewModel.fetchBankConnectionsFromServer()
                         },
                         content: {
                             let createResult = createHandler()
@@ -140,8 +182,10 @@ struct SettingsView: View {
             .navigationBarTitle("Settings")
         }
         .onAppear {
-            userViewModel.fetchUserInfo()
-            userViewModel.fetchBankConnections()
+            print("got to th")
+            //userViewModel.fetchUserInfoFromCoreData()
+            userViewModel.fetchBankConnectionsFromServer()
+            print("got here")
         }
     }
   
@@ -150,7 +194,7 @@ struct SettingsView: View {
             let error = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey : "Link token is not set"])
             return .failure(error)
         }
-        let configuration = plaidLinkViewModel.createLinkConfiguration(linkToken: linkToken, userId: userViewModel.userId)
+        let configuration = plaidLinkViewModel.createLinkConfiguration(linkToken: linkToken, userId: userViewModel.id)
 
         // This only results in an error if the token is malformed.
         return Plaid.create(configuration).mapError { $0 as Error }

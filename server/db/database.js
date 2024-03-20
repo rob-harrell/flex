@@ -9,6 +9,27 @@ pgTypes.setTypeParser(pgTypes.builtins.TIMESTAMP, str => new Date(str));
 
 const db = pgp('postgres://rob@localhost:5432/flex_db');
 
+async function createUser(userData) {
+  const birthDate = new Date(userData.birthDate);
+  const user = await db.one(`
+    INSERT INTO users(firstname, lastname, phone, monthly_income, monthly_fixed_spend, birth_date, session_token)
+    VALUES($1, $2, $3, $4, $5, $6, $7)
+    RETURNING *
+  `, [userData.firstName, userData.lastName, userData.phone, userData.monthlyIncome, userData.monthlyFixedSpend, birthDate, userData.sessionToken]);
+  return user;
+}
+
+async function updateUser(userData) {
+  const birthDate = new Date(userData.birthDate);
+  const user = await db.one(`
+    UPDATE users
+    SET firstname = $1, lastname = $2, phone = $3, monthly_income = $4, monthly_fixed_spend = $5, birth_date = $6, session_token = $7
+    WHERE id = $8
+    RETURNING *
+  `, [userData.firstName, userData.lastName, userData.phone, userData.monthlyIncome, userData.monthlyFixedSpend, birthDate, userData.sessionToken, userData.id]);
+  return user;
+}
+
 async function getUserRecord(userId) {
   const user = await db.one('SELECT * FROM users WHERE id = $1', [userId]);
   return user;
@@ -90,4 +111,4 @@ async function updateItem(itemId, data) {
     return account;
   }
   
-  module.exports = { getUserRecord, getUserAccounts, createItem, updateItem, createAccount, getInstitutionByPlaidId, createInstitution };
+  module.exports = { getUserRecord, getUserAccounts, createItem, updateUser, createUser, updateItem, createAccount, getInstitutionByPlaidId, createInstitution };
