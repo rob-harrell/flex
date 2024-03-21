@@ -28,6 +28,7 @@
 		D4129F1C2B8C2CE300BB2B7D /* ServerResponses.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4129F1B2B8C2CE300BB2B7D /* ServerResponses.swift */; };
 		D4129F202B8EBF0600BB2B7D /* LinkController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4129F1F2B8EBF0600BB2B7D /* LinkController.swift */; };
 		D45892832B8AB09600A8BA32 /* LinkKit in Frameworks */ = {isa = PBXBuildFile; productRef = D45892822B8AB09600A8BA32 /* LinkKit */; };
+		D46B23722BACA2350091C54D /* KeychainAccess in Frameworks */ = {isa = PBXBuildFile; productRef = D46B23712BACA2350091C54D /* KeychainAccess */; };
 		D46EDED92BA51721002FF9BE /* FlexClientDataModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = D46EDED72BA51721002FF9BE /* FlexClientDataModel.xcdatamodeld */; };
 		D46EDF0B2BA93FF3002FF9BE /* CoreDataStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46EDF0A2BA93FF3002FF9BE /* CoreDataStack.swift */; };
 		D48EF48E2B95759000117E8B /* UserViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D48EF48D2B95759000117E8B /* UserViewModel.swift */; };
@@ -90,6 +91,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D46B23722BACA2350091C54D /* KeychainAccess in Frameworks */,
 				D45892832B8AB09600A8BA32 /* LinkKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -268,6 +270,7 @@
 			name = Flex;
 			packageProductDependencies = (
 				D45892822B8AB09600A8BA32 /* LinkKit */,
+				D46B23712BACA2350091C54D /* KeychainAccess */,
 			);
 			productName = Flex;
 			productReference = D4005A7A2B65F69D00652FCA /* Flex.app */;
@@ -343,6 +346,7 @@
 			mainGroup = D4005A712B65F69D00652FCA;
 			packageReferences = (
 				D45892812B8AB09600A8BA32 /* XCRemoteSwiftPackageReference "plaid-link-ios" */,
+				D46B23702BACA2350091C54D /* XCRemoteSwiftPackageReference "KeychainAccess" */,
 			);
 			productRefGroup = D4005A7B2B65F69D00652FCA /* Products */;
 			projectDirPath = "";
@@ -742,6 +746,14 @@
 				minimumVersion = 5.2.1;
 			};
 		};
+		D46B23702BACA2350091C54D /* XCRemoteSwiftPackageReference "KeychainAccess" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/kishikawakatsumi/KeychainAccess.git";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -749,6 +761,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = D45892812B8AB09600A8BA32 /* XCRemoteSwiftPackageReference "plaid-link-ios" */;
 			productName = LinkKit;
+		};
+		D46B23712BACA2350091C54D /* KeychainAccess */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D46B23702BACA2350091C54D /* XCRemoteSwiftPackageReference "KeychainAccess" */;
+			productName = KeychainAccess;
 		};
 /* End XCSwiftPackageProductDependency section */
 

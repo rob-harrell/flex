@@ -50,6 +50,5 @@
         <attribute name="monthlyFixedSpend" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="monthlyIncome" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="phone" optional="YES" attributeType="String"/>
-        <attribute name="sessionToken" optional="YES" attributeType="String"/>
     </entity>
 </model>

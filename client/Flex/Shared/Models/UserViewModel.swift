@@ -7,6 +7,7 @@
 
 import Foundation
 import CoreData
+import KeychainAccess
 
 class UserViewModel: ObservableObject {
     @Published var id: Int64 = 0
@@ -18,6 +19,9 @@ class UserViewModel: ObservableObject {
     @Published var birthDate: String = ""
     @Published var sessionToken: String = ""
     @Published var bankConnections: [BankConnection] = []
+    var isSignedIn: Bool {
+        UserDefaults.standard.object(forKey: "currentUserId") != nil
+    }
 
     struct BankConnection: Identifiable, Codable {
         var id: Int
@@ -29,46 +33,145 @@ class UserViewModel: ObservableObject {
         var logoPath: String
     }
 
-    func createUser(firstName: String, lastName: String, phone: String, birthDate: String, sessionToken: String, monthlyIncome: Double, monthlyFixedSpend: Double) {
-        print("create user called on client")
-        let path = "/user/"
-        let params = ["firstName": firstName, "lastName": lastName, "phone": phone, "birthDate": birthDate, "sessionToken": sessionToken, "monthlyIncome": monthlyIncome, "monthlyFixedSpend": monthlyFixedSpend] as [String : Any]
-        ServerCommunicator.shared.callMyServer(path: path, httpMethod: .post, params: params) { (result: Result<UserInfoResponse, ServerCommunicator.Error>) in
+    // MARK: - Twilio
+    func triggerTwilioOTP(phone: String) {
+        // Implement the logic for sending a verification code via Twilio
+        TwilioAPI.sendVerificationCode(to: phone) { (result: Result<Bool, Error>) in
             switch result {
-            case .success(let userInfo):
-                DispatchQueue.main.async {
-                    print("attempting to save user to core data")
-                    self.saveUserToCoreData(userInfo: userInfo)
-                    print("saved user to core data")
-                    self.fetchUserInfoFromCoreData()
-                    print("updated context with core data")
-                }
+            case .success:
+                print("Verification code sent successfully")
+                // You can now ask the user to enter the verification code
             case .failure(let error):
-                print("Failed to create user: \(error)")
+                print("Failed to send verification code: \(error)")
             }
         }
     }
 
-    func updateUser(firstName: String, lastName: String, phone: String, birthDate: String, monthlyIncome: Double, monthlyFixedSpend: Double) {
+    func verifyTwilioOTP(code: String, forPhone phone: String) {
+        // Implement the logic for verifying the code via Twilio
+        TwilioAPI.verifyCode(code, forPhone: phone) { (result: Result<(userId: Int64, sessionToken: String), Error>) in
+            switch result {
+            case .success(let data):
+                print("Verification code verified successfully")
+                // Save session token to keychain
+                let keychain = Keychain(service: "com.yourapp.identifier")
+                keychain["sessionToken"] = data.sessionToken
+                // Save user id to UserDefaults
+                UserDefaults.standard.set(data.userId, forKey: "currentUserId")
+                // Update the context with the phone number
+                self.phone = phone
+                // Fetch the user data from Core Data or create a new user if not found
+                self.fetchUserFromCoreDataOrCreateNew(userId: data.userId, phone: phone)
+            case .failure(let error):
+                print("Failed to verify code: \(error)")
+            }
+        }
+    }
+
+    // MARK: - Server
+    func updateUser(user: User) {
         print("update user called on client")
-        guard id != 0 else {
+        guard user.id != 0 else {
             print("User ID is not set")
             return
         }
-        let path = "/user/\(self.id)"
-        let params = ["userId": String(self.id), "firstName": firstName, "lastName": lastName, "phone": phone, "birthDate": birthDate, "monthlyIncome": monthlyIncome, "monthlyFixedSpend": monthlyFixedSpend] as [String : Any]
+        let path = "/user/\(user.id)"
+        let params = ["userId": String(user.id), "firstName": user.firstName, "lastName": user.lastName, "phone": user.phone, "birthDate": user.birthDate, "monthlyIncome": user.monthlyIncome, "monthlyFixedSpend": user.monthlyFixedSpend] as [String : Any]
         ServerCommunicator.shared.callMyServer(path: path, httpMethod: .put, params: params) { (result: Result<UserInfoResponse, ServerCommunicator.Error>) in
             switch result {
             case .success(let userInfo):
                 DispatchQueue.main.async {
-                    self.saveUserToCoreData(userInfo: userInfo)
-                    self.fetchUserInfoFromCoreData()
+                    self.updateUserInCoreData(user: user)
+                    self.updateUser(user: user)
                 }
             case .failure(let error):
                 print("Failed to update user: \(error)")
             }
         }
     }
+
+    // MARK: - Core Data
+    func fetchUserFromCoreDataOrCreateNew(userId: Int64, phone: String? = nil) {
+        let context = CoreDataStack.shared.persistentContainer.viewContext
+        let fetchRequest: NSFetchRequest<User> = User.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "id == %d", userId)
+
+        do {
+            let users = try context.fetch(fetchRequest)
+            if let user = users.first {
+                DispatchQueue.main.async {
+                    self.updateUser(user: user)
+                }
+            } else {
+                print("No user found in Core Data with ID \(userId), creating a new user")
+                if let phone = phone {
+                    self.createUserInCoreData(id: userId, phone: phone)
+                } else {
+                    print("Cannot create a new user without a phone number")
+                }
+            }
+        } catch {
+            print("Failed to fetch user from Core Data: \(error)")
+        }
+    }
+
+    func createUserInCoreData(id: Int64, phone: String) {
+        let context = CoreDataStack.shared.persistentContainer.viewContext
+        let newUser = User(context: context)
+        newUser.id = id
+        newUser.phone = phone
+
+        do {
+            try context.save()
+        } catch {
+            print("Failed to create user in Core Data: \(error)")
+        }
+    }
+
+    func updateUserInCoreData(user: User) {
+        let context = CoreDataStack.shared.persistentContainer.viewContext
+        let fetchRequest: NSFetchRequest<User> = User.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "id == %d", user.id)
+
+        do {
+            let users = try context.fetch(fetchRequest)
+            if let existingUser = users.first {
+                existingUser.firstName = user.firstName
+                existingUser.lastName = user.lastName
+                existingUser.phone = user.phone
+                existingUser.birthDate = user.birthDate
+                existingUser.monthlyIncome = user.monthlyIncome
+                existingUser.monthlyFixedSpend = user.monthlyFixedSpend
+                try context.save()
+            } else {
+                print("No user found in Core Data with ID \(user.id)")
+            }
+        } catch {
+            print("Failed to update user in Core Data: \(error)")
+        }
+    }
+
+    // MARK: - User Session
+    func signOutUser() {
+        // Clear session token from keychain
+        let keychain = Keychain(service: "com.yourapp.identifier")
+        try? keychain.remove("sessionToken")
+        
+        // Remove user id from UserDefaults
+        UserDefaults.standard.removeObject(forKey: "currentUserId")
+        
+        // Clean up the state
+        self.id = 0
+        self.firstName = ""
+        self.lastName = ""
+        self.phone = ""
+        self.monthlyIncome = 0
+        self.monthlyFixedSpend = 0
+        self.birthDate = ""
+        self.sessionToken = ""
+        self.bankConnections = []
+    }
+    
 
     func fetchBankConnectionsFromServer() {
         guard id != 0 else {
@@ -86,52 +189,5 @@ class UserViewModel: ObservableObject {
                 print("Failed to fetch bank connections: \(error)")
             }
         }
-    }
-
-    func fetchUserInfoFromCoreData() {
-        let context = CoreDataStack.shared.persistentContainer.viewContext
-        let request = NSFetchRequest<NSFetchRequestResult>(entityName: "User")
-        request.predicate = NSPredicate(format: "id = %@", String(self.id))
-        do {
-            let result = try context.fetch(request)
-            if let user = result.first as? User {
-                DispatchQueue.main.async {
-                    self.id = user.id
-                    self.firstName = user.firstName ?? ""
-                    self.lastName = user.lastName ?? ""
-                    self.phone = user.phone ?? ""
-                    self.monthlyIncome = user.monthlyIncome
-                    self.birthDate = user.birthDate ?? ""
-                    self.monthlyFixedSpend = user.monthlyFixedSpend
-                    self.sessionToken = user.sessionToken ?? ""
-                }
-            }
-        } catch {
-            print("Failed to fetch user from Core Data: \(error)")
-        }
-    }
-
-    func saveUserToCoreData(userInfo: UserInfoResponse) {
-        let context = CoreDataStack.shared.persistentContainer.viewContext
-        print("Context obtained")
-        
-        let user = User(context: context)
-        print("User created")
-        user.id = userInfo.id
-        user.firstName = userInfo.firstName
-        user.lastName = userInfo.lastName
-        user.phone = userInfo.phone
-        user.monthlyIncome = userInfo.monthlyIncome
-        user.birthDate = userInfo.birthDate
-        user.monthlyFixedSpend = userInfo.monthlyFixedSpend
-        user.sessionToken = self.sessionToken
-        print("User properties set")
-
-        do {
-            try context.save()
-            print("Context saved")
-        } catch {
-            print("Failed to save user to Core Data: \(error)")
-        }
-    }
+    }  
 }
