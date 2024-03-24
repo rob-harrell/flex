@@ -17,7 +17,7 @@ const accountsRoutes = require('./routes/accounts');
 const plaidRoutes = require('./routes/plaid');
 const transactionsRoutes = require('./routes/transactions');
 const budgetRoutes = require('./routes/budget');
-const webhookRoutes = require('./routes/webhook');
+const twilioRoutes = require('./routes/twilio');
 
 // Use the routes as middleware
 app.use('/user', userRoutes);
@@ -25,7 +25,7 @@ app.use('/accounts', accountsRoutes);
 app.use('/plaid', plaidRoutes);
 app.use('/transactions', transactionsRoutes);
 app.use('/budget', budgetRoutes);
-app.use('/webhook', webhookRoutes);
+app.use('/twilio', twilioRoutes);
 
 const server = app.listen(APP_PORT, function () {
   console.log(`Server is up and running at http://localhost:${APP_PORT}/`);

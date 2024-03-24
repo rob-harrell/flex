@@ -12,6 +12,12 @@ enum UserConnectionStatus: String, Codable {
     case disconnected
 }
 
+struct VerificationResponse: Decodable {
+    let userId: Int64
+    let sessionToken: String
+    let isExistingUser: Bool
+}
+
 struct UserInfoResponse: Codable {
     let id: Int64
     let firstName: String

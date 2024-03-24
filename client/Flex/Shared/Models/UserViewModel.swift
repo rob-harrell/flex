@@ -35,8 +35,12 @@ class UserViewModel: ObservableObject {
 
     // MARK: - Twilio
     func triggerTwilioOTP(phone: String) {
-        // Implement the logic for sending a verification code via Twilio
-        TwilioAPI.sendVerificationCode(to: phone) { (result: Result<Bool, Error>) in
+        // Implement the logic for sending a verification code via your server
+        ServerCommunicator.shared.callMyServer(
+            path: "/twilio/sendOTP",
+            httpMethod: .post,
+            params: ["phoneNumber": phone]
+        ) { (result: Result<ServerCommunicator.DummyDecodable, ServerCommunicator.Error>) in
             switch result {
             case .success:
                 print("Verification code sent successfully")
@@ -47,9 +51,13 @@ class UserViewModel: ObservableObject {
         }
     }
 
-    func verifyTwilioOTP(code: String, forPhone phone: String) {
-        // Implement the logic for verifying the code via Twilio
-        TwilioAPI.verifyCode(code, forPhone: phone) { (result: Result<(userId: Int64, sessionToken: String), Error>) in
+    func verifyTwilioOTP(code: String, forPhone phone: String, completion: @escaping (Bool) -> Void) {
+        // Implement the logic for verifying the code via your server
+        ServerCommunicator.shared.callMyServer(
+            path: "/twilio/verifyOTP",
+            httpMethod: .post,
+            params: ["phoneNumber": phone, "code": code]
+        ) { (result: Result<VerificationResponse, ServerCommunicator.Error>) in
             switch result {
             case .success(let data):
                 print("Verification code verified successfully")
@@ -62,8 +70,11 @@ class UserViewModel: ObservableObject {
                 self.phone = phone
                 // Fetch the user data from Core Data or create a new user if not found
                 self.fetchUserFromCoreDataOrCreateNew(userId: data.userId, phone: phone)
+                // Call the completion handler with the isExistingUser value
+                completion(data.isExistingUser)
             case .failure(let error):
                 print("Failed to verify code: \(error)")
+                completion(false)
             }
         }
     }

@@ -49,43 +49,6 @@ struct SettingsView: View {
                             .datePickerStyle(GraphicalDatePickerStyle())
                             .frame(width: 250)
                     }
-                    Button(action: {
-                        let dateFormatter = DateFormatter()
-                        dateFormatter.dateFormat = "yyyy-MM-dd"
-                        let birthDateStr = dateFormatter.string(from: birthDate)
-                        userViewModel.createUser(firstName: userViewModel.firstName, lastName: userViewModel.lastName, phone: userViewModel.phone, birthDate: birthDateStr, sessionToken: "TestToken", monthlyIncome: 8000.0, monthlyFixedSpend: 6000.0)
-                    }) {
-                        Text("Create user")
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .padding()
-                            .background(Color.clear)
-                            .foregroundColor(.black)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .stroke(Color.gray, lineWidth: 1)
-                            )
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                    .padding(.horizontal)
-
-                    Button(action: {
-                        let dateFormatter = DateFormatter()
-                        dateFormatter.dateFormat = "yyyy-MM-dd"
-                        let birthDateStr = dateFormatter.string(from: birthDate)
-                        userViewModel.updateUser(firstName: userViewModel.firstName, lastName: userViewModel.lastName, phone: userViewModel.phone, birthDate: birthDateStr, monthlyIncome: 8000.0, monthlyFixedSpend: 6000.0)
-                    }) {
-                        Text("Update user")
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .padding()
-                            .background(Color.clear)
-                            .foregroundColor(.black)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .stroke(Color.gray, lineWidth: 1)
-                            )
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                    .padding(.horizontal)
                 }
                 
                 Section(header: Text("Bank Connections")) {
