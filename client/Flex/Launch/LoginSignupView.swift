@@ -10,6 +10,7 @@ import SwiftUI
 struct LoginSignupView: View {
     @EnvironmentObject var userViewModel: UserViewModel
     @State private var phoneNumber: String = ""
+    @Binding var showOTPView: Bool
 
     var body: some View {
         VStack {
@@ -27,6 +28,7 @@ struct LoginSignupView: View {
 
             Button(action: {
                 userViewModel.triggerTwilioOTP(phone: phoneNumber)
+                self.showOTPView = true
             }) {
                 Text("Continue")
             }
@@ -36,6 +38,6 @@ struct LoginSignupView: View {
 }
 
 #Preview {
-    LoginSignupView()
+    LoginSignupView(showOTPView: .constant(false))
         .environmentObject(UserViewModel())
 }

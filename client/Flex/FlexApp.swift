@@ -30,7 +30,7 @@ struct FlexApp: App {
             if appViewModel.userViewModel.isSignedIn {
                 MainTabView()
             } else {
-                LoginSignupView()
+                LaunchView()
             }
         }
         .environmentObject(appViewModel.userViewModel)

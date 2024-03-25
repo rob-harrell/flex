@@ -11,7 +11,8 @@ struct OTPView: View {
     @EnvironmentObject var userViewModel: UserViewModel
     @State private var otp: String = ""
     @State private var isExistingUser: Bool = false
-    @State private var showNextView: Bool = false
+    @Binding var showUserDetailsView: Bool
+    @Binding var showMainTabView: Bool
 
     var body: some View {
         VStack {
@@ -20,23 +21,20 @@ struct OTPView: View {
             Button(action: {
                 userViewModel.verifyTwilioOTP(code: otp, forPhone: userViewModel.phone) { isUserExisting in
                     self.isExistingUser = isUserExisting
-                    self.showNextView = true
+                    if isUserExisting {
+                        self.showMainTabView = true
+                    } else {
+                        self.showUserDetailsView = true
+                    }
                 }
             }) {
                 Text("Verify OTP")
             }
             .padding()
-            .fullScreenCover(isPresented: $showNextView) {
-                if isExistingUser {
-                    MainTabView()
-                } else {
-                    UserDetailsView()
-                }
-            }
         }
     }
 }
 
 #Preview {
-    OTPView()
+    OTPView(showUserDetailsView: .constant(false), showMainTabView: .constant(false))
 }

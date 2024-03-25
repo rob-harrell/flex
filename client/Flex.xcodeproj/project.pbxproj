@@ -32,6 +32,9 @@
 		D46B23742BAE1EAB0091C54D /* LoginSignupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46B23732BAE1EAB0091C54D /* LoginSignupView.swift */; };
 		D46B23772BAE1F140091C54D /* OTPView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46B23762BAE1F140091C54D /* OTPView.swift */; };
 		D46B23792BAE1F330091C54D /* UserDetailsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46B23782BAE1F330091C54D /* UserDetailsView.swift */; };
+		D46B237B2BB109520091C54D /* LaunchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46B237A2BB109520091C54D /* LaunchView.swift */; };
+		D46B237D2BB10B5F0091C54D /* InitialAccountConnectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46B237C2BB10B5F0091C54D /* InitialAccountConnectionView.swift */; };
+		D46B237F2BB10B6E0091C54D /* AdditionalAccountConnectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46B237E2BB10B6E0091C54D /* AdditionalAccountConnectionView.swift */; };
 		D46EDED92BA51721002FF9BE /* FlexClientDataModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = D46EDED72BA51721002FF9BE /* FlexClientDataModel.xcdatamodeld */; };
 		D46EDF0B2BA93FF3002FF9BE /* CoreDataStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46EDF0A2BA93FF3002FF9BE /* CoreDataStack.swift */; };
 		D48EF48E2B95759000117E8B /* UserViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D48EF48D2B95759000117E8B /* UserViewModel.swift */; };
@@ -84,6 +87,9 @@
 		D46B23732BAE1EAB0091C54D /* LoginSignupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginSignupView.swift; sourceTree = "<group>"; };
 		D46B23762BAE1F140091C54D /* OTPView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OTPView.swift; sourceTree = "<group>"; };
 		D46B23782BAE1F330091C54D /* UserDetailsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDetailsView.swift; sourceTree = "<group>"; };
+		D46B237A2BB109520091C54D /* LaunchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchView.swift; sourceTree = "<group>"; };
+		D46B237C2BB10B5F0091C54D /* InitialAccountConnectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InitialAccountConnectionView.swift; sourceTree = "<group>"; };
+		D46B237E2BB10B6E0091C54D /* AdditionalAccountConnectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdditionalAccountConnectionView.swift; sourceTree = "<group>"; };
 		D46EDED82BA51721002FF9BE /* FlexClientDataModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = FlexClientDataModel.xcdatamodel; sourceTree = "<group>"; };
 		D46EDF0A2BA93FF3002FF9BE /* CoreDataStack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataStack.swift; sourceTree = "<group>"; };
 		D48EF48D2B95759000117E8B /* UserViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserViewModel.swift; sourceTree = "<group>"; };
@@ -142,7 +148,7 @@
 		D4005A7C2B65F69D00652FCA /* Flex */ = {
 			isa = PBXGroup;
 			children = (
-				D46B23752BAE1EF00091C54D /* Signup */,
+				D46B23752BAE1EF00091C54D /* Launch */,
 				D4005A7D2B65F69D00652FCA /* FlexApp.swift */,
 				D4005AA72B65F6F600652FCA /* MainTabView.swift */,
 				D4005AAD2B661D9000652FCA /* Balances */,
@@ -156,7 +162,6 @@
 				D4129F1B2B8C2CE300BB2B7D /* ServerResponses.swift */,
 				D46EDED72BA51721002FF9BE /* FlexClientDataModel.xcdatamodeld */,
 				D46EDF0A2BA93FF3002FF9BE /* CoreDataStack.swift */,
-				D46B23732BAE1EAB0091C54D /* LoginSignupView.swift */,
 			);
 			path = Flex;
 			sourceTree = "<group>";
@@ -260,13 +265,17 @@
 			path = Utilities;
 			sourceTree = "<group>";
 		};
-		D46B23752BAE1EF00091C54D /* Signup */ = {
+		D46B23752BAE1EF00091C54D /* Launch */ = {
 			isa = PBXGroup;
 			children = (
+				D46B237A2BB109520091C54D /* LaunchView.swift */,
+				D46B23732BAE1EAB0091C54D /* LoginSignupView.swift */,
 				D46B23762BAE1F140091C54D /* OTPView.swift */,
 				D46B23782BAE1F330091C54D /* UserDetailsView.swift */,
+				D46B237C2BB10B5F0091C54D /* InitialAccountConnectionView.swift */,
+				D46B237E2BB10B6E0091C54D /* AdditionalAccountConnectionView.swift */,
 			);
-			path = Signup;
+			path = Launch;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -414,10 +423,12 @@
 				D4005AB72B67162800652FCA /* SettingsView.swift in Sources */,
 				D4005AC02B67236400652FCA /* BudgetHeaderView.swift in Sources */,
 				D4005AB32B66216900652FCA /* BalancesView.swift in Sources */,
+				D46B237D2BB10B5F0091C54D /* InitialAccountConnectionView.swift in Sources */,
 				D4129F182B8C20F300BB2B7D /* PlaidLinkViewModel.swift in Sources */,
 				D49D59D12B785501001C0D0A /* MonthSelectorView.swift in Sources */,
 				D49D59CF2B7815E4001C0D0A /* DateViewModel.swift in Sources */,
 				D4129F1C2B8C2CE300BB2B7D /* ServerResponses.swift in Sources */,
+				D46B237B2BB109520091C54D /* LaunchView.swift in Sources */,
 				D4005AB52B66217C00652FCA /* TrendsView.swift in Sources */,
 				D4005AB12B66213200652FCA /* BudgetView.swift in Sources */,
 				D46B23742BAE1EAB0091C54D /* LoginSignupView.swift in Sources */,
@@ -429,6 +440,7 @@
 				D4129F1A2B8C21B300BB2B7D /* ServerCommunicator.swift in Sources */,
 				D4005AA82B65F6F600652FCA /* MainTabView.swift in Sources */,
 				D4005A7E2B65F69D00652FCA /* FlexApp.swift in Sources */,
+				D46B237F2BB10B6E0091C54D /* AdditionalAccountConnectionView.swift in Sources */,
 				D4DD3F112B7C701500D6E987 /* BudgetBarView.swift in Sources */,
 				D4005ACC2B67249400652FCA /* BudgetViewModel.swift in Sources */,
 			);
