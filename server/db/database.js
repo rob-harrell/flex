@@ -1,5 +1,6 @@
 const pgp = require('pg-promise')();
 const pgTypes = require('pg').types;
+const cs = new pgp.helpers.ColumnSet(['?id', 'firstname', 'lastname', 'phone', 'monthly_income', 'monthly_fixed_spend', 'birth_date', 'session_token'], {table: 'users'});
 
 // Override default type parsing for integers and floats
 pgTypes.setTypeParser(pgTypes.builtins.INT8, parseInt);
@@ -19,13 +20,9 @@ async function createUser(phoneNumber, sessionToken) {
 }
 
 async function updateUser(userData) {
-  const birthDate = new Date(userData.birthDate);
-  const user = await db.one(`
-    UPDATE users
-    SET firstname = $1, lastname = $2, phone = $3, monthly_income = $4, monthly_fixed_spend = $5, birth_date = $6, session_token = $7
-    WHERE id = $8
-    RETURNING *
-  `, [userData.firstName, userData.lastName, userData.phone, userData.monthlyIncome, userData.monthlyFixedSpend, birthDate, userData.sessionToken, userData.id]);
+  userData.birth_date = new Date(userData.birthDate);
+  const update = pgp.helpers.update(userData, cs) + ' WHERE v.id = t.id RETURNING *';
+  const user = await db.one(update);
   return user;
 }
 
@@ -52,6 +49,19 @@ async function getUserAccounts(userId) {
       WHERE items.user_id = $1
     `, [userId]);
     return accounts;
+}
+
+async function getUserBySessionToken(sessionToken) {
+  const user = await db.oneOrNone('SELECT * FROM users WHERE session_token = $1', [sessionToken]);
+  return user;
+}
+
+async function invalidateSessionToken(sessionToken) {
+  await db.none(`
+    UPDATE users
+    SET session_token = NULL
+    WHERE session_token = $1
+  `, [sessionToken]);
 }
 
 async function createItem(itemData) {
@@ -110,4 +120,4 @@ async function updateItem(itemId, data) {
     return account;
   }
   
-  module.exports = { getUserRecord, getUserAccounts, createItem, updateUser, createUser, updateItem, createAccount, getInstitutionByPlaidId, createInstitution };
+  module.exports = { getUserRecord, getUserAccounts, createItem, updateUser, createUser, updateItem, createAccount, getInstitutionByPlaidId, createInstitution, invalidateSessionToken, getUserBySessionToken };

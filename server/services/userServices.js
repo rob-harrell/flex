@@ -1,4 +1,4 @@
-const { createUser: createDbUser, updateUser: updateDbUser, getUserRecord, getUserAccounts, createItem, updateItem, getInstitutionByPlaidId, createInstitution, createAccount } = require("../db/database");
+const { createUser: createDbUser, updateUser: updateDbUser, getUserRecord, getUserAccounts, createItem, updateItem, getInstitutionByPlaidId, createInstitution, createAccount, invalidateSessionToken: invalidateDbSessionToken, getUserBySessionToken } = require("../db/database");
 const { saveImage } = require('./institutionServices.js');
 
 async function createUser(userData) {
@@ -21,6 +21,16 @@ async function getUserData(userId) {
 async function getBankAccounts(userId) {
   const accounts = await getUserAccounts(userId);
   return accounts;
+}
+
+async function validateSessionToken(sessionToken) {
+  const user = await db.getUserBySessionToken(sessionToken);
+  return user != null;
+}
+
+async function invalidateSessionToken(sessionToken) {
+  console.log("called invalidateSessionToken on server");
+  await invalidateDbSessionToken(sessionToken);
 }
 
 async function getAuth(itemId, accessToken, plaidClient) {
@@ -81,4 +91,4 @@ async function createItemRecord(itemData) {
   return item;
 }
 
-module.exports = { getUserData, getBankAccounts, createUser, updateUser, createItemRecord, getAuth };
+module.exports = { getUserData, getBankAccounts, createUser, updateUser, createItemRecord, getAuth, validateSessionToken, invalidateSessionToken };

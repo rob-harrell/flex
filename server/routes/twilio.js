@@ -49,8 +49,11 @@ router.post('/verifyOTP', async (req, res) => {
                 // Check if user exists in the database
                 const user = await userServices.getUserData(phoneNumber);
                 if (user) {
-                    // If user exists, return isExistingUser = true, the user ID, and the session token
-                    res.status(200).send({ message: 'Verification code approved', isExistingUser: true, userId: user._id, sessionToken: sessionToken });
+                    // If user exists, update the user's session token in the database
+                    const updatedUser = await userServices.updateUser({ ...user, sessionToken: sessionToken });
+
+                    // Return isExistingUser = true, the user ID, and the session token
+                    res.status(200).send({ message: 'Verification code approved', isExistingUser: true, userId: updatedUser._id, sessionToken: sessionToken });
                 } else {
                     // If user does not exist, create a new user and return isExistingUser = false, the user ID, and the session token
                     const newUser = await userServices.createUser(phoneNumber, sessionToken);

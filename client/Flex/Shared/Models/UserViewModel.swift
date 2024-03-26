@@ -62,7 +62,7 @@ class UserViewModel: ObservableObject {
             case .success(let data):
                 print("Verification code verified successfully")
                 // Save session token to keychain
-                let keychain = Keychain(service: "com.yourapp.identifier")
+                let keychain = Keychain(service: "robharrell.Flex")
                 keychain["sessionToken"] = data.sessionToken
                 // Save user id to UserDefaults
                 UserDefaults.standard.set(data.userId, forKey: "currentUserId")
@@ -102,7 +102,7 @@ class UserViewModel: ObservableObject {
     // MARK: - Server
     func fetchUserInfoFromServer(userId: Int64) {
         // Get session token from keychain
-        let keychain = Keychain(service: "com.yourapp.identifier")
+        let keychain = Keychain(service: "robharrell.Flex")
         guard let sessionToken = keychain["sessionToken"] else {
             print("Session token not found in keychain")
             return
@@ -179,6 +179,29 @@ class UserViewModel: ObservableObject {
         }
     }
 
+    func invalidateSessionToken(completion: @escaping (Bool) -> Void) {
+        // Get session token from keychain
+        let keychain = Keychain(service: "robharrell.Flex")
+        guard let sessionToken = keychain["sessionToken"] else {
+            print("Session token not found in keychain")
+            return
+        }
+        ServerCommunicator.shared.callMyServer(
+            path: "/user/invalidate_session_token",
+            httpMethod: .post,
+            params: ["sessionToken": sessionToken]
+        ) { (result: Result<ServerCommunicator.DummyDecodable, ServerCommunicator.Error>) in
+            switch result {
+            case .success:
+                print("Session token invalidated successfully")
+                completion(true)
+            case .failure(let error):
+                print("Failed to invalidate session token: \(error)")
+                completion(false)
+            }
+        }
+    }
+
     // MARK: - Core Data
     func fetchUserFromCoreData(userId: Int64) {
         let context = CoreDataStack.shared.persistentContainer.viewContext
@@ -243,7 +266,18 @@ class UserViewModel: ObservableObject {
     func signOutUser() {
         // Clear session token from keychain
         let keychain = Keychain(service: "robharrell.Flex")
-        try? keychain.remove("sessionToken")
+        if let sessionToken = keychain["sessionToken"] {
+            // Invalidate the session token on the server
+            invalidateSessionToken { success in
+                if success {
+                    print("Session token invalidated successfully on the server")
+                } else {
+                    print("Failed to invalidate session token on the server")
+                }
+            }
+            // Remove session token from keychain
+            try? keychain.remove("sessionToken")
+        }
         
         // Remove user id from UserDefaults
         UserDefaults.standard.removeObject(forKey: "currentUserId")
