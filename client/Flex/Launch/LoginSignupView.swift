@@ -14,26 +14,70 @@ struct LoginSignupView: View {
 
     var body: some View {
         VStack {
-            Text("Welcome to Flex")
-                .font(.largeTitle)
-                .padding()
+            Spacer()
+            
+            //CTA
+            Text("Sign in or create a new account")
+                .font(.title)
+                .fontWeight(.semibold)
+                .padding(.bottom, 32)
 
-            Text("Please enter your phone number to get started")
-                .font(.headline)
-                .padding()
+            // Phone number input
+            HStack {
+                Image(systemName: "flag.us.fill") // Replace with your flag icon
+                    .resizable()
+                    .frame(width: 24, height: 24)
+                    .padding(.leading, 12)
+                
+                TextField("Phone number", text: $phoneNumber)
+                    .keyboardType(.phonePad)
+                    .padding()
+                    .background(Color(UIColor.secondarySystemBackground)) // Use UIColor.systemGroupedBackground for grouped style
+                    .cornerRadius(8)
+            }
+            .frame(height: 56)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color.gray, lineWidth: 1)
+            )
+            .padding(.horizontal)
 
-            TextField("Phone Number", text: $phoneNumber)
-                .keyboardType(.phonePad)
-                .padding()
-
+            Text("We'll send a text to confirm your number. Standard messaging rates may apply.")
+                .font(.footnote)
+                .foregroundColor(.gray)
+                .padding(.top, 4)
+                .padding(.bottom, 32)
+            
+            // Continue button
             Button(action: {
                 userViewModel.triggerTwilioOTP(phone: phoneNumber)
+                userViewModel.phone = phoneNumber
                 self.showOTPView = true
             }) {
                 Text("Continue")
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.black) // Update to match your app's theme color
+                    .cornerRadius(8)
             }
-            .padding()
+            .padding(.horizontal)
+            
+            HStack {
+                Text("By entering here I agree to all the language in Flex's")
+                    .font(.footnote)
+                    .foregroundColor(.gray)
+                Button("terms of service") {
+                    // Handle terms of service action
+                }
+                .font(.footnote)
+                .foregroundColor(.blue)
+            }
+            .padding(.bottom, 40)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(UIColor.systemGroupedBackground)) // Light gray background
+        .edgesIgnoringSafeArea(.all)
     }
 }
 

@@ -26,7 +26,6 @@ struct UserInfoResponse: Codable {
     let monthlyIncome: Double
     let monthlyFixedSpend: Double
     let birthDate: String
-    let sessionToken: String
     
     enum CodingKeys: String, CodingKey {
         case id, phone
@@ -35,7 +34,6 @@ struct UserInfoResponse: Codable {
         case birthDate = "birth_date"
         case firstName = "firstname"
         case lastName = "lastname"
-        case sessionToken = "session_token"
     }
 }
 

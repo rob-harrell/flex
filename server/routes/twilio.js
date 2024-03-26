@@ -1,6 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const twilio = require('twilio');
+const userServices = require('../services/userServices');
+const uuid = require('uuid');
+
 require('dotenv').config();
 
 // Load the environment variables
@@ -30,16 +33,33 @@ router.post('/sendOTP', (req, res) => {
         });
 });
 
-router.post('/verifyOTP', (req, res) => {
+
+router.post('/verifyOTP', async (req, res) => {
     const phoneNumber = req.body.phoneNumber; // Get the phone number from the request body
     const code = req.body.code; // Get the verification code from the request body
 
     client.verify.v2.services(serviceSid)
         .verificationChecks
         .create({to: phoneNumber, code: code})
-        .then(verification_check => {
+        .then(async verification_check => {
             if (verification_check.status === 'approved') {
-                res.status(200).send({message: 'Verification code approved'});
+                // Generate a new session token
+                const sessionToken = uuid.v4();
+
+                // Check if user exists in the database
+                const user = await userServices.getUserData(phoneNumber);
+                if (user) {
+                    // If user exists, return isExistingUser = true, the user ID, and the session token
+                    res.status(200).send({ message: 'Verification code approved', isExistingUser: true, userId: user._id, sessionToken: sessionToken });
+                } else {
+                    // If user does not exist, create a new user and return isExistingUser = false, the user ID, and the session token
+                    const newUser = await userServices.createUser(phoneNumber, sessionToken);
+                    if (newUser) {
+                        res.status(200).send({ message: 'Verification code approved', isExistingUser: false, userId: newUser._id, sessionToken: sessionToken });
+                    } else {
+                        res.status(500).send({ error: 'Failed to create user' });
+                    }
+                }
             } else {
                 res.status(400).send({error: 'Invalid verification code'});
             }

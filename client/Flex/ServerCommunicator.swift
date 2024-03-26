@@ -51,6 +51,7 @@ class ServerCommunicator {
         path: String,
         httpMethod: HTTPMethod,
         params: [String: Any]? = nil,
+        sessionToken: String? = nil,
         completion: @escaping (Result<T, ServerCommunicator.Error>) -> Void) {
 
             let path = path.hasPrefix("/") ? String(path.dropFirst()) : path
@@ -65,6 +66,10 @@ class ServerCommunicator {
             request.httpMethod = httpMethod.rawValue
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
             request.setValue("application/json", forHTTPHeaderField: "Accept")
+            
+            if let sessionToken = sessionToken {
+                request.setValue("Bearer \(sessionToken)", forHTTPHeaderField: "Authorization")
+            }
 
             switch httpMethod {
             case .post where params != nil:

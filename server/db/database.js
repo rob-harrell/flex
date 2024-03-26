@@ -9,13 +9,12 @@ pgTypes.setTypeParser(pgTypes.builtins.TIMESTAMP, str => new Date(str));
 
 const db = pgp('postgres://rob@localhost:5432/flex_db');
 
-async function createUser(userData) {
-  const birthDate = new Date(userData.birthDate);
+async function createUser(phoneNumber, sessionToken) {
   const user = await db.one(`
-    INSERT INTO users(firstname, lastname, phone, monthly_income, monthly_fixed_spend, birth_date, session_token)
-    VALUES($1, $2, $3, $4, $5, $6, $7)
-    RETURNING *
-  `, [userData.firstName, userData.lastName, userData.phone, userData.monthlyIncome, userData.monthlyFixedSpend, birthDate, userData.sessionToken]);
+      INSERT INTO users(phone, session_token)
+      VALUES($1, $2)
+      RETURNING *
+  `, [phoneNumber, sessionToken]);
   return user;
 }
 
