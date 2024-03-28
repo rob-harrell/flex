@@ -13,8 +13,7 @@ struct LaunchView: View {
     @EnvironmentObject var budgetViewModel: BudgetViewModel
     @State private var isShowingOTPView: Bool = false
     @State private var isShowingUserDetailsView: Bool = false
-    @State private var isShowingInitialAccountConnectionView: Bool = false
-    @State private var isShowingAdditionalAccountConnectionView: Bool = false
+    @State private var isShowingAccountConnectionView: Bool = false
     @State private var isShowingMainTabView: Bool = false
 
     @ViewBuilder
@@ -29,13 +28,10 @@ struct LaunchView: View {
                 OTPView(showUserDetailsView: $isShowingUserDetailsView, showMainTabView: $isShowingMainTabView)
                     .environmentObject(userViewModel)
             } else if isShowingUserDetailsView {
-                UserDetailsView(showInitialAccountConnectionView: $isShowingInitialAccountConnectionView)
+                UserDetailsView(showAccountConnectionView: $isShowingAccountConnectionView)
                     .environmentObject(userViewModel)
-            } else if isShowingInitialAccountConnectionView {
-                InitialAccountConnectionView(showAdditionalAccountConnectionView: $isShowingAdditionalAccountConnectionView)
-                    .environmentObject(userViewModel)
-            } else if isShowingAdditionalAccountConnectionView {
-                AdditionalAccountConnectionView(showMainTabView: $isShowingMainTabView)
+            } else if isShowingAccountConnectionView {
+                AccountConnectionView(showMainTabView: $isShowingMainTabView)
                     .environmentObject(userViewModel)
             } else {
                 LoginSignupView(showOTPView: $isShowingOTPView)

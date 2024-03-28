@@ -31,6 +31,8 @@ class UserViewModel: ObservableObject {
         var bankName: String
         var isActive: Bool
         var logoPath: String
+        var type: String
+        var subType: String
     }
 
     // MARK: - Twilio

@@ -14,14 +14,24 @@ struct OTPView: View {
     @Binding var showUserDetailsView: Bool
     @Binding var showMainTabView: Bool
     
-    var tempPhone = "7138062459"
-
     var body: some View {
-        VStack {
-            Text("Enter the 4-digit code sent to \(tempPhone)")
-                .font(.title3)
+        VStack (alignment: .leading) {
+            Image(.phoneIcon)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 60, height: 60)
+                .padding(.horizontal)
+                .padding(.bottom, 4)
+                .padding(.top, 40)
+            
+            Text("Enter the 4-digit code sent")
+                .font(.title)
                 .bold()
-                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+            
+            Text("to \(userViewModel.phone)")
+                .font(.title)
+                .bold()
                 .padding(.horizontal)
             
             HStack {
@@ -29,35 +39,34 @@ struct OTPView: View {
                     OTPDigitView(digit: otp.count > index ? String(otp[otp.index(otp.startIndex, offsetBy: index)]) : "")
                 }
             }
-            
-            Button(action: {
-                // Resend code action
-            }) {
-                Text("Didn't receive a code? Resend code")
-                    .font(.body)
-                    .foregroundColor(.blue)
-            }
-
-            Button(action: {
-                userViewModel.verifyTwilioOTP(code: otp, forPhone: userViewModel.phone) { isUserExisting in
-                    self.isExistingUser = isUserExisting
-                    if isUserExisting {
-                        self.showMainTabView = true
-                    } else {
-                        self.showUserDetailsView = true
+            .padding(.horizontal)
+            .onChange(of: otp) { oldValue, newValue in
+                if newValue.count == 4 {
+                    userViewModel.verifyTwilioOTP(code: newValue, forPhone: userViewModel.phone) { isExistingUser in
+                        self.isExistingUser = isExistingUser
+                        // Add your logic here for what to do after the OTP is verified
                     }
                 }
-            }) {
-                Text("Verify OTP")
-                    .font(.headline)
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(otp.count == 4 ? Color.blue : Color.gray)
-                    .cornerRadius(8)
-                    .disabled(otp.count < 4)
             }
-            .padding(.horizontal, 24)
+            
+            HStack {
+                Text("Didn't receive a code?")
+                    .font(.body)
+                    .foregroundColor(.gray)
+                
+                Button(action: {
+                    userViewModel.triggerTwilioOTP(phone: userViewModel.phone)
+                }) {
+                    Text("Resend code")
+                        .font(.body)
+                        .foregroundColor(.black)
+                        .underline()
+                }
+            }
+            .padding(.horizontal)
+            .padding(.top, 240)
+
+            Spacer()
         }
     }
 }
@@ -66,8 +75,9 @@ struct OTPDigitView: View {
     var digit: String
     
     var body: some View {
-        Text(digit)
+        Text(digit.isEmpty ? "-" : digit)
             .font(.title)
+            .foregroundColor(digit.isEmpty ? .gray : .black)
             .frame(width: 64, height: 64)
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
@@ -79,4 +89,5 @@ struct OTPDigitView: View {
 
 #Preview {
     OTPView(showUserDetailsView: .constant(false), showMainTabView: .constant(false))
+        .environmentObject(UserViewModel())
 }

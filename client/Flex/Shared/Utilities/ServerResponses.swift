@@ -39,14 +39,28 @@ struct UserInfoResponse: Codable {
 
 struct BankConnection: Codable, Identifiable {
     let id: Int64
-    let account_id: String
-    let item_id: String
+    let accountId: String
+    let itemId: String
     let name: String
-    let masked_account_number: String
-    let friendly_acount_name: String
-    let bank_name: String
-    let is_active: Bool
-    let logo_path: String
+    let maskedAccountNumber: String
+    let friendlyAccountName: String
+    let bankName: String
+    let isActive: Bool
+    let logoPath: String
+    let type: String
+    let subType: String
+
+    enum CodingKeys: String, CodingKey {
+        case id, name, type
+        case accountId = "account_id"
+        case itemId = "item_id"
+        case maskedAccountNumber = "masked_account_number"
+        case friendlyAccountName = "friendly_account_name"
+        case bankName = "bank_name"
+        case isActive = "is_active"
+        case logoPath = "logo_path"
+        case subType = "sub_type"
+    }
 }
 
  struct LinkTokenCreateResponse: Codable {
