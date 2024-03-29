@@ -12,6 +12,7 @@ class AppViewModel: ObservableObject {
     @Published var sharedViewModel: DateViewModel
     @Published var userViewModel = UserViewModel()
     @Published var budgetViewModel: BudgetViewModel
+    @Published var plaidLinkViewModel = PlaidLinkViewModel()
 
     init() {
         let sharedViewModel = DateViewModel()
@@ -36,6 +37,7 @@ struct FlexApp: App {
         .environmentObject(appViewModel.userViewModel)
         .environmentObject(appViewModel.sharedViewModel)
         .environmentObject(appViewModel.budgetViewModel)
+        .environmentObject(appViewModel.plaidLinkViewModel)
         .environment(\.managedObjectContext, coreDataStack.persistentContainer.viewContext)
     }
 }

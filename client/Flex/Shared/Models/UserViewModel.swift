@@ -37,24 +37,25 @@ class UserViewModel: ObservableObject {
 
     // MARK: - Twilio
     func triggerTwilioOTP(phone: String) {
-        // Implement the logic for sending a verification code via your server
         ServerCommunicator.shared.callMyServer(
             path: "/twilio/sendOTP",
             httpMethod: .post,
             params: ["phoneNumber": phone]
-        ) { (result: Result<ServerCommunicator.DummyDecodable, ServerCommunicator.Error>) in
+        ) { (result: Result<OTPResponse, ServerCommunicator.Error>) in
             switch result {
-            case .success:
-                print("Verification code sent successfully")
-                // You can now ask the user to enter the verification code
+            case .success(let response):
+                if let message = response.message {
+                    print("OTP sent successfully: \(message)")
+                } else if let error = response.error {
+                    print("Failed to send OTP: \(error)")
+                }
             case .failure(let error):
-                print("Failed to send verification code: \(error)")
+                print("Failed to send OTP: \(error)")
             }
         }
     }
 
-    func verifyTwilioOTP(code: String, forPhone phone: String, completion: @escaping (Bool) -> Void) {
-        // Implement the logic for verifying the code via your server
+    func verifyTwilioOTP(code: String, forPhone phone: String, completion: @escaping (Result<VerificationResponse, ServerCommunicator.Error>) -> Void) {
         ServerCommunicator.shared.callMyServer(
             path: "/twilio/verifyOTP",
             httpMethod: .post,
@@ -68,8 +69,7 @@ class UserViewModel: ObservableObject {
                 keychain["sessionToken"] = data.sessionToken
                 // Save user id to UserDefaults
                 UserDefaults.standard.set(data.userId, forKey: "currentUserId")
-                // Update the context with the phone number and user id
-                self.phone = phone
+                // Update the context the user id
                 self.id = data.userId
                 // Fetch the user data from Core Data or create a new user if not found
                 let context = CoreDataStack.shared.persistentContainer.viewContext
@@ -92,11 +92,12 @@ class UserViewModel: ObservableObject {
                 } catch {
                     print("Failed to fetch user from Core Data: \(error)")
                 }
-                // Call the completion handler with the isExistingUser value
-                completion(data.isExistingUser)
+                // Call the completion handler with the success result
+                completion(.success(data))
             case .failure(let error):
                 print("Failed to verify code: \(error)")
-                completion(false)
+                // Call the completion handler with the failure result
+                completion(.failure(error))
             }
         }
     }
@@ -268,7 +269,7 @@ class UserViewModel: ObservableObject {
     func signOutUser() {
         // Clear session token from keychain
         let keychain = Keychain(service: "robharrell.Flex")
-        if let sessionToken = keychain["sessionToken"] {
+        if keychain["sessionToken"] != nil {
             // Invalidate the session token on the server
             invalidateSessionToken { success in
                 if success {

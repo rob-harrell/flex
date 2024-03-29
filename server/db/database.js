@@ -1,5 +1,6 @@
 const pgp = require('pg-promise')();
 const pgTypes = require('pg').types;
+const { queryResultErrorCode } = pgp.errors;
 const cs = new pgp.helpers.ColumnSet(['?id', 'firstname', 'lastname', 'phone', 'monthly_income', 'monthly_fixed_spend', 'birth_date', 'session_token'], {table: 'users'});
 
 // Override default type parsing for integers and floats
@@ -31,6 +32,21 @@ async function getUserRecord(userId) {
   return user;
 }
 
+async function getUserRecordByPhone(phoneNumber) {
+  try {
+    const user = await db.one('SELECT * FROM users WHERE phone = $1', [phoneNumber]);
+    return user;
+  } catch (error) {
+    if (error.code === queryResultErrorCode.noData) {
+      // No user with the provided phone number exists in the database
+      return null;
+    } else {
+      // An actual error occurred
+      throw error;
+    }
+  }
+}
+
 async function getUserAccounts(userId) {
     const accounts = await db.any(`
       SELECT 
@@ -38,6 +54,8 @@ async function getUserAccounts(userId) {
         accounts.name, 
         accounts.masked_account_number, 
         accounts.friendly_account_name,
+        accounts.type,
+        accounts.sub_type,
         institutions.institution_name as bank_name, 
         institutions.logo_path,
         items.is_active,
@@ -109,15 +127,15 @@ async function updateItem(itemId, data) {
     return item;
 }
 
-  async function createAccount(accountData) {
-    const { item_id, name, masked_account_number, plaid_account_id } = accountData;
-    const account = await db.one(
-      `INSERT INTO accounts(item_id, name, masked_account_number, plaid_account_id)
-       VALUES($1, $2, $3, $4)
-       RETURNING *`,
-      [item_id, name, masked_account_number, plaid_account_id]
-    );  
-    return account;
-  }
+async function createAccount(accountData) {
+  const { item_id, name, masked_account_number, plaid_account_id, type, sub_type } = accountData;
+  const account = await db.one(
+    `INSERT INTO accounts(item_id, name, masked_account_number, plaid_account_id, type, sub_type)
+     VALUES($1, $2, $3, $4, $5, $6)
+     RETURNING *`,
+    [item_id, name, masked_account_number, plaid_account_id, type, sub_type]
+  );  
+  return account;
+}
   
-  module.exports = { getUserRecord, getUserAccounts, createItem, updateUser, createUser, updateItem, createAccount, getInstitutionByPlaidId, createInstitution, invalidateSessionToken, getUserBySessionToken };
+module.exports = { getUserRecord, getUserRecordByPhone, getUserAccounts, createItem, updateUser, createUser, updateItem, createAccount, getInstitutionByPlaidId, createInstitution, invalidateSessionToken, getUserBySessionToken };

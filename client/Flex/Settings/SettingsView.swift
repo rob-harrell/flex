@@ -10,7 +10,7 @@ import LinkKit
 
 struct SettingsView: View {
     @EnvironmentObject var userViewModel: UserViewModel
-    @StateObject private var plaidLinkViewModel = PlaidLinkViewModel()
+    @EnvironmentObject var plaidLinkViewModel: PlaidLinkViewModel
     @State private var isPresentingLink = false
     @State private var linkController: LinkController?
     @State private var birthDate = Date()
@@ -87,8 +87,7 @@ struct SettingsView: View {
                     }
                     Button(action: {
                         print("connection button tapped")
-                        let userId = userViewModel.id
-                        plaidLinkViewModel.fetchLinkToken (userId: userId) {
+                        plaidLinkViewModel.fetchLinkToken (userId: userViewModel.id) {
                                 isPresentingLink = true
                         }
                     }) {
@@ -168,4 +167,5 @@ struct SettingsView: View {
 #Preview {
     SettingsView()
         .environmentObject(UserViewModel())
+        .environmentObject(PlaidLinkViewModel())
 }

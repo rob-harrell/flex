@@ -9,11 +9,14 @@ import SwiftUI
 
 struct OTPView: View {
     @EnvironmentObject var userViewModel: UserViewModel
-    @State private var otp: String = ""
-    @State private var isExistingUser: Bool = false
+    @State private var otp: [String] = Array(repeating: "", count: 4)
     @Binding var showUserDetailsView: Bool
     @Binding var showMainTabView: Bool
-    
+    @FocusState private var focus0: Bool
+    @FocusState private var focus1: Bool
+    @FocusState private var focus2: Bool
+    @FocusState private var focus3: Bool
+
     var body: some View {
         VStack (alignment: .leading) {
             Image(.phoneIcon)
@@ -35,19 +38,64 @@ struct OTPView: View {
                 .padding(.horizontal)
             
             HStack {
-                ForEach(0..<4, id: \.self) { index in
-                    OTPDigitView(digit: otp.count > index ? String(otp[otp.index(otp.startIndex, offsetBy: index)]) : "")
+                ForEach(0..<4) { index in
+                    TextField("-", text: otpBinding(for: index))
+                        .keyboardType(.numberPad)
+                        .frame(width: 64, height: 64)
+                        .multilineTextAlignment(.center)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8)
+                                .stroke(Color.gray, lineWidth: 1)
+                        )
+                        .padding(4)
+                        .focused(focusBinding(for: index))
+                        .onChange(of: otp[index]) { 
+                            let newValue = otp[index]
+                            if newValue.count == 1 && index < 3 {
+                                DispatchQueue.main.async {
+                                    switch index {
+                                    case 0: focus1 = true
+                                    case 1: focus2 = true
+                                    case 2: focus3 = true
+                                    default: break
+                                    }
+                                }
+                            } else if newValue.isEmpty && index > 0 {
+                                DispatchQueue.main.async {
+                                    switch index {
+                                    case 1: focus0 = true
+                                    case 2: focus1 = true
+                                    case 3: focus2 = true
+                                    default: break
+                                    }
+                                }
+                            }
+                            // Check if all fields are filled
+                            if otp.allSatisfy({ !$0.isEmpty }) {
+                                let enteredOTP = otp.joined()
+                                userViewModel.verifyTwilioOTP(code: enteredOTP, forPhone: "+1\(userViewModel.phone)") { result in
+                                    switch result {
+                                    case .success(let verificationResponse):
+                                        if verificationResponse.isExistingUser {
+                                            // If the user exists, route to the MainTabView
+                                            showMainTabView = true
+                                        } else {
+                                            // If the user is new, route to the UserDetailsView
+                                            showUserDetailsView = true
+                                        }
+                                    case .failure(let error):
+                                        // OTP is incorrect or an error occurred, show an error message
+                                        print("Failed to verify OTP: \(error)")
+                                        // Reset the OTP fields
+                                        otp = Array(repeating: "", count: 4)
+                                    }
+                                }
+                            }
+                        }
                 }
             }
             .padding(.horizontal)
-            .onChange(of: otp) { oldValue, newValue in
-                if newValue.count == 4 {
-                    userViewModel.verifyTwilioOTP(code: newValue, forPhone: userViewModel.phone) { isExistingUser in
-                        self.isExistingUser = isExistingUser
-                        // Add your logic here for what to do after the OTP is verified
-                    }
-                }
-            }
+            .padding(.bottom, 80)
             
             HStack {
                 Text("Didn't receive a code?")
@@ -55,7 +103,7 @@ struct OTPView: View {
                     .foregroundColor(.gray)
                 
                 Button(action: {
-                    userViewModel.triggerTwilioOTP(phone: userViewModel.phone)
+                    userViewModel.triggerTwilioOTP(phone: "+1\(userViewModel.phone)")
                 }) {
                     Text("Resend code")
                         .font(.body)
@@ -64,26 +112,31 @@ struct OTPView: View {
                 }
             }
             .padding(.horizontal)
-            .padding(.top, 240)
-
+            
             Spacer()
+            
         }
     }
-}
 
-struct OTPDigitView: View {
-    var digit: String
-    
-    var body: some View {
-        Text(digit.isEmpty ? "-" : digit)
-            .font(.title)
-            .foregroundColor(digit.isEmpty ? .gray : .black)
-            .frame(width: 64, height: 64)
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color.gray, lineWidth: 1)
-            )
-            .padding(4)
+    private func otpBinding(for index: Int) -> Binding<String> {
+        Binding(
+            get: { self.otp[index] },
+            set: { newValue in
+                if newValue.count <= 1 {
+                    self.otp[index] = newValue
+                }
+            }
+        )
+    }
+
+    private func focusBinding(for index: Int) -> FocusState<Bool>.Binding {
+        switch index {
+        case 0: return $focus0
+        case 1: return $focus1
+        case 2: return $focus2
+        case 3: return $focus3
+        default: return $focus0
+        }
     }
 }
 

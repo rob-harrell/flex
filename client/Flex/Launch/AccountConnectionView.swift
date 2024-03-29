@@ -6,9 +6,13 @@
 //
 
 import SwiftUI
+import LinkKit
 
 struct AccountConnectionView: View {
     @EnvironmentObject var userViewModel: UserViewModel
+    @EnvironmentObject var plaidLinkViewModel: PlaidLinkViewModel
+    @State private var isPresentingLink = false
+    @State private var linkController: LinkController?
     @Binding var showMainTabView: Bool
     
     var body: some View {
@@ -86,7 +90,9 @@ struct AccountConnectionView: View {
             Spacer()
             
             Button(action: {
-                //do action
+                plaidLinkViewModel.fetchLinkToken (userId: userViewModel.id) {
+                        isPresentingLink = true
+                }
             }) {
                 Text("+ Connect Account")
                     .foregroundColor(.white)
@@ -95,9 +101,37 @@ struct AccountConnectionView: View {
                     .background(Color.black)
                     .cornerRadius(8)
             }
+            .sheet(
+                isPresented: $isPresentingLink,
+                onDismiss: {
+                    isPresentingLink = false
+                    userViewModel.fetchBankConnectionsFromServer()
+                },
+                content: {
+                    let createResult = createHandler()
+                    switch createResult {
+                    case .failure(let createError):
+                        Text("Link Creation Error: \(createError.localizedDescription)")
+                            .font(.title2)
+                    case .success(let handler):
+                        LinkController(handler: handler)
+                    }
+                }
+            )
             .padding()
         
         }
+    }
+    
+    private func createHandler() -> Result<Handler, Error> {
+        guard let linkToken = plaidLinkViewModel.linkToken else {
+            let error = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey : "Link token is not set"])
+            return .failure(error)
+        }
+        let configuration = plaidLinkViewModel.createLinkConfiguration(linkToken: linkToken, userId: userViewModel.id)
+
+        // This only results in an error if the token is malformed.
+        return Plaid.create(configuration).mapError { $0 as Error }
     }
 }
 

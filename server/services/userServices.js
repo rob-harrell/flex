@@ -1,9 +1,10 @@
-const { createUser: createDbUser, updateUser: updateDbUser, getUserRecord, getUserAccounts, createItem, updateItem, getInstitutionByPlaidId, createInstitution, createAccount, invalidateSessionToken: invalidateDbSessionToken, getUserBySessionToken } = require("../db/database");
+const { createUser: createDbUser, updateUser: updateDbUser, getUserRecord, getUserRecordByPhone, getUserAccounts, createItem, updateItem, getInstitutionByPlaidId, createInstitution, createAccount, invalidateSessionToken: invalidateDbSessionToken, getUserBySessionToken } = require("../db/database");
 const { saveImage } = require('./institutionServices.js');
 
-async function createUser(userData) {
-  console.log("called createUser on server");
-  const user = await createDbUser(userData);
+async function createUser(phoneNumber, sessionToken) {
+  console.log("called createUser on server with phone number:", phoneNumber, "and session token:", sessionToken);
+  const user = await createDbUser(phoneNumber, sessionToken);
+  console.log("created user:", user);
   return user;
 }
 
@@ -17,6 +18,15 @@ async function getUserData(userId) {
   const user = await getUserRecord(userId);
   return user;
 }
+
+async function getUserByPhone(phoneNumber) {
+  const user = await getUserRecordByPhone(phoneNumber);
+  if (!user) {
+    // No user with the provided phone number exists in the database
+    return null;
+  }
+  return user;
+};
 
 async function getBankAccounts(userId) {
   const accounts = await getUserAccounts(userId);
@@ -77,7 +87,8 @@ async function getAuth(itemId, accessToken, plaidClient) {
       name: account.name,
       masked_account_number: account.mask, // replace 'account.masked' with the correct property from Plaid's response
       plaid_account_id: account.account_id,
-      // Add other account fields as needed
+      type: account.type,
+      sub_type: account.subtype
     };
     await createAccount(accountData);
   }
@@ -91,4 +102,4 @@ async function createItemRecord(itemData) {
   return item;
 }
 
-module.exports = { getUserData, getBankAccounts, createUser, updateUser, createItemRecord, getAuth, validateSessionToken, invalidateSessionToken };
+module.exports = { getUserData, getUserByPhone, getBankAccounts, createUser, updateUser, createItemRecord, getAuth, validateSessionToken, invalidateSessionToken };

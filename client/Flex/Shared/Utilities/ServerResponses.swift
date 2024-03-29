@@ -7,9 +7,9 @@
 
 import Foundation
 
-enum UserConnectionStatus: String, Codable {
-    case connected
-    case disconnected
+struct OTPResponse: Decodable {
+    let message: String?
+    let error: String?
 }
 
 struct VerificationResponse: Decodable {

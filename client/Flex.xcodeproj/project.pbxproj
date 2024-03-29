@@ -220,9 +220,7 @@
 		D4005AB82B671B8600652FCA /* Settings */ = {
 			isa = PBXGroup;
 			children = (
-				D4129F1F2B8EBF0600BB2B7D /* LinkController.swift */,
 				D4005AB62B67162800652FCA /* SettingsView.swift */,
-				D4129F172B8C20F300BB2B7D /* PlaidLinkViewModel.swift */,
 			);
 			path = Settings;
 			sourceTree = "<group>";
@@ -248,6 +246,7 @@
 		D4005AC32B67243A00652FCA /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				D4129F172B8C20F300BB2B7D /* PlaidLinkViewModel.swift */,
 				D49D59CE2B7815E4001C0D0A /* DateViewModel.swift */,
 				D48EF48D2B95759000117E8B /* UserViewModel.swift */,
 			);
@@ -259,6 +258,7 @@
 			children = (
 				D4129F192B8C21B300BB2B7D /* ServerCommunicator.swift */,
 				D4129F1B2B8C2CE300BB2B7D /* ServerResponses.swift */,
+				D4129F1F2B8EBF0600BB2B7D /* LinkController.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";

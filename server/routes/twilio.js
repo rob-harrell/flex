@@ -42,23 +42,17 @@ router.post('/verifyOTP', async (req, res) => {
         .verificationChecks
         .create({to: phoneNumber, code: code})
         .then(async verification_check => {
+            console.log('OTP status:', verification_check.status); // Add this line
             if (verification_check.status === 'approved') {
-                // Generate a new session token
                 const sessionToken = uuid.v4();
-
-                // Check if user exists in the database
-                const user = await userServices.getUserData(phoneNumber);
+                const user = await userServices.getUserByPhone(phoneNumber);
+                console.log('User:', user); // Add this line
                 if (user) {
-                    // If user exists, update the user's session token in the database
-                    const updatedUser = await userServices.updateUser({ ...user, sessionToken: sessionToken });
-
-                    // Return isExistingUser = true, the user ID, and the session token
-                    res.status(200).send({ message: 'Verification code approved', isExistingUser: true, userId: updatedUser._id, sessionToken: sessionToken });
+                    res.status(200).send({ message: 'Verification code approved', isExistingUser: true, userId: user.id, sessionToken: sessionToken });
                 } else {
-                    // If user does not exist, create a new user and return isExistingUser = false, the user ID, and the session token
                     const newUser = await userServices.createUser(phoneNumber, sessionToken);
                     if (newUser) {
-                        res.status(200).send({ message: 'Verification code approved', isExistingUser: false, userId: newUser._id, sessionToken: sessionToken });
+                        res.status(200).send({ message: 'Verification code approved', isExistingUser: false, userId: newUser.id, sessionToken: sessionToken });
                     } else {
                         res.status(500).send({ error: 'Failed to create user' });
                     }

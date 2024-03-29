@@ -67,7 +67,7 @@ struct LoginSignupView: View {
                     
                     // Continue button
                     Button(action: {
-                        userViewModel.triggerTwilioOTP(phone: phoneNumber)
+                        userViewModel.triggerTwilioOTP(phone: "+1\(phoneNumber)")
                         userViewModel.phone = phoneNumber
                         self.showOTPView = true
                     }) {
@@ -75,7 +75,7 @@ struct LoginSignupView: View {
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(Color.black) // Update to match your app's theme color
+                            .background(Color.black) 
                             .cornerRadius(8)
                     }
                     .padding()
