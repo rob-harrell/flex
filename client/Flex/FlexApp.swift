@@ -28,16 +28,12 @@ struct FlexApp: App {
 
     var body: some Scene {
         WindowGroup {
-            if appViewModel.userViewModel.isSignedIn {
-                MainTabView()
-            } else {
-                LaunchView()
-            }
+            LaunchView()
+                .environmentObject(appViewModel.userViewModel)
+                .environmentObject(appViewModel.sharedViewModel)
+                .environmentObject(appViewModel.budgetViewModel)
+                .environmentObject(appViewModel.plaidLinkViewModel)
+                .environment(\.managedObjectContext, coreDataStack.persistentContainer.viewContext)
         }
-        .environmentObject(appViewModel.userViewModel)
-        .environmentObject(appViewModel.sharedViewModel)
-        .environmentObject(appViewModel.budgetViewModel)
-        .environmentObject(appViewModel.plaidLinkViewModel)
-        .environment(\.managedObjectContext, coreDataStack.persistentContainer.viewContext)
     }
 }

@@ -10,8 +10,6 @@ import SwiftUI
 struct OTPView: View {
     @EnvironmentObject var userViewModel: UserViewModel
     @State private var otp: [String] = Array(repeating: "", count: 4)
-    @Binding var showUserDetailsView: Bool
-    @Binding var showMainTabView: Bool
     @FocusState private var focus0: Bool
     @FocusState private var focus1: Bool
     @FocusState private var focus2: Bool
@@ -75,14 +73,8 @@ struct OTPView: View {
                                 let enteredOTP = otp.joined()
                                 userViewModel.verifyTwilioOTP(code: enteredOTP, forPhone: "+1\(userViewModel.phone)") { result in
                                     switch result {
-                                    case .success(let verificationResponse):
-                                        if verificationResponse.isExistingUser {
-                                            // If the user exists, route to the MainTabView
-                                            showMainTabView = true
-                                        } else {
-                                            // If the user is new, route to the UserDetailsView
-                                            showUserDetailsView = true
-                                        }
+                                    case .success:
+                                        print("successfully verified OTP")
                                     case .failure(let error):
                                         // OTP is incorrect or an error occurred, show an error message
                                         print("Failed to verify OTP: \(error)")
@@ -141,6 +133,6 @@ struct OTPView: View {
 }
 
 #Preview {
-    OTPView(showUserDetailsView: .constant(false), showMainTabView: .constant(false))
+    OTPView()
         .environmentObject(UserViewModel())
 }

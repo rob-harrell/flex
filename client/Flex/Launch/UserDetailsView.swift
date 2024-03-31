@@ -9,8 +9,6 @@ import SwiftUI
 
 struct UserDetailsView: View {
     @EnvironmentObject var userViewModel: UserViewModel
-    @Binding var showAccountConnectionView: Bool
-    
     @State private var firstName: String = ""
     @State private var lastName: String = ""
     @State private var birthday: String = ""
@@ -72,8 +70,8 @@ struct UserDetailsView: View {
                 userViewModel.firstName = firstName
                 userViewModel.lastName = lastName
                 userViewModel.birthDate = birthday
-                userViewModel.updateUser()
-                showAccountConnectionView = true
+                userViewModel.updateUserOnServer()
+                userViewModel.hasEnteredUserDetails = true
             } else {
                 showingAlert = true
             }
@@ -104,6 +102,6 @@ struct UserDetailsView: View {
 }
 
 #Preview {
-    UserDetailsView(showAccountConnectionView: .constant(false))
+    UserDetailsView()
         .environmentObject(UserViewModel())
 }

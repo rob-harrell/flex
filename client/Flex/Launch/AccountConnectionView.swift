@@ -13,7 +13,6 @@ struct AccountConnectionView: View {
     @EnvironmentObject var plaidLinkViewModel: PlaidLinkViewModel
     @State private var isPresentingLink = false
     @State private var linkController: LinkController?
-    @Binding var showMainTabView: Bool
     
     var body: some View {
         VStack (alignment: .leading) {
@@ -105,7 +104,7 @@ struct AccountConnectionView: View {
                 isPresented: $isPresentingLink,
                 onDismiss: {
                     isPresentingLink = false
-                    userViewModel.fetchBankConnectionsFromServer()
+                    userViewModel.fetchBankAccountsFromServer(userId: userViewModel.id)
                 },
                 content: {
                     let createResult = createHandler()
@@ -136,6 +135,6 @@ struct AccountConnectionView: View {
 }
 
 #Preview {
-    AccountConnectionView(showMainTabView: .constant(false))
+    AccountConnectionView()
         .environmentObject(UserViewModel())
 }

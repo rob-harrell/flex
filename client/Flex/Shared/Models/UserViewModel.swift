@@ -18,16 +18,18 @@ class UserViewModel: ObservableObject {
     @Published var monthlyFixedSpend: Double = 0.0
     @Published var birthDate: String = ""
     @Published var sessionToken: String = ""
-    @Published var bankConnections: [BankConnection] = []
+    @Published var bankAccounts: [BankAccount] = []
+    @Published var hasEnteredUserDetails: Bool = false
+    @Published var hasCompletedAccountCreation: Bool = false
     var isSignedIn: Bool {
         UserDefaults.standard.object(forKey: "currentUserId") != nil
     }
 
-    struct BankConnection: Identifiable, Codable {
-        var id: Int
+    struct BankAccount: Identifiable, Codable {
+        var id: Int64
         var name: String
         var maskedAccountNumber: String
-        var friendlAccountName: String?
+        var friendlyAccountName: String?
         var bankName: String
         var isActive: Bool
         var logoPath: String
@@ -77,17 +79,19 @@ class UserViewModel: ObservableObject {
                 fetchRequest.predicate = NSPredicate(format: "id == %d", data.userId)
                 do {
                     let users = try context.fetch(fetchRequest)
-                    if data.isExistingUser {
-                        if users.isEmpty {
+                    if !users.isEmpty{
+                        if data.isExistingUser {
                             // If the user exists on the server but not in Core Data on this device, fetch user's data from server
                             self.fetchUserInfoFromServer(userId: data.userId)
+                            self.fetchBankAccountsFromServer(userId: data.userId)
                         } else {
+                            //if it's an existing user on this device but the user hasn't yet finished signup, show user details or account connection
                             // If user exists in core data, load user data from core
                             self.fetchUserFromCoreData(userId: data.userId)
                         }
                     } else {
-                        // If user is new, create a new user in core
-                        self.createUserInCoreData(id: data.userId, phone: phone )
+                        // If user is entirely new, create a new user in core
+                        self.createUserInCoreData()
                     }
                 } catch {
                     print("Failed to fetch user from Core Data: \(error)")
@@ -110,6 +114,8 @@ class UserViewModel: ObservableObject {
             print("Session token not found in keychain")
             return
         }
+        
+        // Fetch user info
         ServerCommunicator.shared.callMyServer(
             path: "/user/get_user_data",
             httpMethod: .get,
@@ -125,6 +131,18 @@ class UserViewModel: ObservableObject {
                     self.monthlyIncome = data.monthlyIncome
                     self.monthlyFixedSpend = data.monthlyFixedSpend
                     self.birthDate = data.birthDate
+                    
+                    // Check if user has entered details
+                    self.hasEnteredUserDetails = !self.firstName.isEmpty && !self.lastName.isEmpty && !self.birthDate.isEmpty
+                
+                    // If user has entered details, update user in CoreData
+                    // Otherwise, create user in CoreData
+                    if self.hasEnteredUserDetails {
+                        self.createUserInCoreData()
+                        self.updateUserInCoreData()
+                    } else {
+                        self.createUserInCoreData()
+                    }
                 }
             case .failure(let error):
                 print("Failed to fetch user data from server: \(error)")
@@ -132,7 +150,7 @@ class UserViewModel: ObservableObject {
         }
     }
     
-    func updateUser() {
+    func updateUserOnServer() {
         // Get session token from keychain
         let keychain = Keychain(service: "robharrell.Flex")
         guard let sessionToken = keychain["sessionToken"] else {
@@ -158,26 +176,47 @@ class UserViewModel: ObservableObject {
         }
     }
 
-    func fetchBankConnectionsFromServer() {
-        // Get session token from keychain
+    func fetchBankAccountsFromServer(userId: Int64) {
+        // Get session token from key
         let keychain = Keychain(service: "robharrell.Flex")
         guard let sessionToken = keychain["sessionToken"] else {
             print("Session token not found in keychain")
             return
         }
-        guard id != 0 else {
-            print("User ID is not set - fetchBankConnectionsFromServer")
-            return
-        }
-        let path = "/accounts/get_bank_accounts?userId=\(self.id)"
-        ServerCommunicator.shared.callMyServer(path: path, httpMethod: .get, sessionToken: sessionToken) { (result: Result<[BankConnection], ServerCommunicator.Error>) in
+        
+        // Fetch bank connections
+        ServerCommunicator.shared.callMyServer(
+            path: "/accounts/get_bank_accounts",
+            httpMethod: .get,
+            params: ["userId": userId],
+            sessionToken: sessionToken
+        ) { (result: Result<BankAccountsResponse, ServerCommunicator.Error>) in
             switch result {
-            case .success(let bankConnections):
+            case .success(let data):
                 DispatchQueue.main.async {
-                    self.bankConnections = bankConnections
+                    let checkingAccounts = data.filter { $0.type == "checking" }
+                    let creditAccounts = data.filter { $0.type == "credit" }
+                    self.hasCompletedAccountCreation = !checkingAccounts.isEmpty && !creditAccounts.isEmpty
+                    // Save bank accounts to UserViewModel.bankAccounts only if the user has completed account creation
+                    if self.hasCompletedAccountCreation {
+                        self.bankAccounts = data.map { bankAccountResponse in
+                            // Convert each BankAccountResponse to a UserViewModel.BankAccount
+                            UserViewModel.BankAccount(
+                                id: bankAccountResponse.id,
+                                name: bankAccountResponse.name,
+                                maskedAccountNumber: bankAccountResponse.maskedAccountNumber,
+                                friendlyAccountName: bankAccountResponse.friendlyAccountName,
+                                bankName: bankAccountResponse.bankName,
+                                isActive: bankAccountResponse.isActive,
+                                logoPath: bankAccountResponse.logoPath,
+                                type: bankAccountResponse.type,
+                                subType: bankAccountResponse.subType
+                            )
+                        }
+                    }
                 }
             case .failure(let error):
-                print("Failed to fetch bank connections: \(error)")
+                print("Failed to fetch bank connections from server: \(error)")
             }
         }
     }
@@ -210,6 +249,7 @@ class UserViewModel: ObservableObject {
         let context = CoreDataStack.shared.persistentContainer.viewContext
         let fetchRequest: NSFetchRequest<User> = User.fetchRequest()
         fetchRequest.predicate = NSPredicate(format: "id == %d", userId)
+        fetchRequest.relationshipKeyPathsForPrefetching = ["accounts"] // Prefetch accounts
 
         do {
             let users = try context.fetch(fetchRequest)
@@ -220,6 +260,30 @@ class UserViewModel: ObservableObject {
                     self.monthlyIncome = user.monthlyIncome
                     self.monthlyFixedSpend = user.monthlyFixedSpend
                     self.birthDate = user.birthDate ?? ""
+
+                    // Set hasEnteredUserDetails to true if firstName is not nil and not an empty string
+                    self.hasEnteredUserDetails = !(self.firstName.isEmpty)
+                    
+                    // Fetch accounts and populate bankAccounts array
+                    if let accounts = user.accounts as? Set<Account> {
+                        self.bankAccounts = accounts.map { account in
+                            BankAccount(
+                                id: account.id, 
+                                name: account.name ?? "", 
+                                maskedAccountNumber: account.maskedAccountNumber ?? "", 
+                                friendlyAccountName: account.friendlyAccountName ?? "", 
+                                bankName: account.bankName ?? "", 
+                                isActive: account.isActive, 
+                                logoPath: account.logoPath ?? "", 
+                                type: account.type ?? "", 
+                                subType: account.subType ?? ""
+                            )
+                        }
+                        
+                        let checkingAccounts = self.bankAccounts.filter { $0.subType == "checking" }
+                        let creditAccounts = self.bankAccounts.filter { $0.subType == "credit" }
+                        self.hasCompletedAccountCreation = !checkingAccounts.isEmpty && !creditAccounts.isEmpty
+                    }
                 }
             } else {
                 print("No user found in Core Data with ID \(userId)")
@@ -229,11 +293,11 @@ class UserViewModel: ObservableObject {
         }
     }
 
-    func createUserInCoreData(id: Int64, phone: String) {
+    func createUserInCoreData() {
         let context = CoreDataStack.shared.persistentContainer.viewContext
         let newUser = User(context: context)
-        newUser.id = id
-        newUser.phone = phone
+        newUser.id = self.id
+        newUser.phone = self.phone
 
         do {
             try context.save()
@@ -294,6 +358,6 @@ class UserViewModel: ObservableObject {
         self.monthlyFixedSpend = 0
         self.birthDate = ""
         self.sessionToken = ""
-        self.bankConnections = []
+        self.bankAccounts = []
     }
 }

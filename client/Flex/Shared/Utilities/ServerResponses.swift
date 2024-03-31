@@ -7,6 +7,8 @@
 
 import Foundation
 
+typealias BankAccountsResponse = [BankAccountResponse]
+
 struct OTPResponse: Decodable {
     let message: String?
     let error: String?
@@ -37,7 +39,7 @@ struct UserInfoResponse: Codable {
     }
 }
 
-struct BankConnection: Codable, Identifiable {
+struct BankAccountResponse: Codable, Identifiable {
     let id: Int64
     let accountId: String
     let itemId: String

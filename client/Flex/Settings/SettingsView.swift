@@ -52,7 +52,7 @@ struct SettingsView: View {
                 }
                 
                 Section(header: Text("Bank Connections")) {
-                    ForEach(userViewModel.bankConnections) { connection in
+                    ForEach(userViewModel.bankAccounts) { connection in
                         HStack {
                             AsyncImage(url: URL(string: "http://localhost:8000/assets/institution_logos/\(connection.logoPath)")!) { phase in
                                         switch phase {
@@ -105,7 +105,7 @@ struct SettingsView: View {
                         isPresented: $isPresentingLink,
                         onDismiss: {
                             isPresentingLink = false
-                            userViewModel.fetchBankConnectionsFromServer()
+                            userViewModel.fetchBankAccountsFromServer(userId: userViewModel.id)
                         },
                         content: {
                             let createResult = createHandler()
@@ -146,7 +146,7 @@ struct SettingsView: View {
         .onAppear {
             print("got to th")
             //userViewModel.fetchUserInfoFromCoreData()
-            userViewModel.fetchBankConnectionsFromServer()
+            userViewModel.fetchBankAccountsFromServer(userId: userViewModel.id)
             print("got here")
         }
     }
