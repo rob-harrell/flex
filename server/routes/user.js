@@ -1,16 +1,17 @@
 const express = require('express');
 const router = express.Router();
-const { getUserData, getBankAccounts, createUser, updateUser, invalidateSessionToken } = require("../services/userServices");
+const { getUserData, getBankAccounts, createUser, updateUser, validateSessionToken, invalidateSessionToken } = require("../services/userServices");
 
 // Middleware to check session token
 router.use(async (req, res, next) => {
-  const sessionToken = req.headers['session-token'];
+  const authHeader = req.headers.authorization;
 
-  if (!sessionToken) {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ message: 'No session token provided' });
   }
 
-  // Replace this with your actual session token validation logic
+  const sessionToken = authHeader.replace('Bearer ', '');
+
   const isValid = await validateSessionToken(sessionToken);
   if (!isValid) {
     return res.status(401).json({ message: 'Invalid session token' });
@@ -19,10 +20,11 @@ router.use(async (req, res, next) => {
   next();
 });
 
+//Get user data endpoint
 router.get('/get_user_data', async (req, res, next) => {
   try {
-    const userInfo = await getUserData(req.query.userId);
-    res.json(userInfo);
+    const user = await getUserData(req.body.id);
+    res.json(user);
   } catch (error) {
     next(error);
   }
@@ -32,8 +34,7 @@ router.get('/get_user_data', async (req, res, next) => {
 router.put('/:id', async (req, res, next) => {
   try {
     const user = await updateUser(req.body);
-    const userInfo = await getUserData(user.id);
-    res.status(201).json(userInfo);
+    res.status(201).json(user);
   } catch (error) {
     next(error);
   }

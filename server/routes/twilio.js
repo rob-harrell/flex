@@ -14,7 +14,7 @@ const serviceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
 const client = twilio(accountSid, authToken);
 
 router.post('/sendOTP', (req, res) => {
-    let phoneNumber = req.body.phoneNumber; // Get the phone number from the request body
+    let phoneNumber = req.body.phone; // Get the phone number from the request body
     // Add the country code if it's not already included
     if (!phoneNumber.startsWith('+')) {
         phoneNumber = '+1' + phoneNumber; // Assuming it's a US number
@@ -35,7 +35,7 @@ router.post('/sendOTP', (req, res) => {
 
 
 router.post('/verifyOTP', async (req, res) => {
-    const phoneNumber = req.body.phoneNumber; // Get the phone number from the request body
+    const phoneNumber = req.body.phone; // Get the phone number from the request body
     const code = req.body.code; // Get the verification code from the request body
 
     client.verify.v2.services(serviceSid)

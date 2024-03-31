@@ -72,13 +72,15 @@ class ServerCommunicator {
             }
 
             switch httpMethod {
-            case .post where params != nil:
-                do {
-                    let jsonData = try JSONSerialization.data(withJSONObject: params!, options: [])
-                    request.httpBody = jsonData
-                } catch {
-                    completion(.failure(.encodingError("\(error)")))
-                    return
+            case .post, .put:
+                if let params = params {
+                    do {
+                        let jsonData = try JSONSerialization.data(withJSONObject: params, options: [])
+                        request.httpBody = jsonData
+                    } catch {
+                        completion(.failure(.encodingError("\(error)")))
+                        return
+                    }
                 }
             default:
                 break

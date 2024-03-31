@@ -37,12 +37,18 @@ class UserViewModel: ObservableObject {
         var subType: String
     }
 
+    init() {
+        if let userId = UserDefaults.standard.object(forKey: "currentUserId") as? Int64 {
+            self.id = userId
+        }
+    }
+
     // MARK: - Twilio
     func triggerTwilioOTP(phone: String) {
         ServerCommunicator.shared.callMyServer(
             path: "/twilio/sendOTP",
             httpMethod: .post,
-            params: ["phoneNumber": phone]
+            params: ["phone": phone]
         ) { (result: Result<OTPResponse, ServerCommunicator.Error>) in
             switch result {
             case .success(let response):
@@ -61,7 +67,7 @@ class UserViewModel: ObservableObject {
         ServerCommunicator.shared.callMyServer(
             path: "/twilio/verifyOTP",
             httpMethod: .post,
-            params: ["phoneNumber": phone, "code": code]
+            params: ["phone": phone, "code": code]
         ) { (result: Result<VerificationResponse, ServerCommunicator.Error>) in
             switch result {
             case .success(let data):
@@ -119,7 +125,7 @@ class UserViewModel: ObservableObject {
         ServerCommunicator.shared.callMyServer(
             path: "/user/get_user_data",
             httpMethod: .get,
-            params: ["userId": userId],
+            params: ["id": userId],
             sessionToken: sessionToken
         ) { (result: Result<UserInfoResponse, ServerCommunicator.Error>) in
             switch result {
@@ -157,13 +163,14 @@ class UserViewModel: ObservableObject {
             print("Session token not found in keychain")
             return
         }
-        print("update user called on client")
+        print("update user called on client with session token \(sessionToken)")
         guard self.id != 0 else {
             print("User ID is not set")
             return
         }
         let path = "/user/\(self.id)"
-        let params = ["userId": String(self.id), "firstName": self.firstName, "lastName": self.lastName, "phone": self.phone, "birthDate": self.birthDate, "monthlyIncome": self.monthlyIncome, "monthlyFixedSpend": self.monthlyFixedSpend] as [String : Any]
+        let params = ["id": String(self.id), "firstname": self.firstName, "lastname": self.lastName, "phone": self.phone, "birth_date": self.birthDate, "monthly_income": self.monthlyIncome, "monthly_fixed_spend": self.monthlyFixedSpend] as [String : Any]
+        print("Params: \(params)")
         ServerCommunicator.shared.callMyServer(path: path, httpMethod: .put, params: params, sessionToken: sessionToken) { (result: Result<UserInfoResponse, ServerCommunicator.Error>) in
             switch result {
             case .success:
@@ -188,7 +195,7 @@ class UserViewModel: ObservableObject {
         ServerCommunicator.shared.callMyServer(
             path: "/accounts/get_bank_accounts",
             httpMethod: .get,
-            params: ["userId": userId],
+            params: ["id": userId],
             sessionToken: sessionToken
         ) { (result: Result<BankAccountsResponse, ServerCommunicator.Error>) in
             switch result {
@@ -231,7 +238,7 @@ class UserViewModel: ObservableObject {
         ServerCommunicator.shared.callMyServer(
             path: "/user/invalidate_session_token",
             httpMethod: .post,
-            params: ["sessionToken": sessionToken]
+            params: ["session_token": sessionToken]
         ) { (result: Result<ServerCommunicator.DummyDecodable, ServerCommunicator.Error>) in
             switch result {
             case .success:

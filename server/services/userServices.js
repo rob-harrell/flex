@@ -9,7 +9,6 @@ async function createUser(phoneNumber, sessionToken) {
 }
 
 async function updateUser(userData) {
-  console.log("called updateUser on server");
   const user = await updateDbUser(userData);
   return user;
 }
@@ -34,7 +33,8 @@ async function getBankAccounts(userId) {
 }
 
 async function validateSessionToken(sessionToken) {
-  const user = await db.getUserBySessionToken(sessionToken);
+  console.log("validating session token")
+  const user = await getUserBySessionToken(sessionToken);
   return user != null;
 }
 

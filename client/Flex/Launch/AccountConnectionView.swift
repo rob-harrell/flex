@@ -60,7 +60,9 @@ struct AccountConnectionView: View {
                 }
                 Spacer()
                 Button(action: {
-                    // Perform action for checking accounts button
+                    plaidLinkViewModel.fetchLinkToken (userId: userViewModel.id) {
+                        isPresentingLink = true
+                    }
                 }) {
                     Image(.addButton)
                 }
@@ -79,7 +81,9 @@ struct AccountConnectionView: View {
                 }
                 Spacer()
                 Button(action: {
-                    // Perform action for checking accounts button
+                    plaidLinkViewModel.fetchLinkToken (userId: userViewModel.id) {
+                        isPresentingLink = true
+                    }
                 }) {
                     Image(.addButton)
                 }

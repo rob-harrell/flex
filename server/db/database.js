@@ -1,7 +1,7 @@
 const pgp = require('pg-promise')();
 const pgTypes = require('pg').types;
 const { queryResultErrorCode } = pgp.errors;
-const cs = new pgp.helpers.ColumnSet(['?id', 'firstname', 'lastname', 'phone', 'monthly_income', 'monthly_fixed_spend', 'birth_date', 'session_token'], {table: 'users'});
+const cs = new pgp.helpers.ColumnSet(['?id', 'firstname', 'lastname', 'phone', 'monthly_income', 'monthly_fixed_spend', 'birth_date'], {table: 'users'});
 
 // Override default type parsing for integers and floats
 pgTypes.setTypeParser(pgTypes.builtins.INT8, parseInt);
@@ -12,18 +12,20 @@ pgTypes.setTypeParser(pgTypes.builtins.TIMESTAMP, str => new Date(str));
 const db = pgp('postgres://rob@localhost:5432/flex_db');
 
 async function createUser(phoneNumber, sessionToken) {
+  console.log(`Creating user with phone number: ${phoneNumber} and session token: ${sessionToken}`);
   const user = await db.one(`
       INSERT INTO users(phone, session_token)
       VALUES($1, $2)
       RETURNING *
   `, [phoneNumber, sessionToken]);
+  console.log('User created:', user);
   return user;
 }
 
 async function updateUser(userData) {
-  userData.birth_date = new Date(userData.birthDate);
-  const update = pgp.helpers.update(userData, cs) + ' WHERE v.id = t.id RETURNING *';
-  const user = await db.one(update);
+  userData.birth_date = new Date(userData.birth_date);
+  const update = pgp.helpers.update(userData, cs) + ' WHERE id = ${id} RETURNING *';
+  const user = await db.one(update, userData);
   return user;
 }
 
@@ -70,7 +72,15 @@ async function getUserAccounts(userId) {
 }
 
 async function getUserBySessionToken(sessionToken) {
+  console.log("looking up user by session token")
   const user = await db.oneOrNone('SELECT * FROM users WHERE session_token = $1', [sessionToken]);
+
+  if (user) {
+    console.log("Session token for retrieved user:", user.session_token);
+  } else {
+    console.log("No user found with the provided session token");
+  }
+
   return user;
 }
 
