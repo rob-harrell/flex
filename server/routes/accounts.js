@@ -4,7 +4,8 @@ const { getBankAccounts } = require("../services/userServices");
 
 router.get('/get_bank_accounts', async (req, res, next) => {
   try {
-    const bankAccounts = await getBankAccounts(req.query.userId);
+    console.log(req.query.id)
+    const bankAccounts = await getBankAccounts(req.query.id);
     res.json(bankAccounts);
   } catch (error) {
     next(error);

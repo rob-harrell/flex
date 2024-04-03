@@ -71,7 +71,7 @@ struct OTPView: View {
                             // Check if all fields are filled
                             if otp.allSatisfy({ !$0.isEmpty }) {
                                 let enteredOTP = otp.joined()
-                                userViewModel.verifyTwilioOTP(code: enteredOTP, forPhone: "+1\(userViewModel.phone)") { result in
+                                userViewModel.verifyTwilioOTP(code: enteredOTP, phone: userViewModel.phone) { result in
                                     switch result {
                                     case .success:
                                         print("successfully verified OTP")

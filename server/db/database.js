@@ -12,13 +12,11 @@ pgTypes.setTypeParser(pgTypes.builtins.TIMESTAMP, str => new Date(str));
 const db = pgp('postgres://rob@localhost:5432/flex_db');
 
 async function createUser(phoneNumber, sessionToken) {
-  console.log(`Creating user with phone number: ${phoneNumber} and session token: ${sessionToken}`);
   const user = await db.one(`
       INSERT INTO users(phone, session_token)
       VALUES($1, $2)
       RETURNING *
   `, [phoneNumber, sessionToken]);
-  console.log('User created:', user);
   return user;
 }
 
@@ -50,6 +48,8 @@ async function getUserRecordByPhone(phoneNumber) {
 }
 
 async function getUserAccounts(userId) {
+    console.log("db call in progress for user:")
+    console.log(userId)
     const accounts = await db.any(`
       SELECT 
         accounts.id as id, 
@@ -60,19 +60,18 @@ async function getUserAccounts(userId) {
         accounts.sub_type,
         institutions.institution_name as bank_name, 
         institutions.logo_path,
-        items.is_active,
-        TO_CHAR(accounts.created, 'Mon DD YY') as created,
-        TO_CHAR(accounts.updated, 'Mon DD YY') as updated
+        items.is_active
       FROM items
       INNER JOIN accounts ON items.id = accounts.item_id
       INNER JOIN institutions ON items.institution_id = institutions.id
       WHERE items.user_id = $1
     `, [userId]);
+    console.log("retrieved the following accounts:")
+    console.log(accounts)
     return accounts;
 }
 
 async function getUserBySessionToken(sessionToken) {
-  console.log("looking up user by session token")
   const user = await db.oneOrNone('SELECT * FROM users WHERE session_token = $1', [sessionToken]);
 
   if (user) {

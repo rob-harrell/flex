@@ -2,9 +2,7 @@ const { createUser: createDbUser, updateUser: updateDbUser, getUserRecord, getUs
 const { saveImage } = require('./institutionServices.js');
 
 async function createUser(phoneNumber, sessionToken) {
-  console.log("called createUser on server with phone number:", phoneNumber, "and session token:", sessionToken);
   const user = await createDbUser(phoneNumber, sessionToken);
-  console.log("created user:", user);
   return user;
 }
 
@@ -33,7 +31,6 @@ async function getBankAccounts(userId) {
 }
 
 async function validateSessionToken(sessionToken) {
-  console.log("validating session token")
   const user = await getUserBySessionToken(sessionToken);
   return user != null;
 }
@@ -44,16 +41,21 @@ async function invalidateSessionToken(sessionToken) {
 }
 
 async function getAuth(itemId, accessToken, plaidClient) {
+  console.log('getAuth called with userId:', userId, 'itemId:', itemId, 'accessToken:', accessToken);
   // Use the access_token to get auth data
   const authResponse = await plaidClient.authGet({ access_token: accessToken });
+  console.log('authResponse:', authResponse);
 
   const plaidInstitutionId = authResponse.data.item.institution_id; // get the institution_id from the auth response
+  console.log('plaidInstitutionId:', plaidInstitutionId);
 
   // Check if the institution already exists in your database
   let institution = await getInstitutionByPlaidId(plaidInstitutionId);
+  console.log('institution:', institution);
 
   if (!institution) {
     // If it doesn't exist, get the institution data from Plaid
+    console.log("new institution detected; getting info from plaid")
     const institutionResponse = await plaidClient.institutionsGetById({ 
       institution_id: plaidInstitutionId,
       country_codes: ['US'],
@@ -61,12 +63,14 @@ async function getAuth(itemId, accessToken, plaidClient) {
         include_optional_metadata: true,
       },
     });
+    console.log('institutionResponse:', institutionResponse);
 
     // Get the base64 logo data
     const base64Logo = institutionResponse.data.institution.logo;
 
     // Save the logo as an image file and get the file path
     const logoPath = await saveImage(base64Logo);
+    console.log('logoPath:', logoPath);
 
     // Store the institution data in your database
     institution = await createInstitution({
@@ -74,12 +78,15 @@ async function getAuth(itemId, accessToken, plaidClient) {
       institution_name: institutionResponse.data.institution.name,
       logo_path: logoPath, // store the path to the logo image file
     });
+    console.log('newly created institution:', institution);
   }
 
   // Update the item with the institution_id
+  console.log("updating item with institution id")
   await updateItem(itemId, { institution_id: institution.id });
 
   // Create the associated accounts
+  console.log("creating accounts")
   const accounts = authResponse.data.accounts;
   for (let account of accounts) {
     const accountData = {
@@ -92,9 +99,7 @@ async function getAuth(itemId, accessToken, plaidClient) {
     };
     await createAccount(accountData);
   }
-
-  // Return the institution id
-  return institution.id;
+  console.log(accounts)
 }
 
 async function createItemRecord(itemData) {

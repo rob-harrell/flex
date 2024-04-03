@@ -40,6 +40,7 @@ class UserViewModel: ObservableObject {
     init() {
         if let userId = UserDefaults.standard.object(forKey: "currentUserId") as? Int64 {
             self.id = userId
+            fetchUserFromCoreData(userId: userId)
         }
     }
 
@@ -63,7 +64,8 @@ class UserViewModel: ObservableObject {
         }
     }
 
-    func verifyTwilioOTP(code: String, forPhone phone: String, completion: @escaping (Result<VerificationResponse, ServerCommunicator.Error>) -> Void) {
+    func verifyTwilioOTP(code: String, phone: String, completion: @escaping (Result<VerificationResponse, ServerCommunicator.Error>) -> Void) {
+        print("verifyTwilioOTP called with phone \(phone)")
         ServerCommunicator.shared.callMyServer(
             path: "/twilio/verifyOTP",
             httpMethod: .post,
@@ -163,14 +165,12 @@ class UserViewModel: ObservableObject {
             print("Session token not found in keychain")
             return
         }
-        print("update user called on client with session token \(sessionToken)")
         guard self.id != 0 else {
             print("User ID is not set")
             return
         }
         let path = "/user/\(self.id)"
         let params = ["id": String(self.id), "firstname": self.firstName, "lastname": self.lastName, "phone": self.phone, "birth_date": self.birthDate, "monthly_income": self.monthlyIncome, "monthly_fixed_spend": self.monthlyFixedSpend] as [String : Any]
-        print("Params: \(params)")
         ServerCommunicator.shared.callMyServer(path: path, httpMethod: .put, params: params, sessionToken: sessionToken) { (result: Result<UserInfoResponse, ServerCommunicator.Error>) in
             switch result {
             case .success:
@@ -185,6 +185,7 @@ class UserViewModel: ObservableObject {
 
     func fetchBankAccountsFromServer(userId: Int64) {
         // Get session token from key
+        print("fetchBankAccountsFromServer called with the following id: \(userId)")
         let keychain = Keychain(service: "robharrell.Flex")
         guard let sessionToken = keychain["sessionToken"] else {
             print("Session token not found in keychain")
@@ -200,6 +201,7 @@ class UserViewModel: ObservableObject {
         ) { (result: Result<BankAccountsResponse, ServerCommunicator.Error>) in
             switch result {
             case .success(let data):
+                print("successfully received account data")
                 DispatchQueue.main.async {
                     let checkingAccounts = data.filter { $0.type == "checking" }
                     let creditAccounts = data.filter { $0.type == "credit" }
@@ -220,7 +222,10 @@ class UserViewModel: ObservableObject {
                                 subType: bankAccountResponse.subType
                             )
                         }
+                        self.upsertFetchedAccountsInCoreData(data: data)
                     }
+                    // Log the returned accounts
+                    print("Returned accounts from server: \(self.bankAccounts)")
                 }
             case .failure(let error):
                 print("Failed to fetch bank connections from server: \(error)")
@@ -275,14 +280,14 @@ class UserViewModel: ObservableObject {
                     if let accounts = user.accounts as? Set<Account> {
                         self.bankAccounts = accounts.map { account in
                             BankAccount(
-                                id: account.id, 
-                                name: account.name ?? "", 
-                                maskedAccountNumber: account.maskedAccountNumber ?? "", 
-                                friendlyAccountName: account.friendlyAccountName ?? "", 
-                                bankName: account.bankName ?? "", 
-                                isActive: account.isActive, 
-                                logoPath: account.logoPath ?? "", 
-                                type: account.type ?? "", 
+                                id: account.id,
+                                name: account.name ?? "",
+                                maskedAccountNumber: account.maskedAccountNumber ?? "",
+                                friendlyAccountName: account.friendlyAccountName ?? "",
+                                bankName: account.bankName ?? "",
+                                isActive: account.isActive,
+                                logoPath: account.logoPath ?? "",
+                                type: account.type ?? "",
                                 subType: account.subType ?? ""
                             )
                         }
@@ -291,6 +296,10 @@ class UserViewModel: ObservableObject {
                         let creditAccounts = self.bankAccounts.filter { $0.subType == "credit" }
                         self.hasCompletedAccountCreation = !checkingAccounts.isEmpty && !creditAccounts.isEmpty
                     }
+                    print(self.id)
+                    print(self.firstName)
+                    print(self.phone)
+                    print("Bank accounts: \(self.bankAccounts)")
                 }
             } else {
                 print("No user found in Core Data with ID \(userId)")
@@ -333,6 +342,57 @@ class UserViewModel: ObservableObject {
             }
         } catch {
             print("Failed to update user in Core Data: \(error)")
+        }
+    }
+    
+    func upsertFetchedAccountsInCoreData(data: [BankAccountResponse]) {
+        let context = CoreDataStack.shared.persistentContainer.viewContext
+
+        for bankAccountResponse in data {
+            let fetchRequest: NSFetchRequest<Account> = Account.fetchRequest()
+            fetchRequest.predicate = NSPredicate(format: "id == %d", bankAccountResponse.id)
+
+            do {
+                let fetchedAccounts = try context.fetch(fetchRequest)
+
+                if let existingAccount = fetchedAccounts.first {
+                    // If the account exists, update it
+                    existingAccount.name = bankAccountResponse.name
+                    existingAccount.maskedAccountNumber = bankAccountResponse.maskedAccountNumber
+                    existingAccount.friendlyAccountName = bankAccountResponse.friendlyAccountName
+                    existingAccount.bankName = bankAccountResponse.bankName
+                    existingAccount.isActive = bankAccountResponse.isActive
+                    existingAccount.logoPath = bankAccountResponse.logoPath
+                    existingAccount.type = bankAccountResponse.type
+                    existingAccount.subType = bankAccountResponse.subType
+                } else {
+                    // If the account doesn't exist, create a new one
+                    let newAccount = Account(context: context)
+                    newAccount.id = bankAccountResponse.id
+                    newAccount.name = bankAccountResponse.name
+                    newAccount.maskedAccountNumber = bankAccountResponse.maskedAccountNumber
+                    newAccount.friendlyAccountName = bankAccountResponse.friendlyAccountName
+                    newAccount.bankName = bankAccountResponse.bankName
+                    newAccount.isActive = bankAccountResponse.isActive
+                    newAccount.logoPath = bankAccountResponse.logoPath
+                    newAccount.type = bankAccountResponse.type
+                    newAccount.subType = bankAccountResponse.subType
+                }
+
+                // Save changes to CoreData
+                try context.save()
+            } catch {
+                print("Failed to fetch or save account: \(error)")
+            }
+        }
+        
+        // Fetch all accounts from CoreData and print them
+        let allAccountsFetchRequest: NSFetchRequest<Account> = Account.fetchRequest()
+        do {
+            let allAccounts = try context.fetch(allAccountsFetchRequest)
+            print("Accounts in CoreData after upsert: \(allAccounts)")
+        } catch {
+            print("Failed to fetch accounts from CoreData: \(error)")
         }
     }
 

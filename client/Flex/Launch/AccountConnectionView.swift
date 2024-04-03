@@ -68,6 +68,40 @@ struct AccountConnectionView: View {
                 }
             }
             .padding()
+
+            ForEach(userViewModel.bankAccounts.filter { $0.subType == "checking" }) { account in
+                HStack {
+                    AsyncImage(url: URL(string: "http://localhost:8000/assets/institution_logos/\(account.logoPath)")!) { phase in
+                        switch phase {
+                        case .empty:
+                            ProgressView()
+                        case .success(let image):
+                            image.resizable()
+                        case .failure:
+                            Image(systemName: "exclamationmark.triangle")
+                        @unknown default:
+                            EmptyView()
+                        }
+                    }
+                    .frame(width: 40, height: 40)
+                    // Rest of your code...
+                    
+                    VStack(alignment: .leading) {
+                        Text(account.subType)
+                            .font(.headline)
+                            .fontWeight(.medium)
+                        Text(account.bankName)
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
+                    }
+                    Spacer()
+                    VStack(alignment: .trailing) {
+                        Text(account.isActive ? "Active" : "Inactive")
+                            .font(.subheadline)
+                    }
+                }
+                .padding()
+            }
             
             HStack{
                 Image(.creditAccountsIcon)
@@ -90,6 +124,40 @@ struct AccountConnectionView: View {
             }
             .padding()
             
+            ForEach(userViewModel.bankAccounts.filter { $0.subType == "credit" }) { account in
+                HStack {
+                    AsyncImage(url: URL(string: "http://localhost:8000/assets/institution_logos/\(account.logoPath)")!) { phase in
+                        switch phase {
+                        case .empty:
+                            ProgressView()
+                        case .success(let image):
+                            image.resizable()
+                        case .failure:
+                            Image(systemName: "exclamationmark.triangle")
+                        @unknown default:
+                            EmptyView()
+                        }
+                    }
+                    .frame(width: 40, height: 40)
+                    // Rest of your code...
+                    
+                    VStack(alignment: .leading) {
+                        Text(account.subType)
+                            .font(.headline)
+                            .fontWeight(.medium)
+                        Text(account.bankName)
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
+                    }
+                    Spacer()
+                    VStack(alignment: .trailing) {
+                        Text(account.isActive ? "Active" : "Inactive")
+                            .font(.subheadline)
+                    }
+                }
+                .padding()
+            }
+            
             Spacer()
             
             Button(action: {
@@ -104,26 +172,25 @@ struct AccountConnectionView: View {
                     .background(Color.black)
                     .cornerRadius(8)
             }
-            .sheet(
-                isPresented: $isPresentingLink,
-                onDismiss: {
-                    isPresentingLink = false
-                    userViewModel.fetchBankAccountsFromServer(userId: userViewModel.id)
-                },
-                content: {
-                    let createResult = createHandler()
-                    switch createResult {
-                    case .failure(let createError):
-                        Text("Link Creation Error: \(createError.localizedDescription)")
-                            .font(.title2)
-                    case .success(let handler):
-                        LinkController(handler: handler)
-                    }
-                }
-            )
             .padding()
-        
         }
+        .sheet(
+            isPresented: $isPresentingLink,
+            onDismiss: {
+                isPresentingLink = false
+                userViewModel.fetchBankAccountsFromServer(userId: userViewModel.id)
+            },
+            content: {
+                let createResult = createHandler()
+                switch createResult {
+                case .failure(let createError):
+                    Text("Link Creation Error: \(createError.localizedDescription)")
+                        .font(.title2)
+                case .success(let handler):
+                    LinkController(handler: handler)
+                }
+            }
+        )
     }
     
     private func createHandler() -> Result<Handler, Error> {

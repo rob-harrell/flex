@@ -15,16 +15,10 @@ const client = twilio(accountSid, authToken);
 
 router.post('/sendOTP', (req, res) => {
     let phoneNumber = req.body.phone; // Get the phone number from the request body
-    // Add the country code if it's not already included
-    if (!phoneNumber.startsWith('+')) {
-        phoneNumber = '+1' + phoneNumber; // Assuming it's a US number
-    }
-
     client.verify.v2.services(serviceSid)
         .verifications
         .create({to: phoneNumber, channel: 'sms'})
         .then(verification => {
-            console.log(verification.sid);
             res.status(200).send({message: 'Verification code sent'});
         })
         .catch(error => {
@@ -46,7 +40,6 @@ router.post('/verifyOTP', async (req, res) => {
             if (verification_check.status === 'approved') {
                 const sessionToken = uuid.v4();
                 const user = await userServices.getUserByPhone(phoneNumber);
-                console.log('User:', user); // Add this line
                 if (user) {
                     res.status(200).send({ message: 'Verification code approved', isExistingUser: true, userId: user.id, sessionToken: sessionToken });
                 } else {

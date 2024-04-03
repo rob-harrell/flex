@@ -38,15 +38,6 @@ struct LaunchView: View {
                 }
             }
         }
-        .onAppear {
-            if userViewModel.isSignedIn {
-                        print("User ID: \(userViewModel.id)")
-                        print("First Name: \(userViewModel.firstName)")
-                        print("Last Name: \(userViewModel.lastName)")
-                        print("Date of Birth: \(userViewModel.birthDate)")
-                // Load user info and all corresponding account/transaction info from core to populate views
-            }
-        }
     }
 }
 

@@ -15,16 +15,14 @@ app.use('/assets', express.static('assets'));
 const userRoutes = require('./routes/user');
 const accountsRoutes = require('./routes/accounts');
 const plaidRoutes = require('./routes/plaid');
-const transactionsRoutes = require('./routes/transactions');
 const budgetRoutes = require('./routes/budget');
 const twilioRoutes = require('./routes/twilio');
 
 // Use the routes as middleware
-app.use('/user', userRoutes);
-app.use('/accounts', accountsRoutes);
-app.use('/plaid', plaidRoutes);
-app.use('/transactions', transactionsRoutes);
-app.use('/budget', budgetRoutes);
+app.use('/user', checkSessionToken, userRoutes);
+app.use('/accounts', checkSessionToken, accountsRoutes);
+app.use('/plaid', checkSessionToken, plaidRoutes);
+app.use('/budget', checkSessionToken, budgetRoutes);
 app.use('/twilio', twilioRoutes);
 
 const server = app.listen(APP_PORT, function () {
@@ -44,3 +42,20 @@ const errorHandler = function (err, req, res, next) {
   }
 };
 app.use(errorHandler);
+
+async function checkSessionToken(req, res, next) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'No session token provided' });
+  }
+
+  const sessionToken = authHeader.replace('Bearer ', '');
+
+  const isValid = await validateSessionToken(sessionToken);
+  if (!isValid) {
+    return res.status(401).json({ message: 'Invalid session token' });
+  }
+
+  next();
+}

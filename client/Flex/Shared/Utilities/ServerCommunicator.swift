@@ -54,66 +54,73 @@ class ServerCommunicator {
         sessionToken: String? = nil,
         completion: @escaping (Result<T, ServerCommunicator.Error>) -> Void) {
 
-            let path = path.hasPrefix("/") ? String(path.dropFirst()) : path
-            let urlString = baseURL + path
+        let path = path.hasPrefix("/") ? String(path.dropFirst()) : path
+        var urlString = baseURL + path
 
-            guard let url = URL(string: urlString) else {
-                completion(.failure(ServerCommunicator.Error.invalidUrl(urlString)))
-                return
-            }
+        if httpMethod == .get, let params = params {
+            let queryItems = params.map { URLQueryItem(name: $0.key, value: String(describing: $0.value)) }
+            var components = URLComponents(string: urlString)!
+            components.queryItems = queryItems
+            urlString = components.url!.absoluteString
+        }
 
-            var request = URLRequest(url: url)
-            request.httpMethod = httpMethod.rawValue
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            request.setValue("application/json", forHTTPHeaderField: "Accept")
-            
-            if let sessionToken = sessionToken {
-                request.setValue("Bearer \(sessionToken)", forHTTPHeaderField: "Authorization")
-            }
+        guard let url = URL(string: urlString) else {
+            completion(.failure(ServerCommunicator.Error.invalidUrl(urlString)))
+            return
+        }
 
-            switch httpMethod {
-            case .post, .put:
-                if let params = params {
-                    do {
-                        let jsonData = try JSONSerialization.data(withJSONObject: params, options: [])
-                        request.httpBody = jsonData
-                    } catch {
-                        completion(.failure(.encodingError("\(error)")))
-                        return
-                    }
-                }
-            default:
-                break
-            }
+        var request = URLRequest(url: url)
+        request.httpMethod = httpMethod.rawValue
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        
+        if let sessionToken = sessionToken {
+            request.setValue("Bearer \(sessionToken)", forHTTPHeaderField: "Authorization")
+        }
 
-            // Create the task
-            let task = URLSession.shared.dataTask(with: request) { (data, _, error) in
-
-                DispatchQueue.main.async {
-
-                    if let error = error {
-                        completion(.failure(.networkError("\(error)")))
-                        return
-                    }
-
-                    guard let data = data else {
-                        completion(.failure(.nilData))
-                        return
-                    }
-                    print("Received data from: \(path)")
-                    data.printJson()
-
-                    do {
-                        let object = try JSONDecoder().decode(T.self, from: data)
-                        completion(.success(object))
-
-                    } catch {
-                        completion(.failure(.decodingError("\(error)")))
-                    }
+        switch httpMethod {
+        case .post, .put:
+            if let params = params {
+                do {
+                    let jsonData = try JSONSerialization.data(withJSONObject: params, options: [])
+                    request.httpBody = jsonData
+                } catch {
+                    completion(.failure(.encodingError("\(error)")))
+                    return
                 }
             }
+        default:
+            break
+        }
 
-            task.resume()
+        // Create the task
+        let task = URLSession.shared.dataTask(with: request) { (data, _, error) in
+
+            DispatchQueue.main.async {
+
+                if let error = error {
+                    completion(.failure(.networkError("\(error)")))
+                    return
+                }
+
+                guard let data = data else {
+                    completion(.failure(.nilData))
+                    return
+                }
+                print("Received data from: \(path)")
+                data.printJson()
+
+                do {
+                    let object = try JSONDecoder().decode(T.self, from: data)
+                    completion(.success(object))
+
+                } catch {
+                    completion(.failure(.decodingError("\(error)")))
+                }
+            }
+        }
+
+        task.resume()
     }
     
     struct DummyDecodable: Decodable { }

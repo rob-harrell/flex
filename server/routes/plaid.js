@@ -22,7 +22,7 @@ const plaidClient = new PlaidApi(plaidConfig);
  */
 router.post("/generate_link_token", async (req, res, next) => {
   try {
-    const userId = req.body.userId;
+    const userId = String(req.body.userId);
     const createTokenResponse = await plaidClient.linkTokenCreate({
       user: {
         client_user_id: userId,
@@ -61,6 +61,7 @@ router.post("/swap_public_token", async (req, res, next) => {
     });
     const data = result.data;
     console.log("publicTokenExchange data", data);
+    console.log(req.body);
 
     const userId = req.body.userId;
     const accessToken = data.access_token;
@@ -74,16 +75,10 @@ router.post("/swap_public_token", async (req, res, next) => {
 
     let newItem = await userServices.createItemRecord(itemData);
 
-    // Call the getAuth function and get the institution_id
-    const institutionId = await userServices.getAuth(newItem.id, accessToken, plaidClient);
+    // Call the getAuth function to add institution data and create accounts
+    const accounts = await userServices.getAuth(newItem.id, accessToken, plaidClient);
 
-    // Add the institution_id to itemData
-    itemData.institution_id = institutionId;
-
-    // Update the item record with the institution_id
-    newItem = await userServices.createItemRecord(itemData);
-
-    res.json({ success: true });
+    res.status(200).json({ success: true });
   } catch (error) {
     next(error);
   }

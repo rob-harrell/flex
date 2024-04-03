@@ -67,8 +67,8 @@ struct LoginSignupView: View {
                     
                     // Continue button
                     Button(action: {
-                        userViewModel.triggerTwilioOTP(phone: "+1\(phoneNumber)")
-                        userViewModel.phone = phoneNumber
+                        userViewModel.phone = "+1\(phoneNumber)"
+                        userViewModel.triggerTwilioOTP(phone: userViewModel.phone)
                         self.showOTPView = true
                     }) {
                         Text("Continue")
