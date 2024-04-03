@@ -41,10 +41,9 @@ async function invalidateSessionToken(sessionToken) {
 }
 
 async function getAuth(itemId, accessToken, plaidClient) {
-  console.log('getAuth called with userId:', userId, 'itemId:', itemId, 'accessToken:', accessToken);
+  console.log('getAuth called with itemId:', itemId, 'accessToken:', accessToken);
   // Use the access_token to get auth data
   const authResponse = await plaidClient.authGet({ access_token: accessToken });
-  console.log('authResponse:', authResponse);
 
   const plaidInstitutionId = authResponse.data.item.institution_id; // get the institution_id from the auth response
   console.log('plaidInstitutionId:', plaidInstitutionId);
@@ -63,7 +62,6 @@ async function getAuth(itemId, accessToken, plaidClient) {
         include_optional_metadata: true,
       },
     });
-    console.log('institutionResponse:', institutionResponse);
 
     // Get the base64 logo data
     const base64Logo = institutionResponse.data.institution.logo;

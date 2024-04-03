@@ -60,7 +60,7 @@ struct AccountConnectionView: View {
                 }
                 Spacer()
                 Button(action: {
-                    plaidLinkViewModel.fetchLinkToken (userId: userViewModel.id) {
+                    plaidLinkViewModel.fetchLinkToken (userId: userViewModel.id, sessionToken: userViewModel.sessionToken) {
                         isPresentingLink = true
                     }
                 }) {
@@ -115,7 +115,7 @@ struct AccountConnectionView: View {
                 }
                 Spacer()
                 Button(action: {
-                    plaidLinkViewModel.fetchLinkToken (userId: userViewModel.id) {
+                    plaidLinkViewModel.fetchLinkToken (userId: userViewModel.id, sessionToken: userViewModel.sessionToken) {
                         isPresentingLink = true
                     }
                 }) {
@@ -161,7 +161,7 @@ struct AccountConnectionView: View {
             Spacer()
             
             Button(action: {
-                plaidLinkViewModel.fetchLinkToken (userId: userViewModel.id) {
+                plaidLinkViewModel.fetchLinkToken (userId: userViewModel.id, sessionToken: userViewModel.sessionToken) {
                         isPresentingLink = true
                 }
             }) {
@@ -178,7 +178,6 @@ struct AccountConnectionView: View {
             isPresented: $isPresentingLink,
             onDismiss: {
                 isPresentingLink = false
-                userViewModel.fetchBankAccountsFromServer(userId: userViewModel.id)
             },
             content: {
                 let createResult = createHandler()
@@ -198,7 +197,9 @@ struct AccountConnectionView: View {
             let error = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey : "Link token is not set"])
             return .failure(error)
         }
-        let configuration = plaidLinkViewModel.createLinkConfiguration(linkToken: linkToken, userId: userViewModel.id)
+        let configuration = plaidLinkViewModel.createLinkConfiguration(linkToken: linkToken, userId: userViewModel.id, sessionToken: userViewModel.sessionToken) {
+                self.userViewModel.fetchBankAccountsFromServer()
+        }
 
         // This only results in an error if the token is malformed.
         return Plaid.create(configuration).mapError { $0 as Error }

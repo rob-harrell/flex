@@ -42,6 +42,8 @@ class UserViewModel: ObservableObject {
             self.id = userId
             fetchUserFromCoreData(userId: userId)
         }
+        let keychain = Keychain(service: "robharrell.Flex")
+        self.sessionToken = keychain["sessionToken"] ?? ""
     }
 
     // MARK: - Twilio
@@ -77,6 +79,7 @@ class UserViewModel: ObservableObject {
                 // Save session token to keychain
                 let keychain = Keychain(service: "robharrell.Flex")
                 keychain["sessionToken"] = data.sessionToken
+                self.sessionToken = data.sessionToken
                 // Save user id to UserDefaults
                 UserDefaults.standard.set(data.userId, forKey: "currentUserId")
                 // Update the context the user id
@@ -91,7 +94,7 @@ class UserViewModel: ObservableObject {
                         if data.isExistingUser {
                             // If the user exists on the server but not in Core Data on this device, fetch user's data from server
                             self.fetchUserInfoFromServer(userId: data.userId)
-                            self.fetchBankAccountsFromServer(userId: data.userId)
+                            self.fetchBankAccountsFromServer()
                         } else {
                             //if it's an existing user on this device but the user hasn't yet finished signup, show user details or account connection
                             // If user exists in core data, load user data from core
@@ -116,19 +119,12 @@ class UserViewModel: ObservableObject {
 
     // MARK: - Server
     func fetchUserInfoFromServer(userId: Int64) {
-        // Get session token from keychain
-        let keychain = Keychain(service: "robharrell.Flex")
-        guard let sessionToken = keychain["sessionToken"] else {
-            print("Session token not found in keychain")
-            return
-        }
-        
         // Fetch user info
         ServerCommunicator.shared.callMyServer(
             path: "/user/get_user_data",
             httpMethod: .get,
             params: ["id": userId],
-            sessionToken: sessionToken
+            sessionToken: self.sessionToken
         ) { (result: Result<UserInfoResponse, ServerCommunicator.Error>) in
             switch result {
             case .success(let data):
@@ -159,19 +155,13 @@ class UserViewModel: ObservableObject {
     }
     
     func updateUserOnServer() {
-        // Get session token from keychain
-        let keychain = Keychain(service: "robharrell.Flex")
-        guard let sessionToken = keychain["sessionToken"] else {
-            print("Session token not found in keychain")
-            return
-        }
         guard self.id != 0 else {
             print("User ID is not set")
             return
         }
         let path = "/user/\(self.id)"
         let params = ["id": String(self.id), "firstname": self.firstName, "lastname": self.lastName, "phone": self.phone, "birth_date": self.birthDate, "monthly_income": self.monthlyIncome, "monthly_fixed_spend": self.monthlyFixedSpend] as [String : Any]
-        ServerCommunicator.shared.callMyServer(path: path, httpMethod: .put, params: params, sessionToken: sessionToken) { (result: Result<UserInfoResponse, ServerCommunicator.Error>) in
+        ServerCommunicator.shared.callMyServer(path: path, httpMethod: .put, params: params, sessionToken: self.sessionToken) { (result: Result<UserInfoResponse, ServerCommunicator.Error>) in
             switch result {
             case .success:
                 DispatchQueue.main.async {
@@ -183,30 +173,26 @@ class UserViewModel: ObservableObject {
         }
     }
 
-    func fetchBankAccountsFromServer(userId: Int64) {
-        // Get session token from key
-        print("fetchBankAccountsFromServer called with the following id: \(userId)")
-        let keychain = Keychain(service: "robharrell.Flex")
-        guard let sessionToken = keychain["sessionToken"] else {
-            print("Session token not found in keychain")
-            return
-        }
-        
+    func fetchBankAccountsFromServer() {
         // Fetch bank connections
+        print("fetchBankAccountsFromSErver called with id: \(self.id)")
         ServerCommunicator.shared.callMyServer(
             path: "/accounts/get_bank_accounts",
             httpMethod: .get,
-            params: ["id": userId],
-            sessionToken: sessionToken
+            params: ["id": self.id],
+            sessionToken: self.sessionToken
         ) { (result: Result<BankAccountsResponse, ServerCommunicator.Error>) in
             switch result {
             case .success(let data):
                 print("successfully received account data")
                 DispatchQueue.main.async {
+                    print("Decoded data: \(data)")
                     let checkingAccounts = data.filter { $0.type == "checking" }
                     let creditAccounts = data.filter { $0.type == "credit" }
+                    print("Checking accounts: \(checkingAccounts)")
+                    print("Credit accounts: \(creditAccounts)")
                     self.hasCompletedAccountCreation = !checkingAccounts.isEmpty && !creditAccounts.isEmpty
-                    // Save bank accounts to UserViewModel.bankAccounts only if the user has completed account creation
+                    print("Has completed account creation: \(self.hasCompletedAccountCreation)")
                     if self.hasCompletedAccountCreation {
                         self.bankAccounts = data.map { bankAccountResponse in
                             // Convert each BankAccountResponse to a UserViewModel.BankAccount
@@ -222,9 +208,9 @@ class UserViewModel: ObservableObject {
                                 subType: bankAccountResponse.subType
                             )
                         }
+                        print("Mapped bank accounts: \(self.bankAccounts)")
                         self.upsertFetchedAccountsInCoreData(data: data)
                     }
-                    // Log the returned accounts
                     print("Returned accounts from server: \(self.bankAccounts)")
                 }
             case .failure(let error):
@@ -234,16 +220,10 @@ class UserViewModel: ObservableObject {
     }
 
     func invalidateSessionToken(completion: @escaping (Bool) -> Void) {
-        // Get session token from keychain
-        let keychain = Keychain(service: "robharrell.Flex")
-        guard let sessionToken = keychain["sessionToken"] else {
-            print("Session token not found in keychain")
-            return
-        }
         ServerCommunicator.shared.callMyServer(
             path: "/user/invalidate_session_token",
             httpMethod: .post,
-            params: ["session_token": sessionToken]
+            params: ["session_token": self.sessionToken]
         ) { (result: Result<ServerCommunicator.DummyDecodable, ServerCommunicator.Error>) in
             switch result {
             case .success:

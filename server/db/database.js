@@ -74,9 +74,7 @@ async function getUserAccounts(userId) {
 async function getUserBySessionToken(sessionToken) {
   const user = await db.oneOrNone('SELECT * FROM users WHERE session_token = $1', [sessionToken]);
 
-  if (user) {
-    console.log("Session token for retrieved user:", user.session_token);
-  } else {
+  if (!user) {
     console.log("No user found with the provided session token");
   }
 

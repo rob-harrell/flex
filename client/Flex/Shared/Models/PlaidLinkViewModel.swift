@@ -13,8 +13,8 @@ class PlaidLinkViewModel: ObservableObject {
     var onLinkFinished: (() -> Void)?
     @Published var isLinkActive = false
 
-    func fetchLinkToken(userId: Int64, completion: @escaping () -> Void) {
-        ServerCommunicator.shared.callMyServer(path: "/plaid/generate_link_token", httpMethod: .post, params: ["userId": userId]) { (result: Result<LinkTokenCreateResponse, ServerCommunicator.Error>) in
+    func fetchLinkToken(userId: Int64, sessionToken: String, completion: @escaping () -> Void) {
+        ServerCommunicator.shared.callMyServer(path: "/plaid/generate_link_token", httpMethod: .post, params: ["userId": userId], sessionToken: sessionToken) { (result: Result<LinkTokenCreateResponse, ServerCommunicator.Error>) in
             switch result {
                 case .success(let response):
                     self.linkToken = response.linkToken
@@ -28,10 +28,12 @@ class PlaidLinkViewModel: ObservableObject {
         }
     }
 
-    func createLinkConfiguration(linkToken: String, userId: Int64) -> LinkTokenConfiguration {
+    func createLinkConfiguration(linkToken: String, userId: Int64, sessionToken: String, completion: @escaping () -> Void) -> LinkTokenConfiguration {
         var linkTokenConfig = LinkTokenConfiguration(token: linkToken) { success in
             print("Link was finished successfully! \(success)")
-            self.exchangePublicTokenForAccessToken(success.publicToken, userId: userId)
+            self.exchangePublicTokenForAccessToken(success.publicToken, userId: userId, sessionToken: sessionToken) {
+                completion()
+            }
             self.onLinkFinished?()
             DispatchQueue.main.async {
                 self.isLinkActive = false
@@ -43,9 +45,9 @@ class PlaidLinkViewModel: ObservableObject {
                 self.isLinkActive = false
             }
         }
-        linkTokenConfig.onEvent = { linkEvent in
-            print("Hit an event \(linkEvent.eventName)")
-        }
+        //linkTokenConfig.onEvent = { linkEvent in
+        //    print("Hit an event \(linkEvent.eventName)")
+        //}
         
         // Print out a message to check if the LinkTokenConfiguration is created correctly
         print("LinkTokenConfiguration created with linkToken: \(linkToken)")
@@ -53,11 +55,14 @@ class PlaidLinkViewModel: ObservableObject {
         return linkTokenConfig
     }
 
-    private func exchangePublicTokenForAccessToken(_ publicToken: String, userId: Int64) {
-        ServerCommunicator.shared.callMyServer(path: "/plaid/swap_public_token", httpMethod: .post, params: ["public_token": publicToken, "userId": userId]) { (result: Result<SwapPublicTokenResponse, ServerCommunicator.Error>) in
+    private func exchangePublicTokenForAccessToken(_ publicToken: String, userId: Int64, sessionToken: String, completion: @escaping () -> Void) {
+        ServerCommunicator.shared.callMyServer(path: "/plaid/swap_public_token", httpMethod: .post, params: ["public_token": publicToken, "userId": userId], sessionToken: sessionToken) { (result: Result<SwapPublicTokenResponse, ServerCommunicator.Error>) in
             switch result {
                 case .success:
-                    self.isLinkActive = false
+                    DispatchQueue.main.async {
+                        self.isLinkActive = false
+                        completion()
+                    }
                 case .failure(let error):
                     print("Got an error \(error)")
             }

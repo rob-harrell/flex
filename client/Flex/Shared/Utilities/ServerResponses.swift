@@ -41,11 +41,9 @@ struct UserInfoResponse: Codable {
 
 struct BankAccountResponse: Codable, Identifiable {
     let id: Int64
-    let accountId: String
-    let itemId: String
     let name: String
     let maskedAccountNumber: String
-    let friendlyAccountName: String
+    let friendlyAccountName: String?
     let bankName: String
     let isActive: Bool
     let logoPath: String
@@ -54,8 +52,6 @@ struct BankAccountResponse: Codable, Identifiable {
 
     enum CodingKeys: String, CodingKey {
         case id, name, type
-        case accountId = "account_id"
-        case itemId = "item_id"
         case maskedAccountNumber = "masked_account_number"
         case friendlyAccountName = "friendly_account_name"
         case bankName = "bank_name"
