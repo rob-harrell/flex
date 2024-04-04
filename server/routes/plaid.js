@@ -75,8 +75,8 @@ router.post("/swap_public_token", async (req, res, next) => {
 
     let newItem = await userServices.createItemRecord(itemData);
 
-    // Call the getAuth function to add institution data and create accounts
-    const accounts = await userServices.getAuth(newItem.id, accessToken, plaidClient);
+    // Call the getPlaidInfo function to add institution data and create accounts
+    await userServices.getPlaidAccountInfo(newItem.id, accessToken, plaidClient);
 
     res.status(200).json({ success: true });
   } catch (error) {
@@ -84,18 +84,5 @@ router.post("/swap_public_token", async (req, res, next) => {
   }
 });
 
-router.post("/get_auth", async (req, res, next) => {
-  try {
-    const accessToken = req.body.access_token;
-    const itemId = req.body.item_id;
-
-    // Call the getAuth function from userServices
-    await userServices.getAuth(itemId, accessToken);
-
-    res.json({ success: true });
-  } catch (error) {
-    next(error);
-  }
-});
 
 module.exports = router;

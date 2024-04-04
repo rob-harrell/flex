@@ -54,7 +54,7 @@ struct AccountConnectionView: View {
                     Text("Required")
                         .font(.callout)
                         .foregroundColor(.blue)
-                    Text("Checking Accounts")
+                    Text("Checking & Savings")
                         .font(.title3)
                         .fontWeight(.semibold)
                 }
@@ -69,7 +69,7 @@ struct AccountConnectionView: View {
             }
             .padding()
 
-            ForEach(userViewModel.bankAccounts.filter { $0.subType == "checking" }) { account in
+            ForEach(userViewModel.bankAccounts.filter { $0.subType == "checking" || $0.subType == "savings"}) { account in
                 HStack {
                     AsyncImage(url: URL(string: "http://localhost:8000/assets/institution_logos/\(account.logoPath)")!) { phase in
                         switch phase {
@@ -84,7 +84,6 @@ struct AccountConnectionView: View {
                         }
                     }
                     .frame(width: 40, height: 40)
-                    // Rest of your code...
                     
                     VStack(alignment: .leading) {
                         Text(account.subType)
@@ -161,17 +160,16 @@ struct AccountConnectionView: View {
             Spacer()
             
             Button(action: {
-                plaidLinkViewModel.fetchLinkToken (userId: userViewModel.id, sessionToken: userViewModel.sessionToken) {
-                        isPresentingLink = true
-                }
+                userViewModel.completeAccountCreation()
             }) {
-                Text("+ Connect Account")
-                    .foregroundColor(.white)
+                Text("Done")
+                    .foregroundColor(userViewModel.canCompleteAccountCreation ? .white : .slate500)
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(Color.black)
+                    .background(userViewModel.canCompleteAccountCreation ? Color.black : .slate200)
                     .cornerRadius(8)
             }
+            .disabled(!userViewModel.canCompleteAccountCreation)
             .padding()
         }
         .sheet(

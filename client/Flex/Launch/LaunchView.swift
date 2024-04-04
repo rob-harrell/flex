@@ -17,7 +17,7 @@ struct LaunchView: View {
     var body: some View {
         Group {
             if userViewModel.isSignedIn {
-                if userViewModel.hasEnteredUserDetails && userViewModel.hasCompletedAccountCreation {
+                if userViewModel.hasCompletedAccountCreation {
                     MainTabView()
                         .environmentObject(userViewModel)
                         .environmentObject(sharedViewModel)

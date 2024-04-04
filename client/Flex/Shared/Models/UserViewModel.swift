@@ -20,6 +20,7 @@ class UserViewModel: ObservableObject {
     @Published var sessionToken: String = ""
     @Published var bankAccounts: [BankAccount] = []
     @Published var hasEnteredUserDetails: Bool = false
+    @Published var canCompleteAccountCreation: Bool = false
     @Published var hasCompletedAccountCreation: Bool = false
     var isSignedIn: Bool {
         UserDefaults.standard.object(forKey: "currentUserId") != nil
@@ -175,7 +176,7 @@ class UserViewModel: ObservableObject {
 
     func fetchBankAccountsFromServer() {
         // Fetch bank connections
-        print("fetchBankAccountsFromSErver called with id: \(self.id)")
+        print("fetchBankAccountsFromServer called with id: \(self.id)")
         ServerCommunicator.shared.callMyServer(
             path: "/accounts/get_bank_accounts",
             httpMethod: .get,
@@ -187,30 +188,11 @@ class UserViewModel: ObservableObject {
                 print("successfully received account data")
                 DispatchQueue.main.async {
                     print("Decoded data: \(data)")
-                    let checkingAccounts = data.filter { $0.type == "checking" }
-                    let creditAccounts = data.filter { $0.type == "credit" }
-                    print("Checking accounts: \(checkingAccounts)")
-                    print("Credit accounts: \(creditAccounts)")
-                    self.hasCompletedAccountCreation = !checkingAccounts.isEmpty && !creditAccounts.isEmpty
-                    print("Has completed account creation: \(self.hasCompletedAccountCreation)")
-                    if self.hasCompletedAccountCreation {
-                        self.bankAccounts = data.map { bankAccountResponse in
-                            // Convert each BankAccountResponse to a UserViewModel.BankAccount
-                            UserViewModel.BankAccount(
-                                id: bankAccountResponse.id,
-                                name: bankAccountResponse.name,
-                                maskedAccountNumber: bankAccountResponse.maskedAccountNumber,
-                                friendlyAccountName: bankAccountResponse.friendlyAccountName,
-                                bankName: bankAccountResponse.bankName,
-                                isActive: bankAccountResponse.isActive,
-                                logoPath: bankAccountResponse.logoPath,
-                                type: bankAccountResponse.type,
-                                subType: bankAccountResponse.subType
-                            )
-                        }
-                        print("Mapped bank accounts: \(self.bankAccounts)")
-                        self.upsertFetchedAccountsInCoreData(data: data)
-                    }
+                    
+                    let accountsToSave = data.filter { $0.subType == "checking" || $0.subType == "credit card" || $0.subType == "savings" }
+                    
+                    self.upsertFetchedAccountsInCoreData(data: accountsToSave)
+                    
                     print("Returned accounts from server: \(self.bankAccounts)")
                 }
             case .failure(let error):
@@ -272,9 +254,9 @@ class UserViewModel: ObservableObject {
                             )
                         }
                         
-                        let checkingAccounts = self.bankAccounts.filter { $0.subType == "checking" }
-                        let creditAccounts = self.bankAccounts.filter { $0.subType == "credit" }
-                        self.hasCompletedAccountCreation = !checkingAccounts.isEmpty && !creditAccounts.isEmpty
+                        let hasCheckingOrSavings = self.bankAccounts.contains { $0.subType == "checking" || $0.subType == "savings" }
+                        let hasCreditCard = self.bankAccounts.contains { $0.subType == "credit card" }
+                        self.canCompleteAccountCreation = hasCheckingOrSavings && hasCreditCard
                     }
                     print(self.id)
                     print(self.firstName)
@@ -327,13 +309,21 @@ class UserViewModel: ObservableObject {
     
     func upsertFetchedAccountsInCoreData(data: [BankAccountResponse]) {
         let context = CoreDataStack.shared.persistentContainer.viewContext
+        let userFetchRequest: NSFetchRequest<User> = User.fetchRequest()
+        userFetchRequest.predicate = NSPredicate(format: "id == %d", self.id)
 
-        for bankAccountResponse in data {
-            let fetchRequest: NSFetchRequest<Account> = Account.fetchRequest()
-            fetchRequest.predicate = NSPredicate(format: "id == %d", bankAccountResponse.id)
+        do {
+            let fetchedUsers = try context.fetch(userFetchRequest)
+            guard let user = fetchedUsers.first else {
+                print("No User entity found in Core Data with id: \(self.id)")
+                return
+            }
 
-            do {
-                let fetchedAccounts = try context.fetch(fetchRequest)
+            for bankAccountResponse in data {
+                let accountFetchRequest: NSFetchRequest<Account> = Account.fetchRequest()
+                accountFetchRequest.predicate = NSPredicate(format: "id == %d", bankAccountResponse.id)
+
+                let fetchedAccounts = try context.fetch(accountFetchRequest)
 
                 if let existingAccount = fetchedAccounts.first {
                     // If the account exists, update it
@@ -347,8 +337,26 @@ class UserViewModel: ObservableObject {
                     existingAccount.subType = bankAccountResponse.subType
                 } else {
                     // If the account doesn't exist, create a new one
+                    let newAccountViewModel = UserViewModel.BankAccount(
+                        id: bankAccountResponse.id,
+                        name: bankAccountResponse.name,
+                        maskedAccountNumber: bankAccountResponse.maskedAccountNumber,
+                        friendlyAccountName: bankAccountResponse.friendlyAccountName,
+                        bankName: bankAccountResponse.bankName,
+                        isActive: bankAccountResponse.isActive,
+                        logoPath: bankAccountResponse.logoPath,
+                        type: bankAccountResponse.type,
+                        subType: bankAccountResponse.subType
+                    )
+                    self.bankAccounts.append(newAccountViewModel)
+
+                    let hasCheckingOrSavings = self.bankAccounts.contains { $0.subType == "checking" || $0.subType == "savings" }
+                    let hasCreditCard = self.bankAccounts.contains { $0.subType == "credit card" }
+
+                    self.canCompleteAccountCreation = hasCheckingOrSavings && hasCreditCard
+
                     let newAccount = Account(context: context)
-                    newAccount.id = bankAccountResponse.id
+                    newAccount.id = Int64(bankAccountResponse.id)
                     newAccount.name = bankAccountResponse.name
                     newAccount.maskedAccountNumber = bankAccountResponse.maskedAccountNumber
                     newAccount.friendlyAccountName = bankAccountResponse.friendlyAccountName
@@ -357,13 +365,16 @@ class UserViewModel: ObservableObject {
                     newAccount.logoPath = bankAccountResponse.logoPath
                     newAccount.type = bankAccountResponse.type
                     newAccount.subType = bankAccountResponse.subType
+
+                    // Associate the new account with the user
+                    user.addToAccounts(newAccount)
                 }
 
                 // Save changes to CoreData
                 try context.save()
-            } catch {
-                print("Failed to fetch or save account: \(error)")
             }
+        } catch {
+            print("Failed to fetch or save account: \(error)")
         }
         
         // Fetch all accounts from CoreData and print them
@@ -373,6 +384,28 @@ class UserViewModel: ObservableObject {
             print("Accounts in CoreData after upsert: \(allAccounts)")
         } catch {
             print("Failed to fetch accounts from CoreData: \(error)")
+        }
+    }
+    
+    func completeAccountCreation() {
+        self.hasCompletedAccountCreation = true
+
+        let context = CoreDataStack.shared.persistentContainer.viewContext
+        let fetchRequest: NSFetchRequest<User> = User.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "id == %@", self.id)
+
+        do {
+            let fetchedUsers = try context.fetch(fetchRequest)
+
+            if let existingUser = fetchedUsers.first {
+                // If the user exists, update it
+                existingUser.hasCompletedAccountCreation = self.hasCompletedAccountCreation
+            }
+
+            // Save changes to CoreData
+            try context.save()
+        } catch {
+            print("Failed to fetch or save user: \(error)")
         }
     }
 

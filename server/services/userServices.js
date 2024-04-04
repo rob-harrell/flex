@@ -40,12 +40,12 @@ async function invalidateSessionToken(sessionToken) {
   await invalidateDbSessionToken(sessionToken);
 }
 
-async function getAuth(itemId, accessToken, plaidClient) {
-  console.log('getAuth called with itemId:', itemId, 'accessToken:', accessToken);
-  // Use the access_token to get auth data
-  const authResponse = await plaidClient.authGet({ access_token: accessToken });
+async function getPlaidAccountInfo(itemId, accessToken, plaidClient) {
+  console.log('getPlaidAccountInfo called with itemId:', itemId, 'accessToken:', accessToken);
 
-  const plaidInstitutionId = authResponse.data.item.institution_id; // get the institution_id from the auth response
+  // Use the access_token to get item data
+  const itemResponse = await plaidClient.itemGet({ access_token: accessToken });
+  const plaidInstitutionId = itemResponse.data.item.institution_id; // get the institution_id from the item response
   console.log('plaidInstitutionId:', plaidInstitutionId);
 
   // Check if the institution already exists in your database
@@ -67,8 +67,14 @@ async function getAuth(itemId, accessToken, plaidClient) {
     const base64Logo = institutionResponse.data.institution.logo;
 
     // Save the logo as an image file and get the file path
-    const logoPath = await saveImage(base64Logo);
-    console.log('logoPath:', logoPath);
+    let logoPath = null;
+    if (base64Logo) {
+        // Save the logo as an image file and get the file path
+        logoPath = await saveImage(base64Logo);
+        console.log('logoPath:', logoPath);
+    } else {
+        console.log('No logo available for this institution');
+    }
 
     // Store the institution data in your database
     institution = await createInstitution({
@@ -83,9 +89,13 @@ async function getAuth(itemId, accessToken, plaidClient) {
   console.log("updating item with institution id")
   await updateItem(itemId, { institution_id: institution.id });
 
-  // Create the associated accounts
-  console.log("creating accounts")
-  const accounts = authResponse.data.accounts;
+  // Get the accounts data
+  console.log("getting accounts data")
+  const accountsResponse = await plaidClient.accountsGet({ access_token: accessToken });
+  const accounts = accountsResponse.data.accounts;
+
+  // Store the accounts data in your database
+  console.log("storing accounts data")
   for (let account of accounts) {
     const accountData = {
       item_id: itemId,
@@ -105,4 +115,4 @@ async function createItemRecord(itemData) {
   return item;
 }
 
-module.exports = { getUserData, getUserByPhone, getBankAccounts, createUser, updateUser, createItemRecord, getAuth, validateSessionToken, invalidateSessionToken };
+module.exports = { getUserData, getUserByPhone, getBankAccounts, createUser, updateUser, createItemRecord, getPlaidAccountInfo, validateSessionToken, invalidateSessionToken };

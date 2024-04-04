@@ -70,8 +70,3 @@ struct SwapPublicTokenResponse: Codable {
     let success: Bool
 }
 
-struct SimpleAuthResponse: Codable{
-    let accountName: String
-    let accountMask: String
-    let routingNumber: String
-}
