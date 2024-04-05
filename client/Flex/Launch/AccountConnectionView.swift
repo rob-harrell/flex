@@ -16,28 +16,16 @@ struct AccountConnectionView: View {
     
     var body: some View {
         VStack (alignment: .leading) {
+
+            Text("Connect Accounts")
+                .bold()
+                .font(.title)
+                .padding()
             
-            HStack {
-                Text("Connect Accounts")
-                    .bold()
-                    .font(.title)
-                    .padding(.top, 100)
-                    .padding(.leading)
-                    .padding(.bottom, 6)
-                
-                Spacer()
-            }
-            
-            Text("The more accounts you add, the more accurate")
-                .font(.callout)
-                .padding(.horizontal)
-                .padding(.bottom, 1)
-                .foregroundColor(.slate500)
-            Text("your budget will be.")
+            Text("The more accounts you add, the more accurate\nyour budget will be.")
                 .font(.callout)
                 .padding(.horizontal)
                 .foregroundColor(.slate500)
-                .padding(.bottom, 4)
             
             HStack{
                 Image(.lock)
@@ -160,14 +148,15 @@ struct AccountConnectionView: View {
             Spacer()
             
             Button(action: {
-                userViewModel.completeAccountCreation()
+                userViewModel.hasCompletedAccountCreation = true
+                userViewModel.updateUserOnServer()
             }) {
                 Text("Done")
                     .foregroundColor(userViewModel.canCompleteAccountCreation ? .white : .slate500)
                     .frame(maxWidth: .infinity)
                     .padding()
                     .background(userViewModel.canCompleteAccountCreation ? Color.black : .slate200)
-                    .cornerRadius(8)
+                    .cornerRadius(12)
             }
             .disabled(!userViewModel.canCompleteAccountCreation)
             .padding()

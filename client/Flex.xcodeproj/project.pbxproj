@@ -36,6 +36,7 @@
 		D46B237D2BB10B5F0091C54D /* AccountConnectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46B237C2BB10B5F0091C54D /* AccountConnectionView.swift */; };
 		D46EDED92BA51721002FF9BE /* FlexClientDataModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = D46EDED72BA51721002FF9BE /* FlexClientDataModel.xcdatamodeld */; };
 		D46EDF0B2BA93FF3002FF9BE /* CoreDataStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46EDF0A2BA93FF3002FF9BE /* CoreDataStack.swift */; };
+		D47B9D512BBF51460020228F /* NotificationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D47B9D502BBF51460020228F /* NotificationView.swift */; };
 		D48EF48E2B95759000117E8B /* UserViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D48EF48D2B95759000117E8B /* UserViewModel.swift */; };
 		D49D59CF2B7815E4001C0D0A /* DateViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49D59CE2B7815E4001C0D0A /* DateViewModel.swift */; };
 		D49D59D12B785501001C0D0A /* MonthSelectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49D59D02B785501001C0D0A /* MonthSelectorView.swift */; };
@@ -90,6 +91,7 @@
 		D46B237C2BB10B5F0091C54D /* AccountConnectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountConnectionView.swift; sourceTree = "<group>"; };
 		D46EDED82BA51721002FF9BE /* FlexClientDataModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = FlexClientDataModel.xcdatamodel; sourceTree = "<group>"; };
 		D46EDF0A2BA93FF3002FF9BE /* CoreDataStack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataStack.swift; sourceTree = "<group>"; };
+		D47B9D502BBF51460020228F /* NotificationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationView.swift; sourceTree = "<group>"; };
 		D48EF48D2B95759000117E8B /* UserViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserViewModel.swift; sourceTree = "<group>"; };
 		D49D59CE2B7815E4001C0D0A /* DateViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateViewModel.swift; sourceTree = "<group>"; };
 		D49D59D02B785501001C0D0A /* MonthSelectorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthSelectorView.swift; sourceTree = "<group>"; };
@@ -271,6 +273,7 @@
 				D46B23762BAE1F140091C54D /* OTPView.swift */,
 				D46B23782BAE1F330091C54D /* UserDetailsView.swift */,
 				D46B237C2BB10B5F0091C54D /* AccountConnectionView.swift */,
+				D47B9D502BBF51460020228F /* NotificationView.swift */,
 			);
 			path = Launch;
 			sourceTree = "<group>";
@@ -421,6 +424,7 @@
 				D4005AC02B67236400652FCA /* BudgetHeaderView.swift in Sources */,
 				D4005AB32B66216900652FCA /* BalancesView.swift in Sources */,
 				D46B237D2BB10B5F0091C54D /* AccountConnectionView.swift in Sources */,
+				D47B9D512BBF51460020228F /* NotificationView.swift in Sources */,
 				D4129F182B8C20F300BB2B7D /* PlaidLinkViewModel.swift in Sources */,
 				D49D59D12B785501001C0D0A /* MonthSelectorView.swift in Sources */,
 				D49D59CF2B7815E4001C0D0A /* DateViewModel.swift in Sources */,

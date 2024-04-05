@@ -17,12 +17,15 @@ struct LaunchView: View {
     var body: some View {
         Group {
             if userViewModel.isSignedIn {
-                if userViewModel.hasCompletedAccountCreation {
+                if userViewModel.hasCompletedNotificationSelection {
                     MainTabView()
                         .environmentObject(userViewModel)
                         .environmentObject(sharedViewModel)
                         .environmentObject(budgetViewModel)
-                } else if userViewModel.hasEnteredUserDetails && !userViewModel.hasCompletedAccountCreation {
+                } else if userViewModel.hasCompletedAccountCreation {
+                    NotificationView()
+                        .environmentObject(userViewModel)
+                } else if userViewModel.hasEnteredUserDetails {
                     AccountConnectionView()
                         .environmentObject(userViewModel)
                 } else {

@@ -92,10 +92,10 @@ struct OTPView: View {
             HStack {
                 Text("Didn't receive a code?")
                     .font(.body)
-                    .foregroundColor(.gray)
+                    .foregroundColor(.slate500)
                 
                 Button(action: {
-                    userViewModel.triggerTwilioOTP(phone: "+1\(userViewModel.phone)")
+                    userViewModel.triggerTwilioOTP(phone: userViewModel.phone)
                 }) {
                     Text("Resend code")
                         .font(.body)

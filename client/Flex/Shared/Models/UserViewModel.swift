@@ -22,6 +22,9 @@ class UserViewModel: ObservableObject {
     @Published var hasEnteredUserDetails: Bool = false
     @Published var canCompleteAccountCreation: Bool = false
     @Published var hasCompletedAccountCreation: Bool = false
+    @Published var hasCompletedNotificationSelection: Bool = false
+    @Published var pushNotificationsEnabled: Bool = false
+    @Published var smsNotificationsEnabled: Bool = false
     var isSignedIn: Bool {
         UserDefaults.standard.object(forKey: "currentUserId") != nil
     }
@@ -136,9 +139,11 @@ class UserViewModel: ObservableObject {
                     self.monthlyIncome = data.monthlyIncome
                     self.monthlyFixedSpend = data.monthlyFixedSpend
                     self.birthDate = data.birthDate
-                    
-                    // Check if user has entered details
-                    self.hasEnteredUserDetails = !self.firstName.isEmpty && !self.lastName.isEmpty && !self.birthDate.isEmpty
+                    self.hasEnteredUserDetails = data.hasEnteredUserDetails
+                    self.hasCompletedAccountCreation = data.hasCompletedAccountCreation
+                    self.hasCompletedNotificationSelection = data.hasCompletedNotificationSelection
+                    self.pushNotificationsEnabled = data.pushNotificationsEnabled
+                    self.smsNotificationsEnabled = data.smsNotificationsEnabled
                 
                     // If user has entered details, update user in CoreData
                     // Otherwise, create user in CoreData
@@ -161,7 +166,7 @@ class UserViewModel: ObservableObject {
             return
         }
         let path = "/user/\(self.id)"
-        let params = ["id": String(self.id), "firstname": self.firstName, "lastname": self.lastName, "phone": self.phone, "birth_date": self.birthDate, "monthly_income": self.monthlyIncome, "monthly_fixed_spend": self.monthlyFixedSpend] as [String : Any]
+        let params = ["id": String(self.id), "firstname": self.firstName, "lastname": self.lastName, "phone": self.phone, "birth_date": self.birthDate, "monthly_income": self.monthlyIncome, "monthly_fixed_spend": self.monthlyFixedSpend, "has_entered_user_details": self.hasEnteredUserDetails, "has_completed_account_creation": self.hasCompletedAccountCreation, "has_completed_notification_selection": self.hasCompletedNotificationSelection, "push_notifications_enabled": self.pushNotificationsEnabled, "sms_notifications_enabled": self.smsNotificationsEnabled] as [String : Any]
         ServerCommunicator.shared.callMyServer(path: path, httpMethod: .put, params: params, sessionToken: self.sessionToken) { (result: Result<UserInfoResponse, ServerCommunicator.Error>) in
             switch result {
             case .success:
@@ -256,7 +261,7 @@ class UserViewModel: ObservableObject {
                         
                         let hasCheckingOrSavings = self.bankAccounts.contains { $0.subType == "checking" || $0.subType == "savings" }
                         let hasCreditCard = self.bankAccounts.contains { $0.subType == "credit card" }
-                        self.canCompleteAccountCreation = hasCheckingOrSavings && hasCreditCard
+                        self.canCompleteAccountCreation = hasCheckingOrSavings
                     }
                     print(self.id)
                     print(self.firstName)
@@ -298,6 +303,11 @@ class UserViewModel: ObservableObject {
                 existingUser.birthDate = self.birthDate
                 existingUser.monthlyIncome = self.monthlyIncome
                 existingUser.monthlyFixedSpend = self.monthlyFixedSpend
+                existingUser.hasEnteredUserDetails = self.hasEnteredUserDetails
+                existingUser.hasCompletedAccountCreation = self.hasCompletedAccountCreation
+                existingUser.hasCompletedNotificationSelection = self.hasCompletedNotificationSelection
+                existingUser.pushNotificationsEnabled = self.pushNotificationsEnabled
+                existingUser.smsNotificationsEnabled = self.smsNotificationsEnabled
                 try context.save()
             } else {
                 print("No user found in Core Data with ID \(self.id)")
@@ -353,7 +363,7 @@ class UserViewModel: ObservableObject {
                     let hasCheckingOrSavings = self.bankAccounts.contains { $0.subType == "checking" || $0.subType == "savings" }
                     let hasCreditCard = self.bankAccounts.contains { $0.subType == "credit card" }
 
-                    self.canCompleteAccountCreation = hasCheckingOrSavings && hasCreditCard
+                    self.canCompleteAccountCreation = hasCheckingOrSavings
 
                     let newAccount = Account(context: context)
                     newAccount.id = Int64(bankAccountResponse.id)
@@ -386,28 +396,6 @@ class UserViewModel: ObservableObject {
             print("Failed to fetch accounts from CoreData: \(error)")
         }
     }
-    
-    func completeAccountCreation() {
-        self.hasCompletedAccountCreation = true
-
-        let context = CoreDataStack.shared.persistentContainer.viewContext
-        let fetchRequest: NSFetchRequest<User> = User.fetchRequest()
-        fetchRequest.predicate = NSPredicate(format: "id == %@", self.id)
-
-        do {
-            let fetchedUsers = try context.fetch(fetchRequest)
-
-            if let existingUser = fetchedUsers.first {
-                // If the user exists, update it
-                existingUser.hasCompletedAccountCreation = self.hasCompletedAccountCreation
-            }
-
-            // Save changes to CoreData
-            try context.save()
-        } catch {
-            print("Failed to fetch or save user: \(error)")
-        }
-    }
 
     // MARK: - User Session
     func signOutUser() {
@@ -438,6 +426,11 @@ class UserViewModel: ObservableObject {
         self.monthlyFixedSpend = 0
         self.birthDate = ""
         self.sessionToken = ""
+        self.hasEnteredUserDetails = false
+        self.hasCompletedAccountCreation = false
+        self.hasCompletedNotificationSelection = false
+        self.pushNotificationsEnabled = false
+        self.smsNotificationsEnabled = false
         self.bankAccounts = []
     }
 }

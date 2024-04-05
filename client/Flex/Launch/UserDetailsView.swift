@@ -70,8 +70,8 @@ struct UserDetailsView: View {
                 userViewModel.firstName = firstName
                 userViewModel.lastName = lastName
                 userViewModel.birthDate = birthday
-                userViewModel.updateUserOnServer()
                 userViewModel.hasEnteredUserDetails = true
+                userViewModel.updateUserOnServer()
             } else {
                 showingAlert = true
             }
@@ -81,7 +81,7 @@ struct UserDetailsView: View {
                 .frame(maxWidth: .infinity)
                 .padding()
                 .background(Color.black)
-                .cornerRadius(8)
+                .cornerRadius(12)
         }
         .alert(isPresented: $showingAlert) {
             Alert(title: Text("Invalid Date"), message: Text("Please enter a valid date in the format MM/DD/YYYY"), dismissButton: .default(Text("OK")))

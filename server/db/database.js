@@ -1,8 +1,7 @@
 const pgp = require('pg-promise')();
 const pgTypes = require('pg').types;
 const { queryResultErrorCode } = pgp.errors;
-const cs = new pgp.helpers.ColumnSet(['?id', 'firstname', 'lastname', 'phone', 'monthly_income', 'monthly_fixed_spend', 'birth_date'], {table: 'users'});
-
+const cs = new pgp.helpers.ColumnSet(['?id', 'firstname', 'lastname', 'phone', 'monthly_income', 'monthly_fixed_spend', 'birth_date', 'has_entered_user_details', 'has_completed_account_creation', 'has_completed_notification_selection', 'push_notifications_enabled', 'sms_notifications_enabled'], {table: 'users'});
 // Override default type parsing for integers and floats
 pgTypes.setTypeParser(pgTypes.builtins.INT8, parseInt);
 pgTypes.setTypeParser(pgTypes.builtins.FLOAT8, parseFloat);

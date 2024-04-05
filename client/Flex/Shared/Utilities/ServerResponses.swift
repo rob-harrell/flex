@@ -28,6 +28,11 @@ struct UserInfoResponse: Codable {
     let monthlyIncome: Double
     let monthlyFixedSpend: Double
     let birthDate: String
+    let hasEnteredUserDetails: Bool
+    let hasCompletedAccountCreation: Bool
+    let hasCompletedNotificationSelection: Bool
+    let pushNotificationsEnabled: Bool
+    let smsNotificationsEnabled: Bool
     
     enum CodingKeys: String, CodingKey {
         case id, phone
@@ -36,6 +41,11 @@ struct UserInfoResponse: Codable {
         case birthDate = "birth_date"
         case firstName = "firstname"
         case lastName = "lastname"
+        case hasEnteredUserDetails = "has_entered_user_details"
+        case hasCompletedAccountCreation = "has_completed_account_creation"
+        case hasCompletedNotificationSelection = "has_completed_notification_selection"
+        case pushNotificationsEnabled = "push_notifications_enabled"
+        case smsNotificationsEnabled = "sms_notifications_enabled"
     }
 }
 

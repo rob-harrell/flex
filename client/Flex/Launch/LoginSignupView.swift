@@ -22,17 +22,11 @@ struct LoginSignupView: View {
                 
                 VStack (alignment: .leading) {
                     //CTA
-                    Text("Sign in or create")
+                    Text("Sign in or create\na new account")
                         .font(.title)
                         .fontWeight(.bold)
                         .padding(.horizontal)
                         .padding(.top, -40)
-
-                    Text("a new account")
-                        .font(.title)
-                        .fontWeight(.bold)
-                        .padding(.horizontal)
-                        .padding(.top, -20)
                     
                     // Phone number input
                     HStack {
@@ -56,14 +50,12 @@ struct LoginSignupView: View {
                     )
                     .padding(.horizontal)
                     
-                    Text("We'll send a text to confirm your number. Standard ")
+                    Text("We'll send a text to confirm your number. Standard\nmessaging rates may apply")
                         .font(.footnote)
                         .foregroundColor(.slate500)
                         .padding(.horizontal)
-                    Text("messaging rates may apply")
-                        .font(.footnote)
-                        .foregroundColor(.slate500)
-                        .padding(.horizontal)
+                        .padding(.top, 4)
+                        .padding(.bottom, 4)
                     
                     // Continue button
                     Button(action: {
@@ -76,15 +68,15 @@ struct LoginSignupView: View {
                             .frame(maxWidth: .infinity)
                             .padding()
                             .background(Color.black) 
-                            .cornerRadius(8)
+                            .cornerRadius(12)
                     }
-                    .padding()
+                    .padding(.horizontal)
                     
                     Text("By entering here I agree to all the language in Flex's ")
                         .font(.footnote)
                         .foregroundColor(.slate500)
                         .padding(.horizontal)
-                        .padding(.top, -12)
+                        .padding(.top, 4)
                     Text("terms of service")
                         .underline()
                         .font(.footnote)
