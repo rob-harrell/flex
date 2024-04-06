@@ -11,6 +11,7 @@ import LinkKit
 struct AccountConnectionView: View {
     @EnvironmentObject var userViewModel: UserViewModel
     @EnvironmentObject var plaidLinkViewModel: PlaidLinkViewModel
+    @EnvironmentObject var budgetViewModel: BudgetViewModel
     @State private var isPresentingLink = false
     @State private var linkController: LinkController?
     
@@ -150,6 +151,7 @@ struct AccountConnectionView: View {
             Button(action: {
                 userViewModel.hasCompletedAccountCreation = true
                 userViewModel.updateUserOnServer()
+                budgetViewModel.fetchTransactionsFromServer()
             }) {
                 Text("Done")
                     .foregroundColor(userViewModel.canCompleteAccountCreation ? .white : .slate500)

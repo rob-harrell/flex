@@ -86,5 +86,5 @@ struct MainTabView: View {
     MainTabView()
         .environmentObject(UserViewModel())
         .environmentObject(DateViewModel())
-        .environmentObject(BudgetViewModel(sharedViewModel: DateViewModel()))
+        .environmentObject(BudgetViewModel(sharedViewModel: DateViewModel(), userViewModel: UserViewModel()))
 }

@@ -8,6 +8,8 @@
 import Foundation
 
 typealias BankAccountsResponse = [BankAccountResponse]
+typealias TransactionsResponse = [TransactionResponse]
+typealias BudgetPreferencesResponse = [BudgetPreferenceResponse]
 
 struct OTPResponse: Decodable {
     let message: String?
@@ -33,6 +35,7 @@ struct UserInfoResponse: Codable {
     let hasCompletedNotificationSelection: Bool
     let pushNotificationsEnabled: Bool
     let smsNotificationsEnabled: Bool
+    let hasEditedBudgetPreferences: Bool
     
     enum CodingKeys: String, CodingKey {
         case id, phone
@@ -46,6 +49,7 @@ struct UserInfoResponse: Codable {
         case hasCompletedNotificationSelection = "has_completed_notification_selection"
         case pushNotificationsEnabled = "push_notifications_enabled"
         case smsNotificationsEnabled = "sms_notifications_enabled"
+        case hasEditedBudgetPreferences = "has_edited_budget_preferences"
     }
 }
 
@@ -68,6 +72,57 @@ struct BankAccountResponse: Codable, Identifiable {
         case isActive = "is_active"
         case logoPath = "logo_path"
         case subType = "sub_type"
+    }
+}
+
+struct TransactionResponse: Codable, Identifiable {
+    let amount: Double
+    let authorizedDate: String
+    let budgetCategory: String
+    let category: String
+    let subCategory: String
+    let productCategory: String
+    let currencyCode: String
+    let date: String
+    let id: Int64
+    let isRemoved: Bool
+    let name: String
+    let pending: Bool
+    let accountId: Int64
+
+    enum CodingKeys: String, CodingKey {
+        case amount
+        case authorizedDate = "authorized_date"
+        case budgetCategory = "budget_category"
+        case category
+        case subCategory = "sub_category"
+        case currencyCode = "currency_code"
+        case date
+        case id
+        case isRemoved = "is_removed"
+        case name
+        case pending
+        case accountId = "account_id"
+        case productCategory = "product_category"
+    }
+}
+
+struct BudgetPreferenceResponse: Codable, Identifiable {
+    let id: Int64?
+    let userId: Int64
+    let category: String
+    let subCategory: String
+    let productCategory: String
+    let budgetCategory: String
+    let fixedAmount: Int16?
+    
+    enum CodingKeys: String, CodingKey {
+        case id, category
+        case userId = "user_id"
+        case subCategory = "sub_category"
+        case productCategory = "product_category"
+        case budgetCategory = "budget_category"
+        case fixedAmount = "fixed_amount"
     }
 }
 

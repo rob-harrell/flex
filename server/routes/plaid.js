@@ -30,7 +30,7 @@ router.post("/generate_link_token", async (req, res, next) => {
       client_name: "Flex",
       country_codes: ["US"],
       language: "en",
-      products: ["auth", "transactions"],
+      products: ["transactions"],
       webhook: "https://sample-webhook-uri.com",
       redirect_uri: "https://rob-harrell.github.io/flex/",
     });

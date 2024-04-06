@@ -10,7 +10,7 @@ import SwiftUI
 struct LaunchView: View {
     @EnvironmentObject var userViewModel: UserViewModel
     @EnvironmentObject var sharedViewModel: DateViewModel
-    @EnvironmentObject var budgetViewModel: BudgetViewModel
+    @StateObject private var budgetViewModel = BudgetViewModel()
     @State private var showOTPView: Bool = false
     
     @ViewBuilder
@@ -28,6 +28,7 @@ struct LaunchView: View {
                 } else if userViewModel.hasEnteredUserDetails {
                     AccountConnectionView()
                         .environmentObject(userViewModel)
+                        .environmentObject(budgetViewModel)
                 } else {
                     UserDetailsView()
                         .environmentObject(userViewModel)
@@ -41,6 +42,12 @@ struct LaunchView: View {
                 }
             }
         }
+        .onAppear {
+            if userViewModel.isSignedIn && userViewModel.hasCompletedNotificationSelection {
+                // Update BudgetViewModel when the user is signed in and has completed the notification selection
+                budgetViewModel.update(sharedViewModel: sharedViewModel, userViewModel: userViewModel)
+            }
+        }
     }
 }
 
@@ -48,6 +55,6 @@ struct LaunchView: View {
     LaunchView()
         .environmentObject(UserViewModel())
         .environmentObject(DateViewModel())
-        .environmentObject(BudgetViewModel(sharedViewModel: DateViewModel()))
+        .environmentObject(BudgetViewModel(sharedViewModel: DateViewModel(), userViewModel: UserViewModel()))
 }
 
