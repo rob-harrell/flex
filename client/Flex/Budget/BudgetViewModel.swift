@@ -251,13 +251,13 @@ class BudgetViewModel: ObservableObject {
             if let user = users.first {
                 for budgetPreferenceResponse in budgetPreferences {
                     let budgetPreference = BudgetPreference(context: context)
-                    budgetPreference.id = budgetPreferenceResponse.id
+                    budgetPreference.id = budgetPreferenceResponse.id ?? 0 // Provide a default value
                     budgetPreference.category = budgetPreferenceResponse.category
                     budgetPreference.subCategory = budgetPreferenceResponse.subCategory
                     budgetPreference.budgetCategory = budgetPreferenceResponse.budgetCategory
                     budgetPreference.user = user
                     budgetPreference.productCategory = budgetPreferenceResponse.productCategory
-                    budgetPreference.fixedAmount = budgetPreferenceResponse.fixedAmount
+                    budgetPreference.fixedAmount = budgetPreferenceResponse.fixedAmount ?? 0 // Provide a default value
                 }
 
                 try context.save()
@@ -296,9 +296,12 @@ class BudgetViewModel: ObservableObject {
             sessionToken: userViewModel.sessionToken
         ) { (result: Result<BudgetPreferencesResponse, ServerCommunicator.Error>) in
             switch result {
-            case .success(let budgetPreferences):
+            case .success(let budgetPreferencesResponse):
                 DispatchQueue.main.async {
-                    self.saveBudgetPreferencesToCoreData(budgetPreferences)
+                    // Map BudgetPreferenceResponse instances to BudgetPreferenceViewModel instances
+                    let budgetPreferenceViewModels = budgetPreferencesResponse.map { BudgetPreferenceViewModel(from: $0) }
+                    // Save the fetched budget preferences to Core Data
+                    self.saveBudgetPreferencesToCoreData(budgetPreferenceViewModels)
                 }
             case .failure(let error):
                 print("Failed to fetch budget preferences from server: \(error)")
@@ -309,12 +312,29 @@ class BudgetViewModel: ObservableObject {
     
     // Update budget preferences on server
     func updateBudgetPreferencesOnServer() {
-        let budgetPreferences = loadBudgetPreferencesFromCoreData()
+        let budgetPreferencesForServer = self.budgetPreferences.compactMap { budgetPreference -> [String: Any]? in
+            var keyValuePairs: [(String, Any)] = [
+                ("category", budgetPreference.category),
+                ("sub_category", budgetPreference.subCategory),
+                ("product_category", budgetPreference.productCategory),
+                ("budget_category", budgetPreference.budgetCategory)
+            ]
+            
+            if let id = budgetPreference.id {
+                keyValuePairs.append(("id", id))
+            }
+            
+            if let fixedAmount = budgetPreference.fixedAmount {
+                keyValuePairs.append(("fixed_amount", fixedAmount))
+            }
+            
+            return Dictionary(uniqueKeysWithValues: keyValuePairs)
+        }
 
         ServerCommunicator.shared.callMyServer(
             path: "/budget/update_budget_preferences",
             httpMethod: .post,
-            params: ["id": userViewModel.id, "budgetPreferences": budgetPreferences],
+            params: ["id": userViewModel.id, "budget_preferences": budgetPreferencesForServer],
             sessionToken: userViewModel.sessionToken
         ) { (result: Result<UpdateBudgetPreferencesResponse, ServerCommunicator.Error>) in
             switch result {

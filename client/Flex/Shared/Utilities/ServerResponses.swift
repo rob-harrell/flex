@@ -126,6 +126,10 @@ struct BudgetPreferenceResponse: Codable, Identifiable {
     }
 }
 
+struct UpdateBudgetPreferencesResponse: Decodable {
+    let success: Bool
+}
+
  struct LinkTokenCreateResponse: Codable {
     let linkToken: String
     let expiration: String
