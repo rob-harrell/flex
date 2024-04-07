@@ -60,6 +60,6 @@ struct BudgetHeaderView: View {
     BudgetHeaderView(selectedFilter: .constant(.total))
         .environmentObject(UserViewModel())
         .environmentObject(DateViewModel())
-        .environmentObject(BudgetViewModel(sharedViewModel: DateViewModel(), userViewModel: UserViewModel()))
+        .environmentObject(BudgetViewModel())
 }
 

@@ -50,6 +50,7 @@
         <attribute name="birthDate" optional="YES" attributeType="String"/>
         <attribute name="firstName" optional="YES" attributeType="String"/>
         <attribute name="hasCompletedAccountCreation" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="hasCompletedBudgetCustomization" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="hasCompletedNotificationSelection" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="hasEditedBudgetPreferences" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="hasEnteredUserDetails" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>

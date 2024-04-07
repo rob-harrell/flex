@@ -107,5 +107,5 @@ struct BudgetCalendarView: View {
     BudgetCalendarView()
         .environmentObject(UserViewModel())
         .environmentObject(DateViewModel())
-        .environmentObject(BudgetViewModel(sharedViewModel: DateViewModel(), userViewModel: UserViewModel()))
+        .environmentObject(BudgetViewModel())
 }

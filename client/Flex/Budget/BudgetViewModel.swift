@@ -9,14 +9,19 @@ import Foundation
 import SwiftUI
 import CoreData
 import SwiftCSV
+import KeychainAccess
+
 
 class BudgetViewModel: ObservableObject {
     @Published var spendingData: [Date: Double] = [:]
     @Published var monthlyIncome: Double = 5000.0 // User-set monthly income
     @Published var transactions: [TransactionViewModel] = []
     @Published var budgetPreferences: [BudgetPreferenceViewModel] = []
-    var userViewModel: UserViewModel
-    var sharedViewModel: DateViewModel
+    @Published var totalExpensesPerDay: [Date: Double] = [:]
+    @Published var totalExpensesPerMonth: [Date: Double] = [:]
+    @Published var expensesMonthToDate: Double = 0.0
+    @Published var monthlySavings: [Date: Double] = [:]
+    @Published var currentMonthSavings: Double = 0.0
     
     struct TransactionViewModel {
         var id: Int64
@@ -69,77 +74,7 @@ class BudgetViewModel: ObservableObject {
             self.fixedAmount = budgetPreferenceResponse.fixedAmount
         }
     }
-
-    init(sharedViewModel: DateViewModel, userViewModel: UserViewModel) {
-        self.sharedViewModel = sharedViewModel
-        self.userViewModel = userViewModel
-
-        // Check if budget preferences exist in Core Data
-        let fetchRequest: NSFetchRequest<BudgetPreference> = BudgetPreference.fetchRequest()
-        do {
-            let context = CoreDataStack.shared.persistentContainer.viewContext
-            let budgetPreferences = try context.fetch(fetchRequest)
-            if budgetPreferences.isEmpty {
-                // If the user has not edited budget preferences, load from the default CSV file
-                if !userViewModel.hasEditedBudgetPreferences {
-                    if let defaultBudgetPreferences = loadDefaultBudgetPreferencesFromJSON() {
-                        self.budgetPreferences = defaultBudgetPreferences
-                        saveBudgetPreferencesToCoreData(defaultBudgetPreferences) // Save to Core Data
-                    }
-                } else {
-                    // Otherwise, fetch from the server
-                    fetchBudgetPreferencesFromServer()
-                }
-            } else {
-                // If budget preferences exist in Core Data, hydrate state with them
-                self.budgetPreferences = budgetPreferences.map { BudgetPreferenceViewModel(from: $0) }
-            }
-        } catch {
-            print("Failed to fetch BudgetPreference: \(error)")
-        }
-
-        generateSpendingData()
-    }
-    
-    // Computed properties to calculate total expenses
-    var totalExpensesPerDay: [Date: Double] {
-        var expenses: [Date: Double] = [:]
-        for (date, spending) in spendingData {
-            expenses[date] = spending
-        }
-        return expenses
-    }
-
-    var totalExpensesPerMonth: [Date: Double] {
-        var expenses: [Date: Double] = [:]
-        for monthDates in sharedViewModel.dates {
-            let totalSpending = monthDates.compactMap { spendingData[$0] }.reduce(0, +)
-            expenses[monthDates.first!] = totalSpending
-        }
-        return expenses
-    }
-
-    var expensesMonthToDate: Double {
-        let now = Date()
-        let startOfMonth = Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: now))!
-        let range = startOfMonth...now
-        let totalSpending = spendingData.filter { range.contains($0.key) }.values.reduce(0, +)
-        return totalSpending
-    }
-
-    var monthlySavings: [Date: Double] {
-        var savings: [Date: Double] = [:]
-        for (date, totalExpenses) in totalExpensesPerMonth {
-            savings[date] = monthlyIncome - totalExpenses
-        }
-        return savings
-    }
-
-    var currentMonthSavings: Double {
-        return monthlyIncome - expensesMonthToDate
-    }
-    
-    
+        
     //Mark init
     func loadDefaultBudgetPreferencesFromJSON() -> [BudgetPreferenceViewModel]? {
         if let url = Bundle.main.url(forResource: "DefaultBudgetPreferences", withExtension: "json") {
@@ -157,6 +92,11 @@ class BudgetViewModel: ObservableObject {
     }
     
     //MARK core
+    enum CoreDataError: Error {
+        case userNotFound
+        case accountNotFound
+    }
+    
     func fetchTransactionsFromCoreData() {
         let context = CoreDataStack.shared.persistentContainer.viewContext
         let fetchRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
@@ -172,7 +112,7 @@ class BudgetViewModel: ObservableObject {
         }
     }
     
-    func saveTransactionsToCoreData(_ transactions: TransactionsResponse) {
+    func saveTransactionsToCoreData(_ transactions: TransactionsResponse, userId: Int64) {
         let context = CoreDataStack.shared.persistentContainer.viewContext
 
         for transactionResponse in transactions {
@@ -190,30 +130,29 @@ class BudgetViewModel: ObservableObject {
             transaction.pending = transactionResponse.pending
             transaction.productCategory = transactionResponse.productCategory
 
-            // Get the User from userViewModel.id
+            // Get the User from userId
             let userFetchRequest: NSFetchRequest<User> = User.fetchRequest()
-            userFetchRequest.predicate = NSPredicate(format: "id == %@", userViewModel.id)
+            userFetchRequest.predicate = NSPredicate(format: "id == %lld", userId)
 
             do {
                 let users = try context.fetch(userFetchRequest)
-                if let user = users.first {
-                    transaction.user = user
+                guard let user = users.first else {
+                    throw CoreDataError.userNotFound
                 }
-            } catch {
-                print("Failed to fetch user from Core Data: \(error)")
-            }
+                transaction.user = user
 
-            // Get the Account from the account ID in the TransactionResponse
-            let accountFetchRequest: NSFetchRequest<Account> = Account.fetchRequest()
-            accountFetchRequest.predicate = NSPredicate(format: "id == %d", transactionResponse.accountId)
+                // Get the Account from the account ID in the TransactionResponse
+                let accountFetchRequest: NSFetchRequest<Account> = Account.fetchRequest()
+                accountFetchRequest.predicate = NSPredicate(format: "id == %lld", transactionResponse.accountId)
 
-            do {
                 let accounts = try context.fetch(accountFetchRequest)
-                if let account = accounts.first {
-                    transaction.account = account
+                guard let account = accounts.first else {
+                    throw CoreDataError.accountNotFound
                 }
+                transaction.account = account
             } catch {
-                print("Failed to fetch account from Core Data: \(error)")
+                print("Failed to fetch user or account from Core Data: \(error)")
+                return
             }
         }
 
@@ -237,12 +176,12 @@ class BudgetViewModel: ObservableObject {
         }
     }
     
-    func saveBudgetPreferencesToCoreData(_ budgetPreferences: [BudgetPreferenceViewModel]) {
+    func saveBudgetPreferencesToCoreData(_ budgetPreferences: [BudgetPreferenceViewModel], userId: Int64) {
         let context = CoreDataStack.shared.persistentContainer.viewContext
 
         // Fetch the User from Core Data
         let fetchRequest: NSFetchRequest<User> = User.fetchRequest()
-        fetchRequest.predicate = NSPredicate(format: "id == %@", userViewModel.id)
+        fetchRequest.predicate = NSPredicate(format: "id == %@", userId)
 
         do {
             let users = try context.fetch(fetchRequest)
@@ -269,17 +208,20 @@ class BudgetViewModel: ObservableObject {
     
     
     //MARK server
-    func fetchTransactionsFromServer() {
+    func fetchTransactionsFromServer(userId: Int64) {
+        let keychain = Keychain(service: "robharrell.Flex")
+        let sessionToken = keychain["sessionToken"] ?? ""
+
         ServerCommunicator.shared.callMyServer(
-            path: "/budget/get_transactions_for_user_accounts",
+            path: "/budget/get_transactions_for_user",
             httpMethod: .get,
-            params: ["id": userViewModel.id],
-            sessionToken: userViewModel.sessionToken
+            params: ["id": userId],
+            sessionToken: sessionToken
         ) { (result: Result<TransactionsResponse, ServerCommunicator.Error>) in
             switch result {
             case .success(let transactions):
                 DispatchQueue.main.async {
-                    self.saveTransactionsToCoreData(transactions)
+                    self.saveTransactionsToCoreData(transactions, userId: userId)
                 }
             case .failure(let error):
                 print("Failed to fetch user data from server: \(error)")
@@ -288,12 +230,15 @@ class BudgetViewModel: ObservableObject {
     }
     
     // Fetch budget preferences from server
-    func fetchBudgetPreferencesFromServer() {
+    func fetchBudgetPreferencesFromServer(userId: Int64) {
+        let keychain = Keychain(service: "robharrell.Flex")
+        let sessionToken = keychain["sessionToken"] ?? ""
+        
         ServerCommunicator.shared.callMyServer(
-            path: "/budget/get_budget_preferences",
+            path: "/budget/get_budget_preferences_for_user",
             httpMethod: .get,
-            params: ["id": userViewModel.id],
-            sessionToken: userViewModel.sessionToken
+            params: ["id": userId],
+            sessionToken: sessionToken
         ) { (result: Result<BudgetPreferencesResponse, ServerCommunicator.Error>) in
             switch result {
             case .success(let budgetPreferencesResponse):
@@ -301,7 +246,7 @@ class BudgetViewModel: ObservableObject {
                     // Map BudgetPreferenceResponse instances to BudgetPreferenceViewModel instances
                     let budgetPreferenceViewModels = budgetPreferencesResponse.map { BudgetPreferenceViewModel(from: $0) }
                     // Save the fetched budget preferences to Core Data
-                    self.saveBudgetPreferencesToCoreData(budgetPreferenceViewModels)
+                    self.saveBudgetPreferencesToCoreData(budgetPreferenceViewModels, userId: userId)
                 }
             case .failure(let error):
                 print("Failed to fetch budget preferences from server: \(error)")
@@ -311,7 +256,9 @@ class BudgetViewModel: ObservableObject {
 
     
     // Update budget preferences on server
-    func updateBudgetPreferencesOnServer() {
+    func updateBudgetPreferencesOnServer(userId: Int64) {
+        let keychain = Keychain(service: "robharrell.Flex")
+        let sessionToken = keychain["sessionToken"] ?? ""
         let budgetPreferencesForServer = self.budgetPreferences.compactMap { budgetPreference -> [String: Any]? in
             var keyValuePairs: [(String, Any)] = [
                 ("category", budgetPreference.category),
@@ -332,10 +279,10 @@ class BudgetViewModel: ObservableObject {
         }
 
         ServerCommunicator.shared.callMyServer(
-            path: "/budget/update_budget_preferences",
+            path: "/budget/update_budget_preferences_for_user",
             httpMethod: .post,
-            params: ["id": userViewModel.id, "budget_preferences": budgetPreferencesForServer],
-            sessionToken: userViewModel.sessionToken
+            params: ["id": userId, "budget_preferences": budgetPreferencesForServer],
+            sessionToken: sessionToken
         ) { (result: Result<UpdateBudgetPreferencesResponse, ServerCommunicator.Error>) in
             switch result {
             case .success:
@@ -346,17 +293,43 @@ class BudgetViewModel: ObservableObject {
         }
     }
     
-    
-    //Mark placeholder
-    // Function to generate dummy spending data for the past 12 months
-    private func generateSpendingData() {
-        for monthDates in sharedViewModel.dates {
+    //Mark business logic
+    func generateSpendingData(dates: [[Date]]) {
+        for monthDates in dates {
             for date in monthDates {
                 // Generate and store dummy spending data for the date
                 let randomSpending = Double.random(in: 1...100)
                 spendingData[date] = randomSpending
             }
         }
+        
+        // Calculate total expenses per day
+        totalExpensesPerDay = [:]
+        for (date, spending) in spendingData {
+            totalExpensesPerDay[date] = spending
+        }
+        
+        // Calculate total expenses per month
+        totalExpensesPerMonth = [:]
+        for monthDates in dates {
+            let totalSpending = monthDates.compactMap { spendingData[$0] }.reduce(0, +)
+            totalExpensesPerMonth[monthDates.first!] = totalSpending
+        }
+        
+        // Calculate expenses month to date
+        let now = Date()
+        let startOfMonth = Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: now))!
+        let range = startOfMonth...now
+        expensesMonthToDate = spendingData.filter { range.contains($0.key) }.values.reduce(0, +)
+        
+        // Calculate monthly savings
+        monthlySavings = [:]
+        for (date, totalExpenses) in totalExpensesPerMonth {
+            monthlySavings[date] = monthlyIncome - totalExpenses
+        }
+        
+        // Calculate current month savings
+        currentMonthSavings = monthlyIncome - expensesMonthToDate
     }
     
     // Function to return spending amount for a given date as a string

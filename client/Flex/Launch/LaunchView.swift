@@ -9,44 +9,34 @@ import SwiftUI
 
 struct LaunchView: View {
     @EnvironmentObject var userViewModel: UserViewModel
-    @EnvironmentObject var sharedViewModel: DateViewModel
-    @StateObject private var budgetViewModel = BudgetViewModel()
-    @State private var showOTPView: Bool = false
-    
+    @State private var showOTPview: Bool = false
+
     @ViewBuilder
     var body: some View {
-        Group {
-            if userViewModel.isSignedIn {
-                if userViewModel.hasCompletedNotificationSelection {
-                    MainTabView()
-                        .environmentObject(userViewModel)
-                        .environmentObject(sharedViewModel)
-                        .environmentObject(budgetViewModel)
-                } else if userViewModel.hasCompletedAccountCreation {
-                    NotificationView()
-                        .environmentObject(userViewModel)
-                } else if userViewModel.hasEnteredUserDetails {
-                    AccountConnectionView()
-                        .environmentObject(userViewModel)
-                        .environmentObject(budgetViewModel)
-                } else {
-                    UserDetailsView()
-                        .environmentObject(userViewModel)
-                }
+        if userViewModel.isSignedIn {
+            if userViewModel.hasCompletedNotificationSelection {
+                //replace with budget customization view
+                MainTabView()
+                    .environmentObject(userViewModel)
+            } else if userViewModel.hasCompletedAccountCreation {
+                NotificationView()
+                    .environmentObject(userViewModel)
+            } else if userViewModel.hasEnteredUserDetails {
+                AccountConnectionView()
+                    .environmentObject(userViewModel)
             } else {
-                if showOTPView {
+                UserDetailsView()
+                    .environmentObject(userViewModel)
+            }
+        } else {
+            Group {
+                if showOTPview {
                     OTPView()
-                        .environmentObject(userViewModel)
                 } else {
-                    LoginSignupView(showOTPView: $showOTPView)
+                    LoginSignupView(showOTPView: $showOTPview)
                 }
             }
-        }
-        .onAppear {
-            if userViewModel.isSignedIn && userViewModel.hasCompletedNotificationSelection {
-                // Update BudgetViewModel when the user is signed in and has completed the notification selection
-                budgetViewModel.update(sharedViewModel: sharedViewModel, userViewModel: userViewModel)
-            }
+            .environmentObject(userViewModel)
         }
     }
 }
@@ -54,7 +44,5 @@ struct LaunchView: View {
 #Preview {
     LaunchView()
         .environmentObject(UserViewModel())
-        .environmentObject(DateViewModel())
-        .environmentObject(BudgetViewModel(sharedViewModel: DateViewModel(), userViewModel: UserViewModel()))
 }
 

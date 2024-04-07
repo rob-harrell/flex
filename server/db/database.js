@@ -1,7 +1,7 @@
 const pgp = require('pg-promise')();
 const pgTypes = require('pg').types;
 const { queryResultErrorCode } = pgp.errors;
-const cs = new pgp.helpers.ColumnSet(['?id', 'firstname', 'lastname', 'phone', 'monthly_income', 'monthly_fixed_spend', 'birth_date', 'has_entered_user_details', 'has_completed_account_creation', 'has_completed_notification_selection', 'push_notifications_enabled', 'sms_notifications_enabled'], {table: 'users'});
+const cs = new pgp.helpers.ColumnSet(['?id', 'firstname', 'lastname', 'phone', 'monthly_income', 'monthly_fixed_spend', 'birth_date', 'has_entered_user_details', 'has_completed_account_creation', 'has_completed_notification_selection', 'push_notifications_enabled', 'sms_notifications_enabled', 'has_edited_budget_preferences'], {table: 'users'});
 // Override default type parsing for integers and floats
 pgTypes.setTypeParser(pgTypes.builtins.INT8, parseInt);
 pgTypes.setTypeParser(pgTypes.builtins.FLOAT8, parseFloat);
@@ -143,5 +143,36 @@ async function createAccount(accountData) {
   );  
   return account;
 }
+
+async function getTransactions(userId) {
+  // TODO: Implement this function
+  console.log(`Getting transactions for user with ID ${userId}`);
+}
+
+async function getBudgetPreferences(userId) {
+  // TODO: Implement this function
+  console.log(`Getting budget preferences for user with ID ${userId}`);
+}
+
+async function updateBudgetPreferences(userId, preferences) {
+  // TODO: Implement this function
+  console.log(`Updating budget preferences for user with ID ${userId}`);
+}
   
-module.exports = { getUserRecord, getUserRecordByPhone, getUserAccounts, createItem, updateUser, createUser, updateItem, createAccount, getInstitutionByPlaidId, createInstitution, invalidateSessionToken, getUserBySessionToken };
+module.exports = { 
+  getUserRecord, 
+  getUserRecordByPhone, 
+  getUserAccounts, 
+  createItem, 
+  updateUser, 
+  createUser, 
+  updateItem, 
+  createAccount, 
+  getInstitutionByPlaidId, 
+  createInstitution, 
+  invalidateSessionToken, 
+  getUserBySessionToken,
+  getTransactions, 
+  getBudgetPreferences,
+  updateBudgetPreferences 
+};

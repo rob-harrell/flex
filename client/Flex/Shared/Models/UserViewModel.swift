@@ -26,6 +26,7 @@ class UserViewModel: ObservableObject {
     @Published var pushNotificationsEnabled: Bool = false
     @Published var smsNotificationsEnabled: Bool = false
     @Published var hasEditedBudgetPreferences: Bool = false
+    @Published var hasCompletedBudgetCustomization: Bool = false
     var isSignedIn: Bool {
         UserDefaults.standard.object(forKey: "currentUserId") != nil
     }

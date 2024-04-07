@@ -13,6 +13,7 @@ struct FlexApp: App {
     @StateObject var sharedViewModel = DateViewModel()
     @StateObject var userViewModel = UserViewModel()
     @StateObject var plaidLinkViewModel = PlaidLinkViewModel()
+    @StateObject var budgetViewModel = BudgetViewModel()
     @StateObject var coreDataStack = CoreDataStack.shared
 
     var body: some Scene {
@@ -21,6 +22,7 @@ struct FlexApp: App {
                 .environmentObject(userViewModel)
                 .environmentObject(sharedViewModel)
                 .environmentObject(plaidLinkViewModel)
+                .environmentObject(budgetViewModel)
                 .environment(\.managedObjectContext, coreDataStack.persistentContainer.viewContext)
         }
     }

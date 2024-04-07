@@ -151,7 +151,7 @@ struct AccountConnectionView: View {
             Button(action: {
                 userViewModel.hasCompletedAccountCreation = true
                 userViewModel.updateUserOnServer()
-                budgetViewModel.fetchTransactionsFromServer()
+                budgetViewModel.fetchTransactionsFromServer(userId: userViewModel.id)
             }) {
                 Text("Done")
                     .foregroundColor(userViewModel.canCompleteAccountCreation ? .white : .slate500)
