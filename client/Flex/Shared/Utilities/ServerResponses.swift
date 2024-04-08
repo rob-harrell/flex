@@ -78,10 +78,8 @@ struct BankAccountResponse: Codable, Identifiable {
 struct TransactionResponse: Codable, Identifiable {
     let amount: Double
     let authorizedDate: String
-    let budgetCategory: String
     let category: String
     let subCategory: String
-    let productCategory: String
     let currencyCode: String
     let date: String
     let id: Int64
@@ -93,7 +91,6 @@ struct TransactionResponse: Codable, Identifiable {
     enum CodingKeys: String, CodingKey {
         case amount
         case authorizedDate = "authorized_date"
-        case budgetCategory = "budget_category"
         case category
         case subCategory = "sub_category"
         case currencyCode = "currency_code"
@@ -103,7 +100,6 @@ struct TransactionResponse: Codable, Identifiable {
         case name
         case pending
         case accountId = "account_id"
-        case productCategory = "product_category"
     }
 }
 

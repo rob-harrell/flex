@@ -46,7 +46,7 @@ struct MainTabView: View {
                 // Initialize budgetviewmodel
                 loadBudgetPreferences()
                 generateSpendingData()
-                
+                budgetViewModel.fetchTransactionsFromServer(userId: userViewModel.id)
                 
                 UITabBarItem.appearance().setTitleTextAttributes([NSAttributedString.Key.font: UIFont.systemFont(ofSize: 12)], for: .normal)
                 UITabBarItem.appearance().setTitleTextAttributes([NSAttributedString.Key.font: UIFont.systemFont(ofSize: 12)], for: .selected)

@@ -2,6 +2,9 @@ const pgp = require('pg-promise')();
 const pgTypes = require('pg').types;
 const { queryResultErrorCode } = pgp.errors;
 const cs = new pgp.helpers.ColumnSet(['?id', 'firstname', 'lastname', 'phone', 'monthly_income', 'monthly_fixed_spend', 'birth_date', 'has_entered_user_details', 'has_completed_account_creation', 'has_completed_notification_selection', 'push_notifications_enabled', 'sms_notifications_enabled', 'has_edited_budget_preferences'], {table: 'users'});
+const csBudgetPreferences = new pgp.helpers.ColumnSet(['?id', 'user_id', 'category', 'sub_category', 'budget_category', 'created', 'updated', 'product_category', 'fixed_amount'], {table: 'budget_preferences'});
+
+
 // Override default type parsing for integers and floats
 pgTypes.setTypeParser(pgTypes.builtins.INT8, parseInt);
 pgTypes.setTypeParser(pgTypes.builtins.FLOAT8, parseFloat);
@@ -144,19 +147,72 @@ async function createAccount(accountData) {
   return account;
 }
 
-async function getTransactions(userId) {
-  // TODO: Implement this function
-  console.log(`Getting transactions for user with ID ${userId}`);
-}
-
 async function getBudgetPreferences(userId) {
-  // TODO: Implement this function
+  const budgetPreferences = await db.any('SELECT * FROM budget_preferences WHERE user_id = $1', [userId]);
   console.log(`Getting budget preferences for user with ID ${userId}`);
+  return budgetPreferences;
 }
 
 async function updateBudgetPreferences(userId, preferences) {
-  // TODO: Implement this function
   console.log(`Updating budget preferences for user with ID ${userId}`);
+  
+  for (let preference of preferences) {
+    const existingPreference = await db.oneOrNone('SELECT * FROM budget_preferences WHERE user_id = $1 AND category = $2 AND sub_category = $3', [userId, preference.category, preference.sub_category]);
+
+    if (existingPreference) {
+      preference.id = existingPreference.id;
+      const update = pgp.helpers.update(preference, csBudgetPreferences) + ' WHERE id = ${id}';
+      await db.none(update, preference);
+    } else {
+      await db.none('INSERT INTO budget_preferences(user_id, category, sub_category, budget_category, product_category, fixed_amount) VALUES($1, $2, $3, $4, $5, $6)', [userId, preference.category, preference.sub_category, preference.budget_category, preference.product_category, preference.fixed_amount]);
+    }
+  }
+}
+// Function to get all items for a user
+async function getItemsForUser(userId) {
+  const items = await db.any('SELECT * FROM items WHERE user_id = $1', [userId]);
+  return items;
+}
+
+// Function to save transactions for a user's item
+async function saveTransactions(userId, itemId, added, modified, removed) {
+  // Start a transaction
+  await db.tx(async t => {
+    // Insert added transactions
+    for (let transaction of added) {
+      await t.none(`
+        INSERT INTO transactions (id, account_id, user_id, category, sub_category, date, authorized_date, name, amount, currency_code, is_removed, pending, payment_meta)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      `, [transaction.id, itemId, userId, transaction.category, transaction.sub_category, transaction.date, transaction.authorized_date, transaction.name, transaction.amount, transaction.currency_code, false, transaction.pending, JSON.stringify(transaction.payment_meta)]);
+    }
+
+    // Update modified transactions
+    for (let transaction of modified) {
+      await t.none(`
+        UPDATE transactions
+        SET category = $1, sub_category = $2, date = $3, authorized_date = $4, name = $5, amount = $6, currency_code = $7, pending = $8, payment_meta = $9
+        WHERE user_id = $10 AND account_id = $11 AND id = $12
+      `, [transaction.category, transaction.sub_category, transaction.date, transaction.authorized_date, transaction.name, transaction.amount, transaction.currency_code, transaction.pending, JSON.stringify(transaction.payment_meta), userId, itemId, transaction.id]);
+    }
+
+    // Mark removed transactions
+    for (let transaction of removed) {
+      await t.none(`
+        UPDATE transactions
+        SET is_removed = true
+        WHERE user_id = $1 AND account_id = $2 AND id = $3
+      `, [userId, itemId, transaction.id]);
+    }
+  });
+}
+
+// Function to save the cursor for a user's item
+async function saveCursor(itemId, cursor) {
+  await db.none(`
+    UPDATE items
+    SET cursor = $1
+    WHERE id = $2
+  `, [cursor, itemId]);
 }
   
 module.exports = { 
@@ -172,7 +228,9 @@ module.exports = {
   createInstitution, 
   invalidateSessionToken, 
   getUserBySessionToken,
-  getTransactions, 
   getBudgetPreferences,
-  updateBudgetPreferences 
+  updateBudgetPreferences,
+  getItemsForUser, 
+  saveTransactions, 
+  saveCursor 
 };

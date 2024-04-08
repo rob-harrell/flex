@@ -120,7 +120,6 @@ class BudgetViewModel: ObservableObject {
             transaction.id = transactionResponse.id
             transaction.amount = transactionResponse.amount
             transaction.authorizedDate = transactionResponse.authorizedDate
-            transaction.budgetCategory = transactionResponse.budgetCategory
             transaction.category = transactionResponse.category
             transaction.subCategory = transactionResponse.subCategory
             transaction.currencyCode = transactionResponse.currencyCode
@@ -128,7 +127,16 @@ class BudgetViewModel: ObservableObject {
             transaction.isRemoved = transactionResponse.isRemoved
             transaction.name = transactionResponse.name
             transaction.pending = transactionResponse.pending
-            transaction.productCategory = transactionResponse.productCategory
+
+            // Assign productCategory and budgetCategory from budgetPreferences
+            if let budgetPreference = budgetPreferences.first(where: { $0.category == transaction.category && $0.subCategory == transaction.subCategory }) {
+                transaction.productCategory = budgetPreference.productCategory
+                transaction.budgetCategory = budgetPreference.budgetCategory
+            } else {
+                // Assign default values or leave as is
+                transaction.productCategory = ""
+                transaction.budgetCategory = ""
+            }
 
             // Get the User from userId
             let userFetchRequest: NSFetchRequest<User> = User.fetchRequest()
