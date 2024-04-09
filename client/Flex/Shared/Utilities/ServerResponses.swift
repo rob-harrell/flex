@@ -8,8 +8,12 @@
 import Foundation
 
 typealias BankAccountsResponse = [BankAccountResponse]
-typealias TransactionsResponse = [TransactionResponse]
 typealias BudgetPreferencesResponse = [BudgetPreferenceResponse]
+struct TransactionsResponse: Codable {
+    let added: [TransactionResponse]
+    let modified: [TransactionResponse]
+    let removed: [TransactionResponse]
+}
 
 struct OTPResponse: Decodable {
     let message: String?
@@ -36,6 +40,7 @@ struct UserInfoResponse: Codable {
     let pushNotificationsEnabled: Bool
     let smsNotificationsEnabled: Bool
     let hasEditedBudgetPreferences: Bool
+    let hasCompletedBudgetCustomization: Bool
     
     enum CodingKeys: String, CodingKey {
         case id, phone
@@ -50,6 +55,7 @@ struct UserInfoResponse: Codable {
         case pushNotificationsEnabled = "push_notifications_enabled"
         case smsNotificationsEnabled = "sms_notifications_enabled"
         case hasEditedBudgetPreferences = "has_edited_budget_preferences"
+        case hasCompletedBudgetCustomization = "has_completed_budget_customization"
     }
 }
 
@@ -77,7 +83,7 @@ struct BankAccountResponse: Codable, Identifiable {
 
 struct TransactionResponse: Codable, Identifiable {
     let amount: Double
-    let authorizedDate: String
+    let authorizedDate: String?
     let category: String
     let subCategory: String
     let currencyCode: String

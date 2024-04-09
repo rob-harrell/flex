@@ -95,6 +95,7 @@ class BudgetViewModel: ObservableObject {
     enum CoreDataError: Error {
         case userNotFound
         case accountNotFound
+        case transactionNotFound
     }
     
     func fetchTransactionsFromCoreData() {
@@ -112,7 +113,7 @@ class BudgetViewModel: ObservableObject {
         }
     }
     
-    func saveTransactionsToCoreData(_ transactions: TransactionsResponse, userId: Int64) {
+    func saveTransactionsToCoreData(_ transactions: [TransactionResponse], userId: Int64) {
         let context = CoreDataStack.shared.persistentContainer.viewContext
 
         for transactionResponse in transactions {
@@ -154,10 +155,13 @@ class BudgetViewModel: ObservableObject {
                 accountFetchRequest.predicate = NSPredicate(format: "id == %lld", transactionResponse.accountId)
 
                 let accounts = try context.fetch(accountFetchRequest)
-                guard let account = accounts.first else {
+                if let account = accounts.first {
+                    print("Fetched account from Core Data: \(account)")
+                    transaction.account = account
+                } else {
+                    print("No account found in Core Data for ID: \(transactionResponse.accountId)")
                     throw CoreDataError.accountNotFound
                 }
-                transaction.account = account
             } catch {
                 print("Failed to fetch user or account from Core Data: \(error)")
                 return
@@ -168,6 +172,80 @@ class BudgetViewModel: ObservableObject {
             try context.save()
         } catch {
             print("Failed to save transactions to Core Data: \(error)")
+        }
+    }
+    
+    func modifyTransactionsInCoreData(_ transactions: [TransactionResponse], userId: Int64) {
+        let context = CoreDataStack.shared.persistentContainer.viewContext
+
+        for transactionResponse in transactions {
+            let fetchRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
+            fetchRequest.predicate = NSPredicate(format: "id == %lld", transactionResponse.id)
+
+            do {
+                let fetchedTransactions = try context.fetch(fetchRequest)
+                guard let transaction = fetchedTransactions.first else {
+                    throw CoreDataError.transactionNotFound
+                }
+
+                // Update the properties of the transaction
+                transaction.amount = transactionResponse.amount
+                transaction.authorizedDate = transactionResponse.authorizedDate
+                transaction.category = transactionResponse.category
+                transaction.subCategory = transactionResponse.subCategory
+                transaction.currencyCode = transactionResponse.currencyCode
+                transaction.date = transactionResponse.date
+                transaction.isRemoved = transactionResponse.isRemoved
+                transaction.name = transactionResponse.name
+                transaction.pending = transactionResponse.pending
+
+                // Update the productCategory and budgetCategory from budgetPreferences
+                if let budgetPreference = budgetPreferences.first(where: { $0.category == transaction.category && $0.subCategory == transaction.subCategory }) {
+                    transaction.productCategory = budgetPreference.productCategory
+                    transaction.budgetCategory = budgetPreference.budgetCategory
+                } else {
+                    // Assign default values or leave as is
+                    transaction.productCategory = ""
+                    transaction.budgetCategory = ""
+                }
+            } catch {
+                print("Failed to fetch or modify transaction from Core Data: \(error)")
+                return
+            }
+        }
+
+        do {
+            try context.save()
+        } catch {
+            print("Failed to save modified transactions to Core Data: \(error)")
+        }
+    }
+    
+    func removeTransactionsFromCoreData(_ transactions: [TransactionResponse], userId: Int64) {
+        let context = CoreDataStack.shared.persistentContainer.viewContext
+
+        for transactionResponse in transactions {
+            let fetchRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
+            fetchRequest.predicate = NSPredicate(format: "id == %lld", transactionResponse.id)
+
+            do {
+                let fetchedTransactions = try context.fetch(fetchRequest)
+                guard let transaction = fetchedTransactions.first else {
+                    throw CoreDataError.transactionNotFound
+                }
+
+                // Delete the transaction
+                context.delete(transaction)
+            } catch {
+                print("Failed to fetch or remove transaction from Core Data: \(error)")
+                return
+            }
+        }
+
+        do {
+            try context.save()
+        } catch {
+            print("Failed to save changes after removing transactions from Core Data: \(error)")
         }
     }
     
@@ -189,7 +267,7 @@ class BudgetViewModel: ObservableObject {
 
         // Fetch the User from Core Data
         let fetchRequest: NSFetchRequest<User> = User.fetchRequest()
-        fetchRequest.predicate = NSPredicate(format: "id == %@", userId)
+        fetchRequest.predicate = NSPredicate(format: "id == %lld", userId)
 
         do {
             let users = try context.fetch(fetchRequest)
@@ -220,16 +298,18 @@ class BudgetViewModel: ObservableObject {
         let keychain = Keychain(service: "robharrell.Flex")
         let sessionToken = keychain["sessionToken"] ?? ""
 
+        let path = "/budget/get_transactions_for_user/\(userId)"
         ServerCommunicator.shared.callMyServer(
-            path: "/budget/get_transactions_for_user",
+            path: path,
             httpMethod: .get,
-            params: ["id": userId],
             sessionToken: sessionToken
         ) { (result: Result<TransactionsResponse, ServerCommunicator.Error>) in
             switch result {
-            case .success(let transactions):
+            case .success(let transactionsResponse):
                 DispatchQueue.main.async {
-                    self.saveTransactionsToCoreData(transactions, userId: userId)
+                    self.saveTransactionsToCoreData(transactionsResponse.added, userId: userId)
+                    self.modifyTransactionsInCoreData(transactionsResponse.modified, userId: userId)
+                    self.removeTransactionsFromCoreData(transactionsResponse.removed, userId: userId)
                 }
             case .failure(let error):
                 print("Failed to fetch user data from server: \(error)")
@@ -241,11 +321,11 @@ class BudgetViewModel: ObservableObject {
     func fetchBudgetPreferencesFromServer(userId: Int64) {
         let keychain = Keychain(service: "robharrell.Flex")
         let sessionToken = keychain["sessionToken"] ?? ""
-        
+
+        let path = "/budget/get_budget_preferences_for_user/\(userId)"
         ServerCommunicator.shared.callMyServer(
-            path: "/budget/get_budget_preferences_for_user",
+            path: path,
             httpMethod: .get,
-            params: ["id": userId],
             sessionToken: sessionToken
         ) { (result: Result<BudgetPreferencesResponse, ServerCommunicator.Error>) in
             switch result {

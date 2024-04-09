@@ -15,7 +15,6 @@ struct LaunchView: View {
     var body: some View {
         if userViewModel.isSignedIn {
             if userViewModel.hasCompletedNotificationSelection {
-                //replace with budget customization view
                 MainTabView()
                     .environmentObject(userViewModel)
             } else if userViewModel.hasCompletedAccountCreation {

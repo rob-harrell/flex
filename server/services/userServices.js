@@ -74,6 +74,8 @@ async function getPlaidAccountInfo(itemId, accessToken, plaidClient) {
         console.log('logoPath:', logoPath);
     } else {
         console.log('No logo available for this institution');
+        // Use the default logo
+        logoPath = '../assets/institution_logos/39ccb2e7-90d2-4c60-84b0-aea399e180ad.png';
     }
 
     // Store the institution data in your database
@@ -107,7 +109,6 @@ async function getPlaidAccountInfo(itemId, accessToken, plaidClient) {
     };
     await createAccount(accountData);
   }
-  console.log(accounts)
 }
 
 async function createItemRecord(itemData) {

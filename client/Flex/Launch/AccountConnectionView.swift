@@ -112,7 +112,7 @@ struct AccountConnectionView: View {
             }
             .padding()
             
-            ForEach(userViewModel.bankAccounts.filter { $0.subType == "credit" }) { account in
+            ForEach(userViewModel.bankAccounts.filter { $0.subType == "credit card" }) { account in
                 HStack {
                     AsyncImage(url: URL(string: "http://localhost:8000/assets/institution_logos/\(account.logoPath)")!) { phase in
                         switch phase {
@@ -151,7 +151,6 @@ struct AccountConnectionView: View {
             Button(action: {
                 userViewModel.hasCompletedAccountCreation = true
                 userViewModel.updateUserOnServer()
-                budgetViewModel.fetchTransactionsFromServer(userId: userViewModel.id)
             }) {
                 Text("Done")
                     .foregroundColor(userViewModel.canCompleteAccountCreation ? .white : .slate500)

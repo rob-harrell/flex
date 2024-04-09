@@ -11,6 +11,8 @@ import UserNotifications
 struct NotificationView: View {
     @EnvironmentObject var userViewModel: UserViewModel
     @State private var isCheckboxChecked = true
+    @State private var isRequestingAuthorization = false
+
 
     var body: some View {
         VStack (alignment: .leading) {
@@ -55,12 +57,12 @@ struct NotificationView: View {
             .padding(.horizontal)
 
             Button(action: {
+                isRequestingAuthorization = true
                 userViewModel.smsNotificationsEnabled = isCheckboxChecked
-                userViewModel.hasCompletedNotificationSelection = true
-
                 let center = UNUserNotificationCenter.current()
                 center.requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
                     DispatchQueue.main.async {
+                        isRequestingAuthorization = false
                         if granted {
                             print("Notifications permission granted.")
                             userViewModel.pushNotificationsEnabled = true
@@ -68,8 +70,8 @@ struct NotificationView: View {
                             print("Notifications permission denied because: \(error?.localizedDescription ?? "User denied permission.")")
                             userViewModel.pushNotificationsEnabled = false
                         }
-                        userViewModel.updateUserOnServer()
                         userViewModel.hasCompletedNotificationSelection = true
+                        userViewModel.updateUserOnServer()
                     }
                 }
             }) {
@@ -81,6 +83,7 @@ struct NotificationView: View {
                     .cornerRadius(12)
             }
             .padding()
+            .disabled(isRequestingAuthorization) // Disable the button while the authorization request is in progress
         }
     }
 }

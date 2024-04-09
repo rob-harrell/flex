@@ -38,7 +38,7 @@
 		D46EDF0B2BA93FF3002FF9BE /* CoreDataStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46EDF0A2BA93FF3002FF9BE /* CoreDataStack.swift */; };
 		D47B9D512BBF51460020228F /* NotificationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D47B9D502BBF51460020228F /* NotificationView.swift */; };
 		D47B9D542BC19FC90020228F /* SwiftCSV in Frameworks */ = {isa = PBXBuildFile; productRef = D47B9D532BC19FC90020228F /* SwiftCSV */; };
-		D47B9D562BC1F7B00020228F /* DefaultBudgetPreferences.json in Resources */ = {isa = PBXBuildFile; fileRef = D47B9D552BC1F7B00020228F /* DefaultBudgetPreferences.json */; };
+		D47B9D5A2BC37D480020228F /* DefaultBudgetPreferences.json in Resources */ = {isa = PBXBuildFile; fileRef = D47B9D592BC37D480020228F /* DefaultBudgetPreferences.json */; };
 		D48EF48E2B95759000117E8B /* UserViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D48EF48D2B95759000117E8B /* UserViewModel.swift */; };
 		D49D59CF2B7815E4001C0D0A /* DateViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49D59CE2B7815E4001C0D0A /* DateViewModel.swift */; };
 		D49D59D12B785501001C0D0A /* MonthSelectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49D59D02B785501001C0D0A /* MonthSelectorView.swift */; };
@@ -94,7 +94,7 @@
 		D46EDED82BA51721002FF9BE /* FlexClientDataModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = FlexClientDataModel.xcdatamodel; sourceTree = "<group>"; };
 		D46EDF0A2BA93FF3002FF9BE /* CoreDataStack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataStack.swift; sourceTree = "<group>"; };
 		D47B9D502BBF51460020228F /* NotificationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationView.swift; sourceTree = "<group>"; };
-		D47B9D552BC1F7B00020228F /* DefaultBudgetPreferences.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; name = DefaultBudgetPreferences.json; path = ../../../../../../Downloads/DefaultBudgetPreferences.json; sourceTree = "<group>"; };
+		D47B9D592BC37D480020228F /* DefaultBudgetPreferences.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = DefaultBudgetPreferences.json; sourceTree = "<group>"; };
 		D48EF48D2B95759000117E8B /* UserViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserViewModel.swift; sourceTree = "<group>"; };
 		D49D59CE2B7815E4001C0D0A /* DateViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateViewModel.swift; sourceTree = "<group>"; };
 		D49D59D02B785501001C0D0A /* MonthSelectorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthSelectorView.swift; sourceTree = "<group>"; };
@@ -196,7 +196,7 @@
 		D4005AAB2B661D6700652FCA /* Budget */ = {
 			isa = PBXGroup;
 			children = (
-				D47B9D552BC1F7B00020228F /* DefaultBudgetPreferences.json */,
+				D47B9D592BC37D480020228F /* DefaultBudgetPreferences.json */,
 				D4005AB02B66213200652FCA /* BudgetView.swift */,
 				D4005AC52B67245800652FCA /* BudgetFilterView.swift */,
 				D4005ABF2B67236300652FCA /* BudgetHeaderView.swift */,
@@ -397,8 +397,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D47B9D562BC1F7B00020228F /* DefaultBudgetPreferences.json in Resources */,
 				D4005A852B65F69E00652FCA /* Preview Assets.xcassets in Resources */,
+				D47B9D5A2BC37D480020228F /* DefaultBudgetPreferences.json in Resources */,
 				D4005A822B65F69E00652FCA /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

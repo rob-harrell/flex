@@ -24,7 +24,7 @@ const { validateSessionToken } = require('./services/userServices');
 // Use the routes as middleware
 app.use('/user', checkSessionToken, userRoutes);
 app.use('/accounts', checkSessionToken, accountsRoutes);
-app.use('/plaid', checkSessionToken, plaidRoutes);
+app.use('/plaid', checkSessionToken, plaidRoutes.router);
 app.use('/budget', checkSessionToken, budgetRoutes);
 app.use('/twilio', twilioRoutes);
 

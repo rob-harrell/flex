@@ -3,12 +3,12 @@ const router = express.Router();
 const budgetServices = require('../services/budgetServices'); // Updated path
 
 // Get transactions for user
-router.get('/get_transactions_for_user', budgetServices.getTransactionsForUser, (req, res) => {
+router.get('/get_transactions_for_user/:id', budgetServices.getTransactionsForUser, (req, res) => {
     res.send(res.locals.data);
 });
 
 // Get budget preferences for user
-router.get('/get_budget_preferences_for_user', budgetServices.getBudgetPreferencesForUser, (req, res) => {
+router.get('/get_budget_preferences_for_user/:id', budgetServices.getBudgetPreferencesForUser, (req, res) => {
     res.send(res.locals.data);
 });
 

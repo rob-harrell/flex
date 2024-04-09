@@ -60,7 +60,6 @@ router.post("/swap_public_token", async (req, res, next) => {
       public_token: req.body.public_token,
     });
     const data = result.data;
-    console.log("publicTokenExchange data", data);
     console.log(req.body);
 
     const userId = req.body.userId;
@@ -84,5 +83,36 @@ router.post("/swap_public_token", async (req, res, next) => {
   }
 });
 
+async function syncTransactions(accessToken, cursor) {
+  const options = {
+    access_token: accessToken,
+  };
 
-module.exports = router;
+  if (cursor) {
+    options.cursor = cursor;
+  }
+  console.log('accessToken', accessToken);
+  console.log('cursor', cursor);
+
+  try {
+    const response = await plaidClient.transactionsSync(options);
+    if (response && response.data) {
+      return {
+        added: response.data.added,
+        removed: response.data.removed,
+        modified: response.data.modified,
+      };
+    } else {
+      console.error('Error in syncTransactions: No response or data');
+      return null;
+    }
+  } catch (error) {
+    console.error('Error in syncTransactions', error);
+    return null;
+  }
+}
+
+module.exports = {
+  router,
+  syncTransactions,
+};

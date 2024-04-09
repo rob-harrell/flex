@@ -1,7 +1,7 @@
 const pgp = require('pg-promise')();
 const pgTypes = require('pg').types;
 const { queryResultErrorCode } = pgp.errors;
-const cs = new pgp.helpers.ColumnSet(['?id', 'firstname', 'lastname', 'phone', 'monthly_income', 'monthly_fixed_spend', 'birth_date', 'has_entered_user_details', 'has_completed_account_creation', 'has_completed_notification_selection', 'push_notifications_enabled', 'sms_notifications_enabled', 'has_edited_budget_preferences'], {table: 'users'});
+const cs = new pgp.helpers.ColumnSet(['?id', 'firstname', 'lastname', 'phone', 'monthly_income', 'monthly_fixed_spend', 'birth_date', 'has_entered_user_details', 'has_completed_account_creation', 'has_completed_notification_selection', 'push_notifications_enabled', 'sms_notifications_enabled', 'has_edited_budget_preferences', 'has_completed_budget_customization'], {table: 'users'});
 const csBudgetPreferences = new pgp.helpers.ColumnSet(['?id', 'user_id', 'category', 'sub_category', 'budget_category', 'created', 'updated', 'product_category', 'fixed_amount'], {table: 'budget_preferences'});
 
 
@@ -50,8 +50,6 @@ async function getUserRecordByPhone(phoneNumber) {
 }
 
 async function getUserAccounts(userId) {
-    console.log("db call in progress for user:")
-    console.log(userId)
     const accounts = await db.any(`
       SELECT 
         accounts.id as id, 
@@ -68,8 +66,6 @@ async function getUserAccounts(userId) {
       INNER JOIN institutions ON items.institution_id = institutions.id
       WHERE items.user_id = $1
     `, [userId]);
-    console.log("retrieved the following accounts:")
-    console.log(accounts)
     return accounts;
 }
 
@@ -170,47 +166,86 @@ async function updateBudgetPreferences(userId, preferences) {
 }
 // Function to get all items for a user
 async function getItemsForUser(userId) {
-  const items = await db.any('SELECT * FROM items WHERE user_id = $1', [userId]);
-  return items;
+  console.log(typeof userId);
+  try {
+    const items = await db.any('SELECT * FROM items WHERE user_id = $1', [userId]);
+    return items;
+  } catch (error) {
+    console.error('Error executing query', error);
+  }
 }
 
 // Function to save transactions for a user's item
 async function saveTransactions(userId, itemId, added, modified, removed) {
   // Start a transaction
-  await db.tx(async t => {
+  return await db.tx(async t => {
+    let results = [];
+
     // Insert added transactions
     for (let transaction of added) {
-      await t.none(`
-        INSERT INTO transactions (id, account_id, user_id, category, sub_category, date, authorized_date, name, amount, currency_code, is_removed, pending, payment_meta)
+      let category = transaction.category[0] || null;
+      let sub_category = transaction.category.slice(1) || [];
+
+      let result = await t.one(`
+        INSERT INTO transactions (plaid_transaction_id, plaid_account_id, user_id, category, sub_category, date, authorized_date, name, amount, currency_code, is_removed, pending, payment_meta)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-      `, [transaction.id, itemId, userId, transaction.category, transaction.sub_category, transaction.date, transaction.authorized_date, transaction.name, transaction.amount, transaction.currency_code, false, transaction.pending, JSON.stringify(transaction.payment_meta)]);
+        RETURNING *
+      `, [transaction.transaction_id, transaction.account_id, userId, category, sub_category, transaction.date, transaction.authorized_date, transaction.name, transaction.amount, transaction.iso_currency_code || '', false, transaction.pending, JSON.stringify(transaction.payment_meta)]);
+      results.push(result);
     }
 
     // Update modified transactions
     for (let transaction of modified) {
-      await t.none(`
+      let category = transaction.category[0] || null;
+      let sub_category = transaction.category.slice(1) || [];
+
+      let result = await t.one(`
         UPDATE transactions
-        SET category = $1, sub_category = $2, date = $3, authorized_date = $4, name = $5, amount = $6, currency_code = $7, pending = $8, payment_meta = $9
-        WHERE user_id = $10 AND account_id = $11 AND id = $12
-      `, [transaction.category, transaction.sub_category, transaction.date, transaction.authorized_date, transaction.name, transaction.amount, transaction.currency_code, transaction.pending, JSON.stringify(transaction.payment_meta), userId, itemId, transaction.id]);
+        SET category = $1, sub_category = $2, date = $3, authorized_date = $4, name = $5, amount = $6, currency_code = $7, pending = $8, payment_meta = $9, plaid_account_id = $10
+        WHERE user_id = $11 AND plaid_transaction_id = $12
+        RETURNING *
+      `, [category, sub_category, transaction.date, transaction.authorized_date, transaction.name, transaction.amount, transaction.currency_code, transaction.pending, JSON.stringify(transaction.payment_meta), transaction.account_id, userId, transaction.transaction_id]);
+      results.push(result);
     }
 
     // Mark removed transactions
     for (let transaction of removed) {
-      await t.none(`
+      let result = await t.one(`
         UPDATE transactions
         SET is_removed = true
-        WHERE user_id = $1 AND account_id = $2 AND id = $3
-      `, [userId, itemId, transaction.id]);
+        WHERE user_id = $1 AND plaid_transaction_id = $2
+        RETURNING *
+      `, [userId, transaction.transaction_id]);
+      results.push(result);
     }
+
+    return results;
   });
 }
+
+// Function to get internal account ID
+async function getInternalAccountId(plaidAccountId) {
+  const result = await db.query(`
+    SELECT id
+    FROM accounts
+    WHERE plaid_account_id = $1
+  `, [plaidAccountId]);
+
+  // Check if an account was found
+  if (result.length > 0) {
+    // Return the internal account ID
+    return result[0].id;
+  } else {
+    // No account was found, return null
+    return null;
+  }
+};
 
 // Function to save the cursor for a user's item
 async function saveCursor(itemId, cursor) {
   await db.none(`
     UPDATE items
-    SET cursor = $1
+    SET plaid_cursor = $1
     WHERE id = $2
   `, [cursor, itemId]);
 }
@@ -232,5 +267,6 @@ module.exports = {
   updateBudgetPreferences,
   getItemsForUser, 
   saveTransactions, 
+  getInternalAccountId,
   saveCursor 
 };

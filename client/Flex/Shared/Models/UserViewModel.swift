@@ -146,6 +146,8 @@ class UserViewModel: ObservableObject {
                     self.hasCompletedNotificationSelection = data.hasCompletedNotificationSelection
                     self.pushNotificationsEnabled = data.pushNotificationsEnabled
                     self.smsNotificationsEnabled = data.smsNotificationsEnabled
+                    self.hasEditedBudgetPreferences = data.hasEditedBudgetPreferences
+                    self.hasCompletedBudgetCustomization = data.hasCompletedBudgetCustomization
                 
                     // If user has entered details, update user in CoreData
                     // Otherwise, create user in CoreData
@@ -168,7 +170,7 @@ class UserViewModel: ObservableObject {
             return
         }
         let path = "/user/\(self.id)"
-        let params = ["id": String(self.id), "firstname": self.firstName, "lastname": self.lastName, "phone": self.phone, "birth_date": self.birthDate, "monthly_income": self.monthlyIncome, "monthly_fixed_spend": self.monthlyFixedSpend, "has_entered_user_details": self.hasEnteredUserDetails, "has_completed_account_creation": self.hasCompletedAccountCreation, "has_completed_notification_selection": self.hasCompletedNotificationSelection, "push_notifications_enabled": self.pushNotificationsEnabled, "sms_notifications_enabled": self.smsNotificationsEnabled] as [String : Any]
+        let params = ["id": String(self.id), "firstname": self.firstName, "lastname": self.lastName, "phone": self.phone, "birth_date": self.birthDate, "monthly_income": self.monthlyIncome, "monthly_fixed_spend": self.monthlyFixedSpend, "has_entered_user_details": self.hasEnteredUserDetails, "has_completed_account_creation": self.hasCompletedAccountCreation, "has_completed_notification_selection": self.hasCompletedNotificationSelection, "push_notifications_enabled": self.pushNotificationsEnabled, "sms_notifications_enabled": self.smsNotificationsEnabled, "has_edited_budget_preferences": self.hasEditedBudgetPreferences, "has_completed_budget_customization": self.hasCompletedBudgetCustomization] as [String : Any]
         ServerCommunicator.shared.callMyServer(path: path, httpMethod: .put, params: params, sessionToken: self.sessionToken) { (result: Result<UserInfoResponse, ServerCommunicator.Error>) in
             switch result {
             case .success:
@@ -194,13 +196,8 @@ class UserViewModel: ObservableObject {
             case .success(let data):
                 print("successfully received account data")
                 DispatchQueue.main.async {
-                    print("Decoded data: \(data)")
-                    
                     let accountsToSave = data.filter { $0.subType == "checking" || $0.subType == "credit card" || $0.subType == "savings" }
-                    
                     self.upsertFetchedAccountsInCoreData(data: accountsToSave)
-                    
-                    print("Returned accounts from server: \(self.bankAccounts)")
                 }
             case .failure(let error):
                 print("Failed to fetch bank connections from server: \(error)")
@@ -236,15 +233,21 @@ class UserViewModel: ObservableObject {
             let users = try context.fetch(fetchRequest)
             if let user = users.first {
                 DispatchQueue.main.async {
+                    self.id = user.id
                     self.firstName = user.firstName ?? ""
                     self.lastName = user.lastName ?? ""
+                    self.phone = user.phone ?? ""
                     self.monthlyIncome = user.monthlyIncome
                     self.monthlyFixedSpend = user.monthlyFixedSpend
                     self.birthDate = user.birthDate ?? ""
+                    self.hasEnteredUserDetails = user.hasEnteredUserDetails
+                    self.hasCompletedAccountCreation = user.hasCompletedAccountCreation
+                    self.hasCompletedNotificationSelection = user.hasCompletedNotificationSelection
+                    self.pushNotificationsEnabled = user.pushNotificationsEnabled
+                    self.smsNotificationsEnabled = user.smsNotificationsEnabled
+                    self.hasEditedBudgetPreferences = user.hasEditedBudgetPreferences
+                    self.hasCompletedBudgetCustomization = user.hasCompletedBudgetCustomization
 
-                    // Set hasEnteredUserDetails to true if firstName is not nil and not an empty string
-                    self.hasEnteredUserDetails = !(self.firstName.isEmpty)
-                    
                     // Fetch accounts and populate bankAccounts array
                     if let accounts = user.accounts as? Set<Account> {
                         self.bankAccounts = accounts.map { account in
@@ -279,6 +282,7 @@ class UserViewModel: ObservableObject {
     }
 
     func createUserInCoreData() {
+        print("calling create user in core data with id: \(self.id) and phone: \(self.phone)")
         let context = CoreDataStack.shared.persistentContainer.viewContext
         let newUser = User(context: context)
         newUser.id = self.id
@@ -292,6 +296,7 @@ class UserViewModel: ObservableObject {
     }
 
     func updateUserInCoreData() {
+        print("calling update user in core data")
         let context = CoreDataStack.shared.persistentContainer.viewContext
         let fetchRequest: NSFetchRequest<User> = User.fetchRequest()
         fetchRequest.predicate = NSPredicate(format: "id == %d", self.id)
@@ -310,6 +315,8 @@ class UserViewModel: ObservableObject {
                 existingUser.hasCompletedNotificationSelection = self.hasCompletedNotificationSelection
                 existingUser.pushNotificationsEnabled = self.pushNotificationsEnabled
                 existingUser.smsNotificationsEnabled = self.smsNotificationsEnabled
+                existingUser.hasEditedBudgetPreferences = self.hasEditedBudgetPreferences
+                existingUser.hasCompletedBudgetCustomization = self.hasCompletedBudgetCustomization
                 try context.save()
             } else {
                 print("No user found in Core Data with ID \(self.id)")
@@ -433,6 +440,8 @@ class UserViewModel: ObservableObject {
         self.hasCompletedNotificationSelection = false
         self.pushNotificationsEnabled = false
         self.smsNotificationsEnabled = false
+        self.hasEditedBudgetPreferences = false
+        self.hasCompletedBudgetCustomization = false
         self.bankAccounts = []
     }
 }

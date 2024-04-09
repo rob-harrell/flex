@@ -45,7 +45,6 @@ struct MainTabView: View {
             .onAppear {
                 // Initialize budgetviewmodel
                 loadBudgetPreferences()
-                generateSpendingData()
                 budgetViewModel.fetchTransactionsFromServer(userId: userViewModel.id)
                 
                 UITabBarItem.appearance().setTitleTextAttributes([NSAttributedString.Key.font: UIFont.systemFont(ofSize: 12)], for: .normal)
@@ -105,10 +104,6 @@ struct MainTabView: View {
         }
 
         budgetViewModel.generateSpendingData(dates: sharedViewModel.dates)
-    }
-    
-    private func generateSpendingData() {
-        
     }
         
     enum Tab {

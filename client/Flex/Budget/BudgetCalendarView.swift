@@ -20,8 +20,8 @@ struct BudgetCalendarView: View {
         VStack {
             // Weekday headers
             HStack(spacing: 10) {
-                ForEach(["S", "M", "T", "W", "T", "F", "S"], id: \.self) { day in
-                    Text(day)
+                ForEach(["S", "M", "T", "W", "T", "F", "S"].indices, id: \.self) { index in
+                    Text(["S", "M", "T", "W", "T", "F", "S"][index])
                         .frame(minWidth: 0, maxWidth: .infinity)
                         .font(.caption)
                         .foregroundColor(.gray)
