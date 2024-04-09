@@ -33,10 +33,13 @@ exports.getTransactionsForUser = async (req, res, next) => {
                 );
                 console.log('Transactions fetched from Plaid');
 
+                // Filter transactions by account type
+                const filteredResponse = filterTransactionsByAccountType(response);
+
                 // Append new transactions to the list
-                added = added.concat(response.added);
-                modified = modified.concat(response.modified);
-                removed = removed.concat(response.removed);
+                added = added.concat(filteredResponse.added);
+                modified = modified.concat(filteredResponse.modified);
+                removed = removed.concat(filteredResponse.removed);
 
                 // Update cursor and hasMore for the next iteration
                 cursor = response.next_cursor;
@@ -70,7 +73,19 @@ exports.getTransactionsForUser = async (req, res, next) => {
         res.locals.error = error;
     }
     next();
-};
+}
+
+// Function to filter transactions by account type
+function filterTransactionsByAccountType(response) {
+    const accountTypes = ["checking", "savings", "credit card"];
+    return {
+        added: response.added.filter(transaction => transaction.category && transaction.category.some(category => accountTypes.includes(category.toLowerCase()))),
+        modified: response.modified.filter(transaction => transaction.category && transaction.category.some(category => accountTypes.includes(category.toLowerCase()))),
+        removed: response.removed.filter(transaction => transaction.category && transaction.category.some(category => accountTypes.includes(category.toLowerCase()))),
+        next_cursor: response.next_cursor,
+        has_more: response.has_more
+    };
+}
 
 //Function to get transactions with internal account IDs
 async function getTransactionsWithInternalAccountId(transactions) {

@@ -268,10 +268,6 @@ class UserViewModel: ObservableObject {
                         let hasCreditCard = self.bankAccounts.contains { $0.subType == "credit card" }
                         self.canCompleteAccountCreation = hasCheckingOrSavings
                     }
-                    print(self.id)
-                    print(self.firstName)
-                    print(self.phone)
-                    print("Bank accounts: \(self.bankAccounts)")
                 }
             } else {
                 print("No user found in Core Data with ID \(userId)")
