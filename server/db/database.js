@@ -52,7 +52,8 @@ async function getUserRecordByPhone(phoneNumber) {
 async function getUserAccounts(userId) {
     const accounts = await db.any(`
       SELECT 
-        accounts.id as id, 
+        accounts.id as id,
+        accounts.plaid_account_id, 
         accounts.name, 
         accounts.masked_account_number, 
         accounts.friendly_account_name,
@@ -187,10 +188,10 @@ async function saveTransactions(userId, itemId, added, modified, removed) {
       let sub_category = transaction.category.slice(1) || [];
 
       let result = await t.one(`
-        INSERT INTO transactions (plaid_transaction_id, plaid_account_id, user_id, category, sub_category, date, authorized_date, name, amount, currency_code, is_removed, pending, payment_meta)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        INSERT INTO transactions (plaid_transaction_id, plaid_account_id, user_id, category, sub_category, date, authorized_date, name, amount, currency_code, is_removed, pending, payment_meta, merchant_name)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
         RETURNING *
-      `, [transaction.transaction_id, transaction.account_id, userId, category, sub_category, transaction.date, transaction.authorized_date, transaction.name, transaction.amount, transaction.iso_currency_code || '', false, transaction.pending, JSON.stringify(transaction.payment_meta)]);
+      `, [transaction.transaction_id, transaction.account_id, userId, category, sub_category, transaction.date, transaction.authorized_date, transaction.name, transaction.amount, transaction.iso_currency_code || '', false, transaction.pending, JSON.stringify(transaction.payment_meta), transaction.merchant_name]);
       results.push(result);
     }
 
@@ -201,10 +202,10 @@ async function saveTransactions(userId, itemId, added, modified, removed) {
 
       let result = await t.one(`
         UPDATE transactions
-        SET category = $1, sub_category = $2, date = $3, authorized_date = $4, name = $5, amount = $6, currency_code = $7, pending = $8, payment_meta = $9, plaid_account_id = $10
-        WHERE user_id = $11 AND plaid_transaction_id = $12
+        SET category = $1, sub_category = $2, date = $3, authorized_date = $4, name = $5, amount = $6, currency_code = $7, pending = $8, payment_meta = $9, plaid_account_id = $10, merchant_name = $11
+        WHERE user_id = $12 AND plaid_transaction_id = $13
         RETURNING *
-      `, [category, sub_category, transaction.date, transaction.authorized_date, transaction.name, transaction.amount, transaction.currency_code, transaction.pending, JSON.stringify(transaction.payment_meta), transaction.account_id, userId, transaction.transaction_id]);
+      `, [category, sub_category, transaction.date, transaction.authorized_date, transaction.name, transaction.amount, transaction.currency_code, transaction.pending, JSON.stringify(transaction.payment_meta), transaction.account_id, transaction.merchant_name, userId, transaction.transaction_id]);
       results.push(result);
     }
 

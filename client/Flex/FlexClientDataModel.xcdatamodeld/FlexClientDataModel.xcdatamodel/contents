@@ -39,6 +39,7 @@
         <attribute name="date" optional="YES" attributeType="String"/>
         <attribute name="id" optional="YES" attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="isRemoved" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="merchantName" optional="YES" attributeType="String"/>
         <attribute name="name" optional="YES" attributeType="String"/>
         <attribute name="pending" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="productCategory" optional="YES" attributeType="String"/>

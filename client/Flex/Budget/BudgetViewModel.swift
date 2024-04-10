@@ -36,6 +36,7 @@ class BudgetViewModel: ObservableObject {
         var name: String
         var pending: Bool
         var productCategory: String
+        var merchantName: String
     }
     
     struct BudgetPreferenceViewModel: Decodable {
@@ -105,7 +106,7 @@ class BudgetViewModel: ObservableObject {
         do {
             let fetchedTransactions = try context.fetch(fetchRequest)
             transactions = fetchedTransactions.map { transaction in
-                TransactionViewModel(id: transaction.id, amount: transaction.amount, authorizedDate: transaction.authorizedDate!, budgetCategory: transaction.budgetCategory!, category: transaction.category!, subCategory: transaction.subCategory!, currencyCode: transaction.currencyCode!, date: transaction.date!, isRemoved: transaction.isRemoved, name: transaction.name!, pending: transaction.pending, productCategory: transaction.productCategory!)
+                TransactionViewModel(id: transaction.id, amount: transaction.amount, authorizedDate: transaction.authorizedDate!, budgetCategory: transaction.budgetCategory!, category: transaction.category!, subCategory: transaction.subCategory!, currencyCode: transaction.currencyCode!, date: transaction.date!, isRemoved: transaction.isRemoved, name: transaction.name!, pending: transaction.pending, productCategory: transaction.productCategory!, merchantName: transaction.merchantName!)
             }
             print("fetched transactions from core data")
         } catch {
@@ -128,6 +129,7 @@ class BudgetViewModel: ObservableObject {
             transaction.isRemoved = transactionResponse.isRemoved
             transaction.name = transactionResponse.name
             transaction.pending = transactionResponse.pending
+            transaction.merchantName = transactionResponse.merchantName
 
             // Assign productCategory and budgetCategory from budgetPreferences
             if let budgetPreference = budgetPreferences.first(where: { $0.category == transaction.category && $0.subCategory == transaction.subCategory }) {
@@ -198,6 +200,7 @@ class BudgetViewModel: ObservableObject {
                 transaction.isRemoved = transactionResponse.isRemoved
                 transaction.name = transactionResponse.name
                 transaction.pending = transactionResponse.pending
+                transaction.merchantName = transactionResponse.merchantName
 
                 // Update the productCategory and budgetCategory from budgetPreferences
                 if let budgetPreference = budgetPreferences.first(where: { $0.category == transaction.category && $0.subCategory == transaction.subCategory }) {

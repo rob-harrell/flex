@@ -13,6 +13,23 @@ exports.getTransactionsForUser = async (req, res, next) => {
         const items = await db.getItemsForUser(userId);
         console.log('Items fetched for user', items);
 
+        // Get all accounts for the user from the database
+        const accounts = await db.getUserAccounts(userId);
+        console.log('Accounts fetched for user', accounts);
+
+        // Filter the accounts to only include checking, savings, and credit card accounts
+        const accountTypes = ["checking", "savings", "credit card"];
+        const filteredAccounts = accounts.filter(account => accountTypes.includes(account.type.toLowerCase()));
+
+        // Create a set of the Plaid account IDs for the filtered accounts
+        const filteredAccountIds = new Set(filteredAccounts.map(account => account.plaid_account_id));
+
+        // Create a mapping from Plaid account ID to internal account ID
+        const accountIdMapping = {};
+        for (let account of filteredAccounts) {
+            accountIdMapping[account.plaid_account_id] = account.id;
+        }
+
         let allAdded = [];
         let allModified = [];
         let allRemoved = [];
@@ -33,13 +50,15 @@ exports.getTransactionsForUser = async (req, res, next) => {
                 );
                 console.log('Transactions fetched from Plaid');
 
-                // Filter transactions by account type
-                const filteredResponse = filterTransactionsByAccountType(response);
+                // Filter the transactions by account ID
+                response.added = response.added.filter(transaction => filteredAccountIds.has(transaction.account_id));
+                response.modified = response.modified.filter(transaction => filteredAccountIds.has(transaction.account_id));
+                response.removed = response.removed.filter(transaction => filteredAccountIds.has(transaction.account_id));
 
                 // Append new transactions to the list
-                added = added.concat(filteredResponse.added);
-                modified = modified.concat(filteredResponse.modified);
-                removed = removed.concat(filteredResponse.removed);
+                added = added.concat(response.added);
+                modified = modified.concat(response.modified);
+                removed = removed.concat(response.removed);
 
                 // Update cursor and hasMore for the next iteration
                 cursor = response.next_cursor;
@@ -55,10 +74,10 @@ exports.getTransactionsForUser = async (req, res, next) => {
             allModified = allModified.concat(savedTransactions.filter(t => t.is_removed === false));
             allRemoved = allRemoved.concat(savedTransactions.filter(t => t.is_removed === true));
 
-            // Get transactions with internal account IDs
-            allAdded = await getTransactionsWithInternalAccountId(allAdded);
-            allModified = await getTransactionsWithInternalAccountId(allModified);
-            allRemoved = await getTransactionsWithInternalAccountId(allRemoved);
+            // Replace Plaid account IDs with internal account IDs
+            allAdded = replacePlaidAccountIdsWithInternalAccountIds(allAdded, accountIdMapping);
+            allModified = replacePlaidAccountIdsWithInternalAccountIds(allModified, accountIdMapping);
+            allRemoved = replacePlaidAccountIdsWithInternalAccountIds(allRemoved, accountIdMapping);
         }
 
         console.log('Transactions fetched from Plaid and saved to DB, now responding to client')
@@ -75,36 +94,20 @@ exports.getTransactionsForUser = async (req, res, next) => {
     next();
 }
 
-// Function to filter transactions by account type
-function filterTransactionsByAccountType(response) {
-    const accountTypes = ["checking", "savings", "credit card"];
-    return {
-        added: response.added.filter(transaction => transaction.category && transaction.category.some(category => accountTypes.includes(category.toLowerCase()))),
-        modified: response.modified.filter(transaction => transaction.category && transaction.category.some(category => accountTypes.includes(category.toLowerCase()))),
-        removed: response.removed.filter(transaction => transaction.category && transaction.category.some(category => accountTypes.includes(category.toLowerCase()))),
-        next_cursor: response.next_cursor,
-        has_more: response.has_more
-    };
+// Function to replace Plaid account IDs with internal account IDs
+function replacePlaidAccountIdsWithInternalAccountIds(transactions, accountIdMapping) {
+    return transactions.map(transaction => ({
+        ...transaction,
+        account_id: accountIdMapping[transaction.account_id]
+    }));
 }
 
-//Function to get transactions with internal account IDs
-async function getTransactionsWithInternalAccountId(transactions) {
-    // Create a new list for the modified transactions
-    let modifiedTransactions = [];
-
-    // Iterate over each transaction
-    for (let transaction of transactions) {
-        // Get the internal account ID for the transaction's Plaid account ID
-        let accountId = await db.getInternalAccountId(transaction.plaid_account_id);
-
-        // Replace the transaction's Plaid account ID with the internal account ID
-        let modifiedTransaction = {...transaction, account_id: accountId};
-
-        // Add the modified transaction to the new list
-        modifiedTransactions.push(modifiedTransaction);
-    }
-
-    return modifiedTransactions;
+// Function to replace Plaid account IDs with internal account IDs
+function replacePlaidAccountIdsWithInternalAccountIds(transactions, accountIdMapping) {
+    return transactions.map(transaction => ({
+        ...transaction,
+        account_id: accountIdMapping[transaction.account_id]
+    }));
 }
 
 // Function to get budget preferences for a user
