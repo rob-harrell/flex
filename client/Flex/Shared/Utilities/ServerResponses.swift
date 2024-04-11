@@ -93,7 +93,7 @@ struct TransactionResponse: Codable, Identifiable {
     let name: String
     let pending: Bool
     let accountId: Int64
-    let merchantName: String
+    let merchantName: String?
 
     enum CodingKeys: String, CodingKey {
         case amount

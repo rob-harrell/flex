@@ -158,7 +158,6 @@ class BudgetViewModel: ObservableObject {
 
                 let accounts = try context.fetch(accountFetchRequest)
                 if let account = accounts.first {
-                    print("Fetched account from Core Data: \(account)")
                     transaction.account = account
                 } else {
                     print("No account found in Core Data for ID: \(transactionResponse.accountId)")

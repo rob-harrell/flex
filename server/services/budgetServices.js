@@ -19,16 +19,19 @@ exports.getTransactionsForUser = async (req, res, next) => {
 
         // Filter the accounts to only include checking, savings, and credit card accounts
         const accountTypes = ["checking", "savings", "credit card"];
-        const filteredAccounts = accounts.filter(account => accountTypes.includes(account.type.toLowerCase()));
+        const filteredAccounts = accounts.filter(account => accountTypes.includes(account.sub_type.toLowerCase()));
+        console.log('Filtered accounts', filteredAccounts);
 
         // Create a set of the Plaid account IDs for the filtered accounts
         const filteredAccountIds = new Set(filteredAccounts.map(account => account.plaid_account_id));
+        console.log('Filtered account IDs', [...filteredAccountIds]);
 
         // Create a mapping from Plaid account ID to internal account ID
         const accountIdMapping = {};
         for (let account of filteredAccounts) {
             accountIdMapping[account.plaid_account_id] = account.id;
         }
+        console.log('Account ID mapping', accountIdMapping);
 
         let allAdded = [];
         let allModified = [];
@@ -51,9 +54,28 @@ exports.getTransactionsForUser = async (req, res, next) => {
                 console.log('Transactions fetched from Plaid');
 
                 // Filter the transactions by account ID
+
+                console.log(`Fetched ${response.added.length} new transactions from Plaid`);
+                console.log(`Fetched ${response.modified.length} modified transactions from Plaid`);
+                console.log(`Fetched ${response.removed.length} removed transactions from Plaid`);
+
                 response.added = response.added.filter(transaction => filteredAccountIds.has(transaction.account_id));
                 response.modified = response.modified.filter(transaction => filteredAccountIds.has(transaction.account_id));
                 response.removed = response.removed.filter(transaction => filteredAccountIds.has(transaction.account_id));
+
+                console.log(`${response.added.length} new transactions after filtering`);
+                console.log(`${response.modified.length} modified transactions after filtering`);
+                console.log(`${response.removed.length} removed transactions after filtering`);
+
+                // Log the properties of each transaction before it's processed
+                response.added.forEach(transaction => console.log(`Processing transaction with properties ${JSON.stringify(transaction)}`));
+                response.modified.forEach(transaction => console.log(`Processing transaction with properties ${JSON.stringify(transaction)}`));
+                response.removed.forEach(transaction => console.log(`Processing transaction with properties ${JSON.stringify(transaction)}`));
+
+                // Add internal account ID to each transaction and remove payment meta
+                response.added = processTransactions(response.added, accountIdMapping);
+                response.modified = processTransactions(response.modified, accountIdMapping);
+                response.removed = processTransactions(response.removed, accountIdMapping);
 
                 // Append new transactions to the list
                 added = added.concat(response.added);
@@ -70,14 +92,9 @@ exports.getTransactionsForUser = async (req, res, next) => {
             await db.saveCursor(currentItem.id, cursor);
 
             // Append transactions to the total list
-            allAdded = allAdded.concat(savedTransactions.filter(t => t.is_removed === false));
-            allModified = allModified.concat(savedTransactions.filter(t => t.is_removed === false));
-            allRemoved = allRemoved.concat(savedTransactions.filter(t => t.is_removed === true));
-
-            // Replace Plaid account IDs with internal account IDs
-            allAdded = replacePlaidAccountIdsWithInternalAccountIds(allAdded, accountIdMapping);
-            allModified = replacePlaidAccountIdsWithInternalAccountIds(allModified, accountIdMapping);
-            allRemoved = replacePlaidAccountIdsWithInternalAccountIds(allRemoved, accountIdMapping);
+            allAdded = allAdded.concat(savedTransactions.added);
+            allModified = allModified.concat(savedTransactions.modified);
+            allRemoved = allRemoved.concat(savedTransactions.removed);
         }
 
         console.log('Transactions fetched from Plaid and saved to DB, now responding to client')
@@ -94,20 +111,29 @@ exports.getTransactionsForUser = async (req, res, next) => {
     next();
 }
 
-// Function to replace Plaid account IDs with internal account IDs
-function replacePlaidAccountIdsWithInternalAccountIds(transactions, accountIdMapping) {
-    return transactions.map(transaction => ({
-        ...transaction,
-        account_id: accountIdMapping[transaction.account_id]
-    }));
-}
+function processTransactions(transactions, accountIdMapping) {
+    const processedTransactions = transactions.map(transaction => {
+        // Keep both account_id (Plaid) and internal_account_id
+        transaction.plaid_account_id = transaction.account_id;
+        console.log(`Set plaid_account_id to: ${transaction.plaid_account_id}`);
 
-// Function to replace Plaid account IDs with internal account IDs
-function replacePlaidAccountIdsWithInternalAccountIds(transactions, accountIdMapping) {
-    return transactions.map(transaction => ({
-        ...transaction,
-        account_id: accountIdMapping[transaction.account_id]
-    }));
+        const internalAccountId = accountIdMapping[transaction.account_id];
+        if (internalAccountId === undefined) {
+            console.warn(`No internal account ID mapping found for Plaid account_id: ${transaction.account_id}`);
+        }
+        transaction.account_id = internalAccountId;
+        console.log(`Set account_id to: ${transaction.account_id}`);
+
+        return transaction;
+    });
+
+    // Log the number of transactions that have undefined account_id
+    const undefinedAccountIdCount = processedTransactions.filter(transaction => transaction.account_id === undefined).length;
+    if (undefinedAccountIdCount > 0) {
+        console.warn(`${undefinedAccountIdCount} transactions have undefined account_id`);
+    }
+
+    return processedTransactions;
 }
 
 // Function to get budget preferences for a user

@@ -180,7 +180,9 @@ async function getItemsForUser(userId) {
 async function saveTransactions(userId, itemId, added, modified, removed) {
   // Start a transaction
   return await db.tx(async t => {
-    let results = [];
+    let addedResults = [];
+    let modifiedResults = [];
+    let removedResults = [];
 
     // Insert added transactions
     for (let transaction of added) {
@@ -188,11 +190,11 @@ async function saveTransactions(userId, itemId, added, modified, removed) {
       let sub_category = transaction.category.slice(1) || [];
 
       let result = await t.one(`
-        INSERT INTO transactions (plaid_transaction_id, plaid_account_id, user_id, category, sub_category, date, authorized_date, name, amount, currency_code, is_removed, pending, payment_meta, merchant_name)
+        INSERT INTO transactions (plaid_transaction_id, plaid_account_id, account_id, user_id, category, sub_category, date, authorized_date, name, amount, currency_code, is_removed, pending, merchant_name)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
         RETURNING *
-      `, [transaction.transaction_id, transaction.account_id, userId, category, sub_category, transaction.date, transaction.authorized_date, transaction.name, transaction.amount, transaction.iso_currency_code || '', false, transaction.pending, JSON.stringify(transaction.payment_meta), transaction.merchant_name]);
-      results.push(result);
+      `, [transaction.transaction_id, transaction.plaid_account_id, transaction.account_id, userId, category, sub_category, transaction.date, transaction.authorized_date, transaction.name, transaction.amount, transaction.iso_currency_code || '', false, transaction.pending, transaction.merchant_name]);
+      addedResults.push(result);
     }
 
     // Update modified transactions
@@ -202,11 +204,11 @@ async function saveTransactions(userId, itemId, added, modified, removed) {
 
       let result = await t.one(`
         UPDATE transactions
-        SET category = $1, sub_category = $2, date = $3, authorized_date = $4, name = $5, amount = $6, currency_code = $7, pending = $8, payment_meta = $9, plaid_account_id = $10, merchant_name = $11
+        SET category = $1, sub_category = $2, date = $3, authorized_date = $4, name = $5, amount = $6, currency_code = $7, pending = $8, plaid_account_id = $9, account_id = $10, merchant_name = $11
         WHERE user_id = $12 AND plaid_transaction_id = $13
         RETURNING *
-      `, [category, sub_category, transaction.date, transaction.authorized_date, transaction.name, transaction.amount, transaction.currency_code, transaction.pending, JSON.stringify(transaction.payment_meta), transaction.account_id, transaction.merchant_name, userId, transaction.transaction_id]);
-      results.push(result);
+      `, [category, sub_category, transaction.date, transaction.authorized_date, transaction.name, transaction.amount, transaction.currency_code, transaction.pending, transaction.plaid_account_id, transaction.account_id, transaction.merchant_name, userId, transaction.transaction_id]);
+      modifiedResults.push(result);
     }
 
     // Mark removed transactions
@@ -217,10 +219,14 @@ async function saveTransactions(userId, itemId, added, modified, removed) {
         WHERE user_id = $1 AND plaid_transaction_id = $2
         RETURNING *
       `, [userId, transaction.transaction_id]);
-      results.push(result);
+      removedResults.push(result);
     }
 
-    return results;
+    return {
+      added: addedResults,
+      modified: modifiedResults,
+      removed: removedResults
+    };
   });
 }
 
