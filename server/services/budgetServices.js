@@ -67,11 +67,6 @@ exports.getTransactionsForUser = async (req, res, next) => {
                 console.log(`${response.modified.length} modified transactions after filtering`);
                 console.log(`${response.removed.length} removed transactions after filtering`);
 
-                // Log the properties of each transaction before it's processed
-                response.added.forEach(transaction => console.log(`Processing transaction with properties ${JSON.stringify(transaction)}`));
-                response.modified.forEach(transaction => console.log(`Processing transaction with properties ${JSON.stringify(transaction)}`));
-                response.removed.forEach(transaction => console.log(`Processing transaction with properties ${JSON.stringify(transaction)}`));
-
                 // Add internal account ID to each transaction and remove payment meta
                 response.added = processTransactions(response.added, accountIdMapping);
                 response.modified = processTransactions(response.modified, accountIdMapping);
@@ -115,7 +110,6 @@ function processTransactions(transactions, accountIdMapping) {
     const processedTransactions = transactions.map(transaction => {
         // Keep both account_id (Plaid) and internal_account_id
         transaction.plaid_account_id = transaction.account_id;
-        console.log(`Set plaid_account_id to: ${transaction.plaid_account_id}`);
 
         const internalAccountId = accountIdMapping[transaction.account_id];
         if (internalAccountId === undefined) {

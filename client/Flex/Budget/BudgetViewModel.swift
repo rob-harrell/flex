@@ -14,7 +14,7 @@ import KeychainAccess
 
 class BudgetViewModel: ObservableObject {
     @Published var spendingData: [Date: Double] = [:]
-    @Published var monthlyIncome: Double = 5000.0 // User-set monthly income
+    @Published var monthlyIncome: Double = round(5000.0) // User-set monthly income
     @Published var transactions: [TransactionViewModel] = []
     @Published var budgetPreferences: [BudgetPreferenceViewModel] = []
     @Published var totalExpensesPerDay: [Date: Double] = [:]

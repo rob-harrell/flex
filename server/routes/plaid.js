@@ -60,8 +60,6 @@ router.post("/swap_public_token", async (req, res, next) => {
       public_token: req.body.public_token,
     });
     const data = result.data;
-    console.log(req.body);
-
     const userId = req.body.userId;
     const accessToken = data.access_token;
 

@@ -92,12 +92,10 @@ async function getPlaidAccountInfo(itemId, accessToken, plaidClient) {
   await updateItem(itemId, { institution_id: institution.id });
 
   // Get the accounts data
-  console.log("getting accounts data")
   const accountsResponse = await plaidClient.accountsGet({ access_token: accessToken });
   const accounts = accountsResponse.data.accounts;
 
   // Store the accounts data in your database
-  console.log("storing accounts data")
   for (let account of accounts) {
     const accountData = {
       item_id: itemId,

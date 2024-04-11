@@ -16,17 +16,13 @@ struct BudgetView: View {
         
     var body: some View {
         VStack {
-            BudgetFilterView(selectedFilter: $selectedFilter)
-                .padding(.horizontal)
-                .padding(.bottom, 4)
-            BudgetHeaderView(selectedFilter: $selectedFilter)
+            BudgetHeaderView()
                 .padding(.horizontal)
             BudgetBarView(selectedFilter: $selectedFilter)
-                .padding(.top, 24)
-                .padding(.bottom, 44)
+                .padding(.vertical)
+                .padding(.bottom, 16)
             BudgetCalendarView()
         }
-        .padding(.top, 4)
     }
 }
 

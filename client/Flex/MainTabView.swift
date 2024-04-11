@@ -53,20 +53,37 @@ struct MainTabView: View {
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: {
-                        showingMonthSelection.toggle()
-                    }) {
-                        HStack {
-                            Text(sharedViewModel.stringForDate(sharedViewModel.selectedMonth, format: "MMMM yyyy"))
-                                .font(.headline)
-                                .fontWeight(.semibold)
-                            Image(systemName: "chevron.down")
-                                .font(.caption)
-                                .fontWeight(.semibold)
+                    HStack {
+                        Button(action: {
+                            showingMonthSelection.toggle()
+                        }) {
+                            HStack {
+                                Image("Calendar")
+                                Text(sharedViewModel.stringForDate(sharedViewModel.selectedMonth, format: "MMMM"))
+                                    .font(.headline)
+                                    .fontWeight(.semibold)
+                                Image(systemName: "chevron.down")
+                                    .font(.caption)
+                                    .fontWeight(.semibold)
+                            }
                         }
-                    }
-                    .sheet(isPresented: $showingMonthSelection) {
-                        MonthSelectorView(showingMonthSelection: $showingMonthSelection)
+                        .padding(.horizontal, 4)
+                        .background(RoundedRectangle(cornerRadius: 24).stroke(Color.slate200, lineWidth: 1))
+                        .sheet(isPresented: $showingMonthSelection) {
+                            MonthSelectorView(showingMonthSelection: $showingMonthSelection)
+                        }
+                        Button(action: {
+                                    // Handle the button tap
+                        }) {
+                            HStack{
+                                Image("Money")
+                                Text(String(format: "$%.0f", budgetViewModel.monthlyIncome))
+                                    .font(.headline)
+                                    .fontWeight(.semibold)
+                            }
+                        }
+                        .padding(.horizontal, 4)
+                        .background(RoundedRectangle(cornerRadius: 24).stroke(Color.slate200, lineWidth: 1))
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {

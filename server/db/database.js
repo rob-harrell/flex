@@ -167,7 +167,6 @@ async function updateBudgetPreferences(userId, preferences) {
 }
 // Function to get all items for a user
 async function getItemsForUser(userId) {
-  console.log(typeof userId);
   try {
     const items = await db.any('SELECT * FROM items WHERE user_id = $1', [userId]);
     return items;

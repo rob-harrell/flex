@@ -198,7 +198,6 @@
 			children = (
 				D47B9D592BC37D480020228F /* DefaultBudgetPreferences.json */,
 				D4005AB02B66213200652FCA /* BudgetView.swift */,
-				D4005AC52B67245800652FCA /* BudgetFilterView.swift */,
 				D4005ABF2B67236300652FCA /* BudgetHeaderView.swift */,
 				D4DD3F102B7C701500D6E987 /* BudgetBarView.swift */,
 				D4005AC72B67247000652FCA /* BudgetCalendarView.swift */,
@@ -211,6 +210,7 @@
 		D4005AAC2B661D7600652FCA /* Trends */ = {
 			isa = PBXGroup;
 			children = (
+				D4005AC52B67245800652FCA /* BudgetFilterView.swift */,
 				D4005AB42B66217C00652FCA /* TrendsView.swift */,
 			);
 			path = Trends;
