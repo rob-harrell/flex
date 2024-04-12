@@ -266,7 +266,7 @@ class UserViewModel: ObservableObject {
                         
                         let hasCheckingOrSavings = self.bankAccounts.contains { $0.subType == "checking" || $0.subType == "savings" }
                         let hasCreditCard = self.bankAccounts.contains { $0.subType == "credit card" }
-                        self.canCompleteAccountCreation = hasCheckingOrSavings
+                        self.canCompleteAccountCreation = hasCheckingOrSavings || hasCreditCard
                     }
                 }
             } else {

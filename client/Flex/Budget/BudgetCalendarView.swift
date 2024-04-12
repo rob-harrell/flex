@@ -80,14 +80,21 @@ struct BudgetCalendarView: View {
             VStack {
                 Text(sharedViewModel.stringForDate(date, format: "d")) // Date
                     .font(.caption)
-                    .foregroundColor(cellDate == today || date == selectedDate ? Color.black : Color.gray)
+                    .foregroundColor(Color.slate500)
                     .fixedSize(horizontal: false, vertical: true) // Prevent stretching
                     .padding(.vertical, 8)
                     .fontWeight(.semibold)
                 
-                Text(budgetViewModel.spendingStringForDate(date)) // Spending amount
+                Text("$\(Int(budgetViewModel.totalFlexSpendPerDay[date, default: 0]))") // Flex spend
                     .font(.caption)
-                    .foregroundColor(cellDate == today || date == selectedDate ? Color.black : Color.gray)
+                    .foregroundColor(Color.black)
+                    .fixedSize(horizontal: false, vertical: true) // Prevent stretching
+                    .fontWeight(.semibold)
+                    .padding(.bottom, 4)
+                            
+                Text("$\(Int(budgetViewModel.totalFixedSpendPerDay[date, default: 0]))") // Fixed spend
+                    .font(.caption)
+                    .foregroundColor(Color.slate500)
                     .fixedSize(horizontal: false, vertical: true) // Prevent stretching
                     .fontWeight(.semibold)
                 Spacer()
@@ -97,11 +104,10 @@ struct BudgetCalendarView: View {
         }
         .overlay(
             RoundedRectangle(cornerRadius: 0)
-                .stroke(cellDate == today || date == selectedDate ? Color.black : Color(.gray.opacity(0.2)), lineWidth: 0.5)
+                .stroke(cellDate == today || date == selectedDate ? Color.black : Color.slate500.opacity(0.1), lineWidth: 0.75)
         )
     }
 }
-
 
 #Preview {
     BudgetCalendarView()

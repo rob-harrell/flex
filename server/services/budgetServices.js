@@ -116,8 +116,7 @@ function processTransactions(transactions, accountIdMapping) {
             console.warn(`No internal account ID mapping found for Plaid account_id: ${transaction.account_id}`);
         }
         transaction.account_id = internalAccountId;
-        console.log(`Set account_id to: ${transaction.account_id}`);
-
+        
         return transaction;
     });
 

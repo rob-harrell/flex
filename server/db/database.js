@@ -165,6 +165,7 @@ async function updateBudgetPreferences(userId, preferences) {
     }
   }
 }
+
 // Function to get all items for a user
 async function getItemsForUser(userId) {
   try {
@@ -185,8 +186,8 @@ async function saveTransactions(userId, itemId, added, modified, removed) {
 
     // Insert added transactions
     for (let transaction of added) {
-      let category = transaction.category[0] || null;
-      let sub_category = transaction.category.slice(1) || [];
+      let category = transaction.personal_finance_category.primary || null;
+      let sub_category = transaction.personal_finance_category.detailed || null;
 
       let result = await t.one(`
         INSERT INTO transactions (plaid_transaction_id, plaid_account_id, account_id, user_id, category, sub_category, date, authorized_date, name, amount, currency_code, is_removed, pending, merchant_name)
@@ -198,8 +199,8 @@ async function saveTransactions(userId, itemId, added, modified, removed) {
 
     // Update modified transactions
     for (let transaction of modified) {
-      let category = transaction.category[0] || null;
-      let sub_category = transaction.category.slice(1) || [];
+      let category = transaction.personal_finance_category.primary || null;
+      let sub_category = transaction.personal_finance_category.detailed || null;
 
       let result = await t.one(`
         UPDATE transactions

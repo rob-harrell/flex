@@ -14,29 +14,33 @@ import KeychainAccess
 
 class BudgetViewModel: ObservableObject {
     @Published var spendingData: [Date: Double] = [:]
-    @Published var monthlyIncome: Double = round(5000.0) // User-set monthly income
+    @Published var monthlyIncome: Double = round(10000.0) // User-set monthly income
+    @Published var fixedSpendBudget: Double = 5000
     @Published var transactions: [TransactionViewModel] = []
     @Published var budgetPreferences: [BudgetPreferenceViewModel] = []
-    @Published var totalExpensesPerDay: [Date: Double] = [:]
-    @Published var totalExpensesPerMonth: [Date: Double] = [:]
-    @Published var expensesMonthToDate: Double = 0.0
+    @Published var totalFixedSpendPerDay: [Date: Double] = [:]
+    @Published var totalFlexSpendPerDay: [Date: Double] = [:]
+    @Published var totalFixedSpendPerMonth: [Date: Double] = [:]
+    @Published var totalFlexSpendPerMonth: [Date: Double] = [:]
+    @Published var flexSpendMonthToDate: Double = 0.0
     @Published var monthlySavings: [Date: Double] = [:]
     @Published var currentMonthSavings: Double = 0.0
     
     struct TransactionViewModel {
         var id: Int64
         var amount: Double
-        var authorizedDate: String
+        var authorizedDate: Date
         var budgetCategory: String
         var category: String
         var subCategory: String
         var currencyCode: String
-        var date: String
+        var date: Date
         var isRemoved: Bool
         var name: String
         var pending: Bool
         var productCategory: String
         var merchantName: String
+        var fixedAmount: Int16
     }
     
     struct BudgetPreferenceViewModel: Decodable {
@@ -106,7 +110,22 @@ class BudgetViewModel: ObservableObject {
         do {
             let fetchedTransactions = try context.fetch(fetchRequest)
             transactions = fetchedTransactions.map { transaction in
-                TransactionViewModel(id: transaction.id, amount: transaction.amount, authorizedDate: transaction.authorizedDate!, budgetCategory: transaction.budgetCategory!, category: transaction.category!, subCategory: transaction.subCategory!, currencyCode: transaction.currencyCode!, date: transaction.date!, isRemoved: transaction.isRemoved, name: transaction.name!, pending: transaction.pending, productCategory: transaction.productCategory!, merchantName: transaction.merchantName!)
+                TransactionViewModel(
+                    id: transaction.id,
+                    amount: transaction.amount,
+                    authorizedDate: transaction.authorizedDate ?? Date(), // provide a default value
+                    budgetCategory: transaction.budgetCategory ?? "", // provide a default value
+                    category: transaction.category ?? "", // provide a default value
+                    subCategory: transaction.subCategory ?? "", // provide a default value
+                    currencyCode: transaction.currencyCode ?? "", // provide a default value
+                    date: transaction.date ?? Date(), // provide a default value
+                    isRemoved: transaction.isRemoved,
+                    name: transaction.name ?? "", // provide a default value
+                    pending: transaction.pending,
+                    productCategory: transaction.productCategory ?? "", // provide a default value
+                    merchantName: transaction.merchantName ?? "", // provide a default value
+                    fixedAmount: transaction.fixedAmount
+                )
             }
             print("fetched transactions from core data")
         } catch {
@@ -116,29 +135,48 @@ class BudgetViewModel: ObservableObject {
     
     func saveTransactionsToCoreData(_ transactions: [TransactionResponse], userId: Int64) {
         let context = CoreDataStack.shared.persistentContainer.viewContext
+        let dateFormatter = ISO8601DateFormatter()
+        dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
 
         for transactionResponse in transactions {
             let transaction = Transaction(context: context)
             transaction.id = transactionResponse.id
             transaction.amount = transactionResponse.amount
-            transaction.authorizedDate = transactionResponse.authorizedDate
             transaction.category = transactionResponse.category
             transaction.subCategory = transactionResponse.subCategory
             transaction.currencyCode = transactionResponse.currencyCode
-            transaction.date = transactionResponse.date
             transaction.isRemoved = transactionResponse.isRemoved
             transaction.name = transactionResponse.name
             transaction.pending = transactionResponse.pending
             transaction.merchantName = transactionResponse.merchantName
+            
+            // Convert the dates from String to Date
+            guard let dateAsDate = dateFormatter.date(from: transactionResponse.date) else {
+                print("Invalid date: \(transactionResponse.date)")
+                continue
+            }
+            transaction.date = dateAsDate
+            
+            if let authorizedDateString = transactionResponse.authorizedDate {
+                guard let authDateAsDate = dateFormatter.date(from: authorizedDateString) else {
+                    print("Invalid date: \(authorizedDateString)")
+                    continue
+                }
+                transaction.authorizedDate = authDateAsDate
+            } else {
+                print("authorizedDate is nil")
+            }
 
             // Assign productCategory and budgetCategory from budgetPreferences
             if let budgetPreference = budgetPreferences.first(where: { $0.category == transaction.category && $0.subCategory == transaction.subCategory }) {
                 transaction.productCategory = budgetPreference.productCategory
                 transaction.budgetCategory = budgetPreference.budgetCategory
+                transaction.fixedAmount = budgetPreference.fixedAmount ?? transaction.fixedAmount
             } else {
                 // Assign default values or leave as is
-                transaction.productCategory = ""
-                transaction.budgetCategory = ""
+                transaction.productCategory = "Other"
+                transaction.budgetCategory = "Flex"
             }
 
             // Get the User from userId
@@ -171,6 +209,7 @@ class BudgetViewModel: ObservableObject {
 
         do {
             try context.save()
+            self.calculateBudgetMetrics()
         } catch {
             print("Failed to save transactions to Core Data: \(error)")
         }
@@ -178,6 +217,9 @@ class BudgetViewModel: ObservableObject {
     
     func modifyTransactionsInCoreData(_ transactions: [TransactionResponse], userId: Int64) {
         let context = CoreDataStack.shared.persistentContainer.viewContext
+        let dateFormatter = ISO8601DateFormatter()
+        dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
 
         for transactionResponse in transactions {
             let fetchRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
@@ -188,27 +230,43 @@ class BudgetViewModel: ObservableObject {
                 guard let transaction = fetchedTransactions.first else {
                     throw CoreDataError.transactionNotFound
                 }
-
+                
                 // Update the properties of the transaction
                 transaction.amount = transactionResponse.amount
-                transaction.authorizedDate = transactionResponse.authorizedDate
                 transaction.category = transactionResponse.category
                 transaction.subCategory = transactionResponse.subCategory
                 transaction.currencyCode = transactionResponse.currencyCode
-                transaction.date = transactionResponse.date
                 transaction.isRemoved = transactionResponse.isRemoved
                 transaction.name = transactionResponse.name
                 transaction.pending = transactionResponse.pending
                 transaction.merchantName = transactionResponse.merchantName
+                
+                // Convert the dates from String to Date
+                guard let dateAsDate = dateFormatter.date(from: transactionResponse.date) else {
+                    print("Invalid date: \(transactionResponse.date)")
+                    continue
+                }
+                transaction.date = dateAsDate
+                
+                if let authorizedDateString = transactionResponse.authorizedDate {
+                    guard let authDateAsDate = dateFormatter.date(from: authorizedDateString) else {
+                        print("Invalid date: \(authorizedDateString)")
+                        continue
+                    }
+                    transaction.authorizedDate = authDateAsDate
+                } else {
+                    print("authorizedDate is nil")
+                }
 
                 // Update the productCategory and budgetCategory from budgetPreferences
                 if let budgetPreference = budgetPreferences.first(where: { $0.category == transaction.category && $0.subCategory == transaction.subCategory }) {
                     transaction.productCategory = budgetPreference.productCategory
                     transaction.budgetCategory = budgetPreference.budgetCategory
+                    transaction.fixedAmount = budgetPreference.fixedAmount ?? transaction.fixedAmount
                 } else {
                     // Assign default values or leave as is
-                    transaction.productCategory = ""
-                    transaction.budgetCategory = ""
+                    transaction.productCategory = "Other"
+                    transaction.budgetCategory = "Flex"
                 }
             } catch {
                 print("Failed to fetch or modify transaction from Core Data: \(error)")
@@ -384,50 +442,64 @@ class BudgetViewModel: ObservableObject {
     }
     
     //Mark business logic
-    func generateSpendingData(dates: [[Date]]) {
-        for monthDates in dates {
-            for date in monthDates {
-                // Generate and store dummy spending data for the date
-                let randomSpending = Double.random(in: 1...100)
-                spendingData[date] = randomSpending
-            }
+    func calculateBudgetMetrics() {
+        // Fetch transactions from Core Data
+        self.fetchTransactionsFromCoreData()
+
+        // Log fetched transactions
+        print("Fetched transactions:")
+        for transaction in self.transactions {
+            print("ID: \(transaction.id), Amount: \(transaction.amount), Category: \(transaction.category), SubCategory: \(transaction.subCategory), Date: \(transaction.date), BudgetCategory: \(transaction.budgetCategory), ProductCategory: \(transaction.productCategory)")
         }
-        
-        // Calculate total expenses per day
-        totalExpensesPerDay = [:]
-        for (date, spending) in spendingData {
-            totalExpensesPerDay[date] = spending
+
+        // Group transactions by date
+        let groupedTransactions = Dictionary(grouping: self.transactions, by: { $0.date })
+
+        // Calculate total fixed and flexible spending per day
+        self.totalFixedSpendPerDay = [:]
+        self.totalFlexSpendPerDay = [:]
+        for (date, transactions) in groupedTransactions {
+            let totalFixedSpend = transactions.filter { $0.budgetCategory == "Fixed" }.map { $0.amount }.reduce(0, +)
+            let totalFlexSpend = transactions.filter { $0.budgetCategory == "Flexible" }.map { $0.amount }.reduce(0, +)
+            self.totalFixedSpendPerDay[date] = totalFixedSpend
+            self.totalFlexSpendPerDay[date] = totalFlexSpend
         }
-        
-        // Calculate total expenses per month
-        totalExpensesPerMonth = [:]
-        for monthDates in dates {
-            let totalSpending = monthDates.compactMap { spendingData[$0] }.reduce(0, +)
-            totalExpensesPerMonth[monthDates.first!] = totalSpending
+
+        // Log total fixed and flexible spending per day
+        print("Total fixed spending per day: \(self.totalFixedSpendPerDay)")
+        print("Total flexible spending per day: \(self.totalFlexSpendPerDay)")
+
+        // Calculate total fixed and flexible spending per month
+        self.totalFixedSpendPerMonth = [:]
+        self.totalFlexSpendPerMonth = [:]
+        let groupedTransactionsByMonth = Dictionary(grouping: self.transactions, by: { Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: $0.date))! })
+        for (month, transactions) in groupedTransactionsByMonth {
+            let totalFixedSpend = transactions.filter { $0.budgetCategory == "Fixed" }.map { $0.amount }.reduce(0, +)
+            let totalFlexSpend = transactions.filter { $0.budgetCategory == "Flexible" }.map { $0.amount }.reduce(0, +)
+            self.totalFixedSpendPerMonth[month] = totalFixedSpend
+            self.totalFlexSpendPerMonth[month] = totalFlexSpend
         }
-        
+
+        // Log total fixed and flexible spending per month
+        print("Total fixed spending per month: \(self.totalFixedSpendPerMonth)")
+        print("Total flexible spending per month: \(self.totalFlexSpendPerMonth)")
+
         // Calculate expenses month to date
         let now = Date()
         let startOfMonth = Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: now))!
         let range = startOfMonth...now
-        expensesMonthToDate = spendingData.filter { range.contains($0.key) }.values.reduce(0, +)
-        
-        // Calculate monthly savings
-        monthlySavings = [:]
-        for (date, totalExpenses) in totalExpensesPerMonth {
-            monthlySavings[date] = monthlyIncome - totalExpenses
+        self.flexSpendMonthToDate = self.totalFlexSpendPerDay.filter { range.contains($0.key) }.values.reduce(0, +)
+
+        // Calculate monthly savings and current month savings
+        self.monthlySavings = [:]
+        for (date, totalFixedSpend) in self.totalFixedSpendPerMonth {
+            let totalFlexSpend = self.totalFlexSpendPerMonth[date] ?? 0
+            self.monthlySavings[date] = self.monthlyIncome - totalFixedSpend - totalFlexSpend
         }
-        
-        // Calculate current month savings
-        currentMonthSavings = monthlyIncome - expensesMonthToDate
-    }
-    
-    // Function to return spending amount for a given date as a string
-    func spendingStringForDate(_ date: Date) -> String {
-        if let spending = spendingData[date] {
-            return "$\(Int(round(spending)))"
-        } else {
-            return "$0"
-        }
+        self.currentMonthSavings = self.monthlyIncome - (self.totalFixedSpendPerMonth[startOfMonth] ?? 0) - self.flexSpendMonthToDate
+
+        // Log monthly savings and current month savings
+        print("Monthly savings: \(self.monthlySavings)")
+        print("Current month savings: \(self.currentMonthSavings)")
     }
 }

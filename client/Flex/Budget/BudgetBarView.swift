@@ -15,9 +15,9 @@ struct BudgetBarView: View {
     
     private var percentageSpent: Double {
         if sharedViewModel.currentMonth == sharedViewModel.selectedMonth {
-            return budgetViewModel.expensesMonthToDate / budgetViewModel.monthlyIncome
+            return budgetViewModel.flexSpendMonthToDate / budgetViewModel.monthlyIncome
         } else {
-            return (budgetViewModel.totalExpensesPerMonth[sharedViewModel.selectedMonth] ?? 0.0) / budgetViewModel.monthlyIncome
+            return (budgetViewModel.totalFlexSpendPerMonth[sharedViewModel.selectedMonth] ?? 0.0) / budgetViewModel.monthlyIncome
         }
     }
     
@@ -34,11 +34,11 @@ struct BudgetBarView: View {
                 .fill(Color.black) // Foreground color representing the spend
                 .frame(width: UIScreen.main.bounds.width * CGFloat(percentageSpent), height: 56)
                 .cornerRadius(16)
-                .animation(.linear, value: budgetViewModel.expensesMonthToDate)
+                .animation(.linear, value: budgetViewModel.flexSpendMonthToDate)
 
             // Text overlay
             VStack(alignment: .leading) {
-                Text("$\(Int(sharedViewModel.currentMonth == sharedViewModel.selectedMonth ? budgetViewModel.expensesMonthToDate : budgetViewModel.totalExpensesPerMonth[sharedViewModel.selectedMonth] ?? 0.0))")
+                Text("$\(Int(sharedViewModel.currentMonth == sharedViewModel.selectedMonth ? budgetViewModel.flexSpendMonthToDate : budgetViewModel.totalFlexSpendPerMonth[sharedViewModel.selectedMonth] ?? 0.0))")
                     .font(.body)
                     .fontWeight(.semibold)
                 Text(sharedViewModel.currentMonth == sharedViewModel.selectedMonth ? "Est. total spend" : "Total Spend")
