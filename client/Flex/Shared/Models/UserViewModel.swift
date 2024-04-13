@@ -14,8 +14,8 @@ class UserViewModel: ObservableObject {
     @Published var firstName: String = ""
     @Published var lastName: String = ""
     @Published var phone: String = ""
-    @Published var monthlyIncome: Double = 0.0
-    @Published var monthlyFixedSpend: Double = 0.0
+    @Published var monthlyIncome: Double = 10000
+    @Published var monthlyFixedSpend: Double = 5000
     @Published var birthDate: String = ""
     @Published var sessionToken: String = ""
     @Published var bankAccounts: [BankAccount] = []
@@ -368,7 +368,7 @@ class UserViewModel: ObservableObject {
                     let hasCheckingOrSavings = self.bankAccounts.contains { $0.subType == "checking" || $0.subType == "savings" }
                     let hasCreditCard = self.bankAccounts.contains { $0.subType == "credit card" }
 
-                    self.canCompleteAccountCreation = hasCheckingOrSavings
+                    self.canCompleteAccountCreation = hasCheckingOrSavings || hasCreditCard
 
                     let newAccount = Account(context: context)
                     newAccount.id = Int64(bankAccountResponse.id)

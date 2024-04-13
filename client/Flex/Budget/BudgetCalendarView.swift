@@ -43,7 +43,7 @@ struct BudgetCalendarView: View {
                 }
                 .scrollTargetLayout()
             }
-            .frame(height: 443)
+            .frame(height: 420)
             .scrollTargetBehavior(.paging)
             .scrollPosition(id: $scrollPosition, anchor: .top)
             .onAppear {
@@ -73,7 +73,8 @@ struct BudgetCalendarView: View {
         let today = calendar.startOfDay(for: Date())
         let cellDate = calendar.startOfDay(for: date)
         let isPastOrToday = cellDate <= today && calendar.isDate(cellDate, equalTo: today, toGranularity: .month)
-        
+        let isFuture = cellDate > today
+
         Button(action: {
             selectedDate = date
         }) {
@@ -84,22 +85,25 @@ struct BudgetCalendarView: View {
                     .fixedSize(horizontal: false, vertical: true) // Prevent stretching
                     .padding(.vertical, 8)
                     .fontWeight(.semibold)
-                
-                Text("$\(Int(budgetViewModel.totalFlexSpendPerDay[date, default: 0]))") // Flex spend
-                    .font(.caption)
-                    .foregroundColor(Color.black)
-                    .fixedSize(horizontal: false, vertical: true) // Prevent stretching
-                    .fontWeight(.semibold)
-                    .padding(.bottom, 4)
-                            
-                Text("$\(Int(budgetViewModel.totalFixedSpendPerDay[date, default: 0]))") // Fixed spend
-                    .font(.caption)
-                    .foregroundColor(Color.slate500)
-                    .fixedSize(horizontal: false, vertical: true) // Prevent stretching
-                    .fontWeight(.semibold)
+
+                if !isFuture {
+                    Text("$\(Int(budgetViewModel.totalFlexSpendPerDay[date, default: 0]))") // Flex spend
+                        .font(.caption)
+                        .foregroundColor(Color.black)
+                        .fixedSize(horizontal: false, vertical: true) // Prevent stretching
+                        .fontWeight(.semibold)
+                        .padding(.bottom, 2)
+
+                    Text("$\(Int(budgetViewModel.totalFixedSpendPerDay[date, default: 0]))") // Fixed spend
+                        .font(.caption)
+                        .foregroundColor(Color.slate500)
+                        .fixedSize(horizontal: false, vertical: true) // Prevent stretching
+                        .fontWeight(.semibold)
+                }
+
                 Spacer()
             }
-            .frame(minWidth: 0, maxWidth: .infinity, minHeight: 87)
+            .frame(minWidth: 0, maxWidth: .infinity, minHeight: 82.25)
             .background(isPastOrToday ? Color(.slate) : Color.clear)
         }
         .overlay(

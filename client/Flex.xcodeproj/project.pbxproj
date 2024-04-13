@@ -39,6 +39,7 @@
 		D47B9D512BBF51460020228F /* NotificationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D47B9D502BBF51460020228F /* NotificationView.swift */; };
 		D47B9D542BC19FC90020228F /* SwiftCSV in Frameworks */ = {isa = PBXBuildFile; productRef = D47B9D532BC19FC90020228F /* SwiftCSV */; };
 		D47B9D5A2BC37D480020228F /* DefaultBudgetPreferences.json in Resources */ = {isa = PBXBuildFile; fileRef = D47B9D592BC37D480020228F /* DefaultBudgetPreferences.json */; };
+		D47B9D5E2BCA05DD0020228F /* MoneyFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D47B9D5D2BCA05DD0020228F /* MoneyFormatter.swift */; };
 		D48EF48E2B95759000117E8B /* UserViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D48EF48D2B95759000117E8B /* UserViewModel.swift */; };
 		D49D59CF2B7815E4001C0D0A /* DateViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49D59CE2B7815E4001C0D0A /* DateViewModel.swift */; };
 		D49D59D12B785501001C0D0A /* MonthSelectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49D59D02B785501001C0D0A /* MonthSelectorView.swift */; };
@@ -95,6 +96,7 @@
 		D46EDF0A2BA93FF3002FF9BE /* CoreDataStack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataStack.swift; sourceTree = "<group>"; };
 		D47B9D502BBF51460020228F /* NotificationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationView.swift; sourceTree = "<group>"; };
 		D47B9D592BC37D480020228F /* DefaultBudgetPreferences.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = DefaultBudgetPreferences.json; sourceTree = "<group>"; };
+		D47B9D5D2BCA05DD0020228F /* MoneyFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoneyFormatter.swift; sourceTree = "<group>"; };
 		D48EF48D2B95759000117E8B /* UserViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserViewModel.swift; sourceTree = "<group>"; };
 		D49D59CE2B7815E4001C0D0A /* DateViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateViewModel.swift; sourceTree = "<group>"; };
 		D49D59D02B785501001C0D0A /* MonthSelectorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthSelectorView.swift; sourceTree = "<group>"; };
@@ -266,6 +268,7 @@
 				D4129F192B8C21B300BB2B7D /* ServerCommunicator.swift */,
 				D4129F1B2B8C2CE300BB2B7D /* ServerResponses.swift */,
 				D4129F1F2B8EBF0600BB2B7D /* LinkController.swift */,
+				D47B9D5D2BCA05DD0020228F /* MoneyFormatter.swift */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -431,6 +434,7 @@
 				D4005AB72B67162800652FCA /* SettingsView.swift in Sources */,
 				D4005AC02B67236400652FCA /* BudgetHeaderView.swift in Sources */,
 				D4005AB32B66216900652FCA /* BalancesView.swift in Sources */,
+				D47B9D5E2BCA05DD0020228F /* MoneyFormatter.swift in Sources */,
 				D46B237D2BB10B5F0091C54D /* AccountConnectionView.swift in Sources */,
 				D47B9D512BBF51460020228F /* NotificationView.swift in Sources */,
 				D4129F182B8C20F300BB2B7D /* PlaidLinkViewModel.swift in Sources */,

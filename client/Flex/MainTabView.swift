@@ -45,7 +45,7 @@ struct MainTabView: View {
             .onAppear {
                 // Initialize budgetviewmodel
                 loadBudgetPreferences()
-                budgetViewModel.fetchTransactionsFromServer(userId: userViewModel.id)
+                budgetViewModel.fetchTransactionsFromServer(userId: userViewModel.id, monthlyIncome: userViewModel.monthlyIncome, monthlyFixedSpend: userViewModel.monthlyFixedSpend)
                 print("made it here without error")
                 
                 UITabBarItem.appearance().setTitleTextAttributes([NSAttributedString.Key.font: UIFont.systemFont(ofSize: 12)], for: .normal)
@@ -77,7 +77,7 @@ struct MainTabView: View {
                         }) {
                             HStack{
                                 Image("Money")
-                                Text(formatBudgetNumber(budgetViewModel.monthlyIncome))
+                                Text(formatBudgetNumber(userViewModel.monthlyIncome))
                                     .font(.headline)
                                     .fontWeight(.semibold)
                             }
@@ -121,26 +121,6 @@ struct MainTabView: View {
         } catch {
             print("Failed to fetch BudgetPreference: \(error)")
         }
-    }
-    
-    func formatBudgetNumber(_ n: Double) -> String {
-        let absN = abs(n)
-        let suffix: String
-
-        switch absN {
-        case 1_000_000...:
-            suffix = "m"
-        case 1_000...:
-            suffix = "k"
-        default:
-            return String(format: "$%.0f", round(n / 10) * 10)
-        }
-
-        let number = n / pow(10, (suffix == "m") ? 6 : 3)
-        let formattedNumber = String(format: "%.1f", number)
-        let finalNumber = formattedNumber.hasSuffix(".0") ? String(formattedNumber.dropLast(2)) : formattedNumber
-
-        return "$\(finalNumber)\(suffix)"
     }
         
     enum Tab {

@@ -14,8 +14,6 @@ import KeychainAccess
 
 class BudgetViewModel: ObservableObject {
     @Published var spendingData: [Date: Double] = [:]
-    @Published var monthlyIncome: Double = round(10000.0) // User-set monthly income
-    @Published var fixedSpendBudget: Double = 5000
     @Published var transactions: [TransactionViewModel] = []
     @Published var budgetPreferences: [BudgetPreferenceViewModel] = []
     @Published var totalFixedSpendPerDay: [Date: Double] = [:]
@@ -133,7 +131,7 @@ class BudgetViewModel: ObservableObject {
         }
     }
     
-    func saveTransactionsToCoreData(_ transactions: [TransactionResponse], userId: Int64) {
+    func saveTransactionsToCoreData(_ transactions: [TransactionResponse], userId: Int64, monthlyIncome: Double, monthlyFixedSpend: Double) {
         let context = CoreDataStack.shared.persistentContainer.viewContext
         let dateFormatter = ISO8601DateFormatter()
         dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
@@ -209,13 +207,13 @@ class BudgetViewModel: ObservableObject {
 
         do {
             try context.save()
-            self.calculateBudgetMetrics()
+            self.calculateBudgetMetrics(monthlyIncome: monthlyIncome, monthlyFixedSpend: monthlyFixedSpend)
         } catch {
             print("Failed to save transactions to Core Data: \(error)")
         }
     }
     
-    func modifyTransactionsInCoreData(_ transactions: [TransactionResponse], userId: Int64) {
+    func modifyTransactionsInCoreData(_ transactions: [TransactionResponse], userId: Int64, monthlyIncome: Double, monthlyFixedSpend: Double) {
         let context = CoreDataStack.shared.persistentContainer.viewContext
         let dateFormatter = ISO8601DateFormatter()
         dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
@@ -276,6 +274,7 @@ class BudgetViewModel: ObservableObject {
 
         do {
             try context.save()
+            self.calculateBudgetMetrics(monthlyIncome: monthlyIncome, monthlyFixedSpend: monthlyFixedSpend)
         } catch {
             print("Failed to save modified transactions to Core Data: \(error)")
         }
@@ -354,7 +353,7 @@ class BudgetViewModel: ObservableObject {
     
     
     //MARK server
-    func fetchTransactionsFromServer(userId: Int64) {
+    func fetchTransactionsFromServer(userId: Int64, monthlyIncome: Double, monthlyFixedSpend: Double) {
         let keychain = Keychain(service: "robharrell.Flex")
         let sessionToken = keychain["sessionToken"] ?? ""
 
@@ -367,8 +366,8 @@ class BudgetViewModel: ObservableObject {
             switch result {
             case .success(let transactionsResponse):
                 DispatchQueue.main.async {
-                    self.saveTransactionsToCoreData(transactionsResponse.added, userId: userId)
-                    self.modifyTransactionsInCoreData(transactionsResponse.modified, userId: userId)
+                    self.saveTransactionsToCoreData(transactionsResponse.added, userId: userId, monthlyIncome: monthlyIncome, monthlyFixedSpend: monthlyFixedSpend)
+                    self.modifyTransactionsInCoreData(transactionsResponse.modified, userId: userId, monthlyIncome: monthlyIncome, monthlyFixedSpend: monthlyFixedSpend)
                     self.removeTransactionsFromCoreData(transactionsResponse.removed, userId: userId)
                 }
             case .failure(let error):
@@ -442,7 +441,7 @@ class BudgetViewModel: ObservableObject {
     }
     
     //Mark business logic
-    func calculateBudgetMetrics() {
+    func calculateBudgetMetrics(monthlyIncome: Double, monthlyFixedSpend: Double) {
         // Fetch transactions from Core Data
         self.fetchTransactionsFromCoreData()
 
@@ -494,9 +493,9 @@ class BudgetViewModel: ObservableObject {
         self.monthlySavings = [:]
         for (date, totalFixedSpend) in self.totalFixedSpendPerMonth {
             let totalFlexSpend = self.totalFlexSpendPerMonth[date] ?? 0
-            self.monthlySavings[date] = self.monthlyIncome - totalFixedSpend - totalFlexSpend
+            self.monthlySavings[date] = monthlyIncome - totalFixedSpend - totalFlexSpend
         }
-        self.currentMonthSavings = self.monthlyIncome - (self.totalFixedSpendPerMonth[startOfMonth] ?? 0) - self.flexSpendMonthToDate
+        self.currentMonthSavings = monthlyIncome - (monthlyFixedSpend) - self.flexSpendMonthToDate
 
         // Log monthly savings and current month savings
         print("Monthly savings: \(self.monthlySavings)")

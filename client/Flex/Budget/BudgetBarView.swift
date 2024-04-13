@@ -11,49 +11,117 @@ struct BudgetBarView: View {
     @EnvironmentObject var userViewModel: UserViewModel
     @EnvironmentObject var sharedViewModel: DateViewModel
     @EnvironmentObject var budgetViewModel: BudgetViewModel
-    @Binding var selectedFilter: BudgetFilter
     
-    private var percentageSpent: Double {
-        if sharedViewModel.currentMonth == sharedViewModel.selectedMonth {
-            return budgetViewModel.flexSpendMonthToDate / budgetViewModel.monthlyIncome
-        } else {
-            return (budgetViewModel.totalFlexSpendPerMonth[sharedViewModel.selectedMonth] ?? 0.0) / budgetViewModel.monthlyIncome
-        }
+    let testIncome = 10000.0
+    let testFixedSpend = 5000.0
+    let testFlexSpendMonthToDate = 3500.0
+    
+    var totalBudget: Double {
+        return max(testIncome, testFixedSpend + testFlexSpendMonthToDate)
+    }
+    
+    var percentageFixed: Double {
+        return testFixedSpend / totalBudget
+    }
+    
+    var percentageFlex: Double {
+        return testFlexSpendMonthToDate / totalBudget
+    }
+    
+    var percentageOverSpend: Double {
+        let overSpend = max(0, testFlexSpendMonthToDate - (testIncome - testFixedSpend))
+        return overSpend / totalBudget
     }
     
     var body: some View {
-        ZStack(alignment: .leading) {
-            // Background for income
-            Rectangle()
-                .fill(Color(.emerald300)) // Light background color
-                .frame(maxWidth: .infinity, maxHeight: 56)
-                .cornerRadius(16)
-
-            // Foreground for expenses
-            Rectangle()
-                .fill(Color.black) // Foreground color representing the spend
-                .frame(width: UIScreen.main.bounds.width * CGFloat(percentageSpent), height: 56)
-                .cornerRadius(16)
-                .animation(.linear, value: budgetViewModel.flexSpendMonthToDate)
-
-            // Text overlay
-            VStack(alignment: .leading) {
-                Text("$\(Int(sharedViewModel.currentMonth == sharedViewModel.selectedMonth ? budgetViewModel.flexSpendMonthToDate : budgetViewModel.totalFlexSpendPerMonth[sharedViewModel.selectedMonth] ?? 0.0))")
-                    .font(.body)
-                    .fontWeight(.semibold)
-                Text(sharedViewModel.currentMonth == sharedViewModel.selectedMonth ? "Est. total spend" : "Total Spend")
-                    .font(.caption2)
+        GeometryReader { geometry in
+            ZStack(alignment: .leading) {
+                // Total income bar
+                if percentageOverSpend > 0 {
+                    UnevenRoundedRectangle(topLeadingRadius: 16, bottomLeadingRadius: 16, bottomTrailingRadius: 0, topTrailingRadius: 0)
+                        .stroke(Color.black, lineWidth: 1)
+                        .background(
+                            UnevenRoundedRectangle(topLeadingRadius: 16, bottomLeadingRadius: 16, bottomTrailingRadius: 0, topTrailingRadius: 0)
+                                .fill(Color.red400)
+                        )
+                        .frame(width: geometry.size.width, height: 54)
+                    
+                } else {
+                    Rectangle()
+                        .fill(Color.emerald300)
+                        .frame(width: geometry.size.width, height: 54)
+                        .cornerRadius(16)
+                }
+                
+                HStack(spacing: 0) {
+                    // Fixed spend segment
+                    ZStack(alignment: .leading) {
+                        UnevenRoundedRectangle(topLeadingRadius: 16, bottomLeadingRadius: 16, bottomTrailingRadius: 0, topTrailingRadius: 0)
+                            .stroke(Color.slate200, lineWidth: 1)
+                            .background(
+                                UnevenRoundedRectangle(topLeadingRadius: 16, bottomLeadingRadius: 16, bottomTrailingRadius: 0, topTrailingRadius: 0)
+                                    .fill(Color.white)
+                            )
+                            .frame(width: geometry.size.width * CGFloat(percentageFixed), height: 54)
+                        
+                        HStack {
+                            Text("\(formatBudgetNumber(testFixedSpend))")
+                                .font(.system(size: 16))
+                                .foregroundColor(.slate500)
+                                .frame(alignment: .center)
+                                .padding(.leading, 10)
+                                .fontWeight(.semibold)
+                            Image(systemName: "lock.fill")
+                                .foregroundColor(Color.slate500)
+                                .padding(.leading, -4)
+                        }
+                    }
+                    
+                    // Flex spend segment
+                    if percentageOverSpend > 0 {
+                        ZStack(alignment: .leading) {
+                            UnevenRoundedRectangle(topLeadingRadius: 0, bottomLeadingRadius: 0, bottomTrailingRadius: 16, topTrailingRadius: 16)
+                                .fill(Color.black)
+                                .frame(width: geometry.size.width * CGFloat(percentageFlex - percentageOverSpend), height: 54)
+                            
+                            Text("\(formatBudgetNumber(testFlexSpendMonthToDate))")
+                                .font(.system(size: 16))
+                                .foregroundColor(.white)
+                                .padding(.leading, 10)
+                                .fontWeight(.semibold)
+                        }
+                    } else {
+                        ZStack(alignment: .leading) {
+                            Rectangle()
+                                .fill(Color.black)
+                                .frame(width: geometry.size.width * CGFloat(percentageFlex - percentageOverSpend), height: 54)
+                            
+                            Text("\(formatBudgetNumber(testFlexSpendMonthToDate))")
+                                .font(.system(size: 16))
+                                .foregroundColor(.white)
+                                .padding(.leading, 10)
+                                .fontWeight(.semibold)
+                        }
+                    }
+                    
+                    Spacer()
+                }
+                
+                // Vertical black line to mark the end of the income bar
+                Rectangle()
+                    .fill(Color.black)
+                    .frame(width: 2, height: 64)
+                    .offset(x: geometry.size.width * (CGFloat(percentageFlex) + CGFloat(percentageFixed)) - 1, y: 0)
             }
-            .foregroundColor(.white)
-            .padding(.leading, 8)
         }
-        .frame(height: 24)
+        .frame(height: 54)
         .padding(.horizontal)
     }
 }
 
+
 #Preview {
-    BudgetBarView(selectedFilter: .constant(.total))
+    BudgetBarView()
         .environmentObject(UserViewModel())
         .environmentObject(DateViewModel())
         .environmentObject(BudgetViewModel())
