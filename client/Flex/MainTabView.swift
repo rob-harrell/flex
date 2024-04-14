@@ -77,7 +77,7 @@ struct MainTabView: View {
                         }) {
                             HStack{
                                 Image("Money")
-                                Text(formatBudgetNumber(userViewModel.monthlyIncome))
+                                Text("\(formatBudgetNumber(userViewModel.monthlyIncome)) income")
                                     .font(.headline)
                                     .fontWeight(.semibold)
                             }

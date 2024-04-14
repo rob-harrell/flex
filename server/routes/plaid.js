@@ -99,6 +99,7 @@ async function syncTransactions(accessToken, cursor) {
         added: response.data.added,
         removed: response.data.removed,
         modified: response.data.modified,
+        next_cursor: response.data.next_cursor,
       };
     } else {
       console.error('Error in syncTransactions: No response or data');

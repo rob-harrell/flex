@@ -1,4 +1,4 @@
-const { createUser: createDbUser, updateUser: updateDbUser, getUserRecord, getUserRecordByPhone, getUserAccounts, createItem, updateItem, getInstitutionByPlaidId, createInstitution, createAccount, invalidateSessionToken: invalidateDbSessionToken, getUserBySessionToken } = require("../db/database");
+const { createUser: createDbUser, updateUser: updateDbUser, updateDBSessionToken, getUserRecord, getUserRecordByPhone, getUserAccounts, createItem, updateItem, getInstitutionByPlaidId, createInstitution, createAccount, invalidateSessionToken: invalidateDbSessionToken, getUserBySessionToken } = require("../db/database");
 const { saveImage } = require('./institutionServices.js');
 
 async function createUser(phoneNumber, sessionToken) {
@@ -8,6 +8,11 @@ async function createUser(phoneNumber, sessionToken) {
 
 async function updateUser(userData) {
   const user = await updateDbUser(userData);
+  return user;
+}
+
+async function updateSessionToken(userId, sessionToken) {
+  const user = await updateDBSessionToken(userId, sessionToken);
   return user;
 }
 
@@ -114,4 +119,4 @@ async function createItemRecord(itemData) {
   return item;
 }
 
-module.exports = { getUserData, getUserByPhone, getBankAccounts, createUser, updateUser, createItemRecord, getPlaidAccountInfo, validateSessionToken, invalidateSessionToken };
+module.exports = { getUserData, updateSessionToken, getUserByPhone, getBankAccounts, createUser, updateUser, createItemRecord, getPlaidAccountInfo, validateSessionToken, invalidateSessionToken };

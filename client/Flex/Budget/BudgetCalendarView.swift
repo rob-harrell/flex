@@ -87,18 +87,25 @@ struct BudgetCalendarView: View {
                     .fontWeight(.semibold)
 
                 if !isFuture {
-                    Text("$\(Int(budgetViewModel.totalFlexSpendPerDay[date, default: 0]))") // Flex spend
-                        .font(.caption)
-                        .foregroundColor(Color.black)
-                        .fixedSize(horizontal: false, vertical: true) // Prevent stretching
-                        .fontWeight(.semibold)
-                        .padding(.bottom, 2)
+                    let flexSpend = Int(budgetViewModel.totalFlexSpendPerDay[date, default: 0])
+                    let fixedSpend = Int(budgetViewModel.totalFixedSpendPerDay[date, default: 0])   
 
-                    Text("$\(Int(budgetViewModel.totalFixedSpendPerDay[date, default: 0]))") // Fixed spend
-                        .font(.caption)
-                        .foregroundColor(Color.slate500)
-                        .fixedSize(horizontal: false, vertical: true) // Prevent stretching
-                        .fontWeight(.semibold)
+                    if flexSpend > 0 {
+                        Text("$\(flexSpend)") // Flex spend
+                            .font(.caption)
+                            .foregroundColor(Color.black)
+                            .fixedSize(horizontal: false, vertical: true) // Prevent stretching
+                            .fontWeight(.semibold)
+                            .padding(.bottom, 2)
+                    }
+
+                    if fixedSpend > 0 {
+                        Text("$\(fixedSpend)") // Fixed spend
+                            .font(.caption)
+                            .foregroundColor(Color.slate500)
+                            .fixedSize(horizontal: false, vertical: true) // Prevent stretching
+                            .fontWeight(.semibold)
+                    }
                 }
 
                 Spacer()

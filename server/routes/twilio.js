@@ -41,6 +41,7 @@ router.post('/verifyOTP', async (req, res) => {
                 const sessionToken = uuid.v4();
                 const user = await userServices.getUserByPhone(phoneNumber);
                 if (user) {
+                    await userServices.updateSessionToken(user.id, sessionToken);
                     res.status(200).send({ message: 'Verification code approved', isExistingUser: true, userId: user.id, sessionToken: sessionToken });
                 } else {
                     const newUser = await userServices.createUser(phoneNumber, sessionToken);

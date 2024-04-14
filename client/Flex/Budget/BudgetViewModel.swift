@@ -459,7 +459,7 @@ class BudgetViewModel: ObservableObject {
         self.totalFlexSpendPerDay = [:]
         for (date, transactions) in groupedTransactions {
             let totalFixedSpend = transactions.filter { $0.budgetCategory == "Fixed" }.map { $0.amount }.reduce(0, +)
-            let totalFlexSpend = transactions.filter { $0.budgetCategory == "Flexible" }.map { $0.amount }.reduce(0, +)
+            let totalFlexSpend = transactions.filter { $0.budgetCategory == "Flex" }.map { $0.amount }.reduce(0, +)
             self.totalFixedSpendPerDay[date] = totalFixedSpend
             self.totalFlexSpendPerDay[date] = totalFlexSpend
         }
@@ -474,11 +474,11 @@ class BudgetViewModel: ObservableObject {
         let groupedTransactionsByMonth = Dictionary(grouping: self.transactions, by: { Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: $0.date))! })
         for (month, transactions) in groupedTransactionsByMonth {
             let totalFixedSpend = transactions.filter { $0.budgetCategory == "Fixed" }.map { $0.amount }.reduce(0, +)
-            let totalFlexSpend = transactions.filter { $0.budgetCategory == "Flexible" }.map { $0.amount }.reduce(0, +)
+            let totalFlexSpend = transactions.filter { $0.budgetCategory == "Flex" }.map { $0.amount }.reduce(0, +)
             self.totalFixedSpendPerMonth[month] = totalFixedSpend
             self.totalFlexSpendPerMonth[month] = totalFlexSpend
         }
-
+        
         // Log total fixed and flexible spending per month
         print("Total fixed spending per month: \(self.totalFixedSpendPerMonth)")
         print("Total flexible spending per month: \(self.totalFlexSpendPerMonth)")

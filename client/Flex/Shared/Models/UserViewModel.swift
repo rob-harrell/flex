@@ -14,8 +14,8 @@ class UserViewModel: ObservableObject {
     @Published var firstName: String = ""
     @Published var lastName: String = ""
     @Published var phone: String = ""
-    @Published var monthlyIncome: Double = 10000
-    @Published var monthlyFixedSpend: Double = 5000
+    @Published var monthlyIncome: Double = 10000.0
+    @Published var monthlyFixedSpend: Double = 5000.0
     @Published var birthDate: String = ""
     @Published var sessionToken: String = ""
     @Published var bankAccounts: [BankAccount] = []
@@ -96,19 +96,20 @@ class UserViewModel: ObservableObject {
                 fetchRequest.predicate = NSPredicate(format: "id == %d", data.userId)
                 do {
                     let users = try context.fetch(fetchRequest)
-                    if !users.isEmpty{
+                    //There is a user on this device
+                    if users.isEmpty{
+                        //And the user exists on the server too
                         if data.isExistingUser {
                             // If the user exists on the server but not in Core Data on this device, fetch user's data from server
                             self.fetchUserInfoFromServer(userId: data.userId)
                             self.fetchBankAccountsFromServer()
                         } else {
-                            //if it's an existing user on this device but the user hasn't yet finished signup, show user details or account connection
-                            // If user exists in core data, load user data from core
-                            self.fetchUserFromCoreData(userId: data.userId)
+                            //Entirely new user
+                            self.createUserInCoreData()
                         }
                     } else {
-                        // If user is entirely new, create a new user in core
-                        self.createUserInCoreData()
+                        //User exists on device, load user data
+                        self.fetchUserFromCoreData(userId: data.userId)
                     }
                 } catch {
                     print("Failed to fetch user from Core Data: \(error)")
@@ -138,8 +139,8 @@ class UserViewModel: ObservableObject {
                     self.firstName = data.firstName
                     self.lastName = data.lastName
                     self.phone = data.phone
-                    self.monthlyIncome = data.monthlyIncome
-                    self.monthlyFixedSpend = data.monthlyFixedSpend
+                    self.monthlyIncome = 10000.0
+                    self.monthlyFixedSpend = 5000.0
                     self.birthDate = data.birthDate
                     self.hasEnteredUserDetails = data.hasEnteredUserDetails
                     self.hasCompletedAccountCreation = data.hasCompletedAccountCreation

@@ -22,6 +22,12 @@ async function createUser(phoneNumber, sessionToken) {
   return user;
 }
 
+async function updateDBSessionToken(userId, sessionToken) {
+  const query = 'UPDATE users SET session_token = $1 WHERE id = $2';
+  const values = [sessionToken, userId];
+  await db.none(query, values);
+}
+
 async function updateUser(userData) {
   userData.birth_date = new Date(userData.birth_date);
   const update = pgp.helpers.update(userData, cs) + ' WHERE id = ${id} RETURNING *';
@@ -250,18 +256,27 @@ async function getInternalAccountId(plaidAccountId) {
 
 // Function to save the cursor for a user's item
 async function saveCursor(itemId, cursor) {
-  await db.none(`
-    UPDATE items
-    SET plaid_cursor = $1
-    WHERE id = $2
-  `, [cursor, itemId]);
+  console.log(`Saving cursor: ${cursor} for item ID: ${itemId}`); // Log the cursor and item ID
+
+  try {
+    await db.none(`
+      UPDATE items
+      SET plaid_cursor = $1
+      WHERE id = $2
+    `, [cursor, itemId]);
+
+    console.log('Cursor saved successfully'); // Log success message
+  } catch (error) {
+    console.error('Error saving cursor:', error); // Log error message
+  }
 }
   
 module.exports = { 
   getUserRecord, 
   getUserRecordByPhone, 
   getUserAccounts, 
-  createItem, 
+  createItem,
+  updateDBSessionToken, 
   updateUser, 
   createUser, 
   updateItem, 
