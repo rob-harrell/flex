@@ -59,7 +59,7 @@ struct MainTabView: View {
                         }) {
                             HStack {
                                 Image("Calendar")
-                                Text(sharedViewModel.stringForDate(sharedViewModel.selectedMonth, format: "MMMM"))
+                                Text(sharedViewModel.stringForDate(sharedViewModel.selectedMonth, format: "MMM"))
                                     .font(.headline)
                                     .fontWeight(.semibold)
                                 Image(systemName: "chevron.down")

@@ -11,17 +11,21 @@ struct BudgetHeaderView: View {
     @EnvironmentObject var userViewModel: UserViewModel
     @EnvironmentObject var sharedViewModel: DateViewModel
     @EnvironmentObject var budgetViewModel: BudgetViewModel
-    
+
+    var savings: Double {
+        if sharedViewModel.selectedMonth == sharedViewModel.currentMonth {
+            return budgetViewModel.currentMonthSavings
+        } else {
+            return budgetViewModel.monthlySavings[sharedViewModel.selectedMonth] ?? 0
+        }
+    } 
+
     var body: some View {
         VStack(alignment: .leading) {
             HStack{
-                Text("\(budgetViewModel.currentMonthSavings < 0 ? "-" : "")$\(abs(Int(budgetViewModel.currentMonthSavings)))")
-                    .foregroundColor(budgetViewModel.currentMonthSavings < 0 ? Color(.red600) : Color(.emerald600))
-                if sharedViewModel.currentMonth == sharedViewModel.selectedMonth {
-                    Text("remaining")
-                } else {
-                    Text("saved")
-                }
+                Text("\(savings < 0 ? "-" : "")$\(abs(Int(savings)))")
+                    .foregroundColor(savings < 0 ? Color(.red600) : Color(.emerald600))
+                Text(savings < 0 ? "over budget" : (sharedViewModel.currentMonth == sharedViewModel.selectedMonth ? "remaining" : "saved"))
             }
             Text("after all spending")
         }

@@ -21,27 +21,23 @@ struct MonthSelectorView: View {
             ScrollViewReader { scrollView in
                 ScrollView {
                     VStack(alignment: .leading) {
-                        ForEach(sharedViewModel.dates, id: \.self) { dates in
+                        ForEach(Array(sharedViewModel.dates.enumerated()), id: \.element) { index, dates in
                             let month = sharedViewModel.stringForDate(dates.first!, format: "MMMM")
                             Button(action: {
-                                if let dateString = sharedViewModel.dates.first(where: { sharedViewModel.stringForDate($0.first!, format: "MMMM") == month }) {
-                                    sharedViewModel.selectedMonth = dateString.first!
-                                    if let index = sharedViewModel.dates.firstIndex(of: dateString) {
-                                        sharedViewModel.selectedMonthIndex = index
-                                    }
-                                }
+                                sharedViewModel.selectedMonth = dates.first!
+                                sharedViewModel.selectedMonthIndex = index
                                 showingMonthSelection = false
                             }) {
                                 ZStack(alignment: .trailing) {
                                     Text(month)
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                         .font(.body)
-                                        .fontWeight(sharedViewModel.stringForDate(sharedViewModel.selectedMonth, format: "MMMM") == month ? .bold : .regular)
+                                        .fontWeight(sharedViewModel.selectedMonthIndex == index ? .bold : .regular)
                                         .padding(12)
-                                        .background(sharedViewModel.stringForDate(sharedViewModel.selectedMonth, format: "MMMM") == month ? Color(.systemGray6) : Color.clear)
+                                        .background(sharedViewModel.selectedMonthIndex == index ? Color(.systemGray6) : Color.clear)
                                         .id(month)
 
-                                    if sharedViewModel.stringForDate(sharedViewModel.selectedMonth, format: "MMMM") == month {
+                                    if sharedViewModel.selectedMonthIndex == index {
                                         Image(systemName: "checkmark")
                                             .foregroundColor(.black)
                                             .fontWeight(.semibold)
@@ -52,8 +48,7 @@ struct MonthSelectorView: View {
                         }
                     }
                     .onAppear {
-                        let lastMonth = sharedViewModel.stringForDate(sharedViewModel.dates.last!.first!, format: "MMMM")
-                        scrollView.scrollTo(lastMonth, anchor: .bottom)
+                        scrollView.scrollTo(sharedViewModel.stringForDate(sharedViewModel.dates.last!.first!, format: "MMMM"), anchor: .bottom)
                     }
                 }
             }
@@ -63,18 +58,9 @@ struct MonthSelectorView: View {
             Spacer()
         }
     }
-
-    func monthSelectionButtons() -> [ActionSheet.Button] {
-        sharedViewModel.monthNames.map { month in
-            .default(Text(month)) {
-                if let dateString = sharedViewModel.dates.first(where: { sharedViewModel.stringForDate($0.first!, format: "MMMM") == month }) {
-                    sharedViewModel.selectedMonth = dateString.first!
-                }
-            }
-        } + [.cancel()]
-    }
 }
 
 #Preview {
     MonthSelectorView(showingMonthSelection: .constant(false))
+        .environmentObject(DateViewModel())
 }

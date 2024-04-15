@@ -11,25 +11,38 @@ struct BudgetBarView: View {
     @EnvironmentObject var userViewModel: UserViewModel
     @EnvironmentObject var sharedViewModel: DateViewModel
     @EnvironmentObject var budgetViewModel: BudgetViewModel
+
+    var selectedMonthFixed: Double {
+        if sharedViewModel.currentMonth == sharedViewModel.selectedMonth {
+            return userViewModel.monthlyFixedSpend
+        } else {
+            return budgetViewModel.totalFixedSpendPerMonth[sharedViewModel.selectedMonth] ?? 0.0
+        }
+    }
     
-    let testIncome = 10000.0
-    let testFixedSpend = 5000.0
-    let testFlexSpendMonthToDate = 3500.0
+    var selectedMonthFlex: Double {
+        if sharedViewModel.currentMonth == sharedViewModel.selectedMonth {
+            return budgetViewModel.flexSpendMonthToDate
+        } else {
+            return budgetViewModel.totalFlexSpendPerMonth[sharedViewModel.selectedMonth] ?? 0.0
+        }
+    }
     
     var totalBudget: Double {
-        return max(testIncome, testFixedSpend + testFlexSpendMonthToDate)
+        return max(userViewModel.monthlyIncome, selectedMonthFixed + selectedMonthFlex)
     }
     
     var percentageFixed: Double {
-        return testFixedSpend / totalBudget
+        let percentage = selectedMonthFixed / totalBudget
+        return max(percentage, 0.2)
     }
     
     var percentageFlex: Double {
-        return testFlexSpendMonthToDate / totalBudget
+        return selectedMonthFlex / totalBudget
     }
     
     var percentageOverSpend: Double {
-        let overSpend = max(0, testFlexSpendMonthToDate - (testIncome - testFixedSpend))
+        let overSpend = max(0, selectedMonthFlex - (userViewModel.monthlyIncome - selectedMonthFixed))
         return overSpend / totalBudget
     }
     
@@ -65,7 +78,7 @@ struct BudgetBarView: View {
                             .frame(width: geometry.size.width * CGFloat(percentageFixed), height: 54)
                         
                         HStack {
-                            Text("\(formatBudgetNumber(testFixedSpend))")
+                            Text("\(formatBudgetNumber(selectedMonthFixed))")
                                 .font(.system(size: 16))
                                 .foregroundColor(.slate500)
                                 .frame(alignment: .center)
@@ -82,9 +95,9 @@ struct BudgetBarView: View {
                         ZStack(alignment: .leading) {
                             UnevenRoundedRectangle(topLeadingRadius: 0, bottomLeadingRadius: 0, bottomTrailingRadius: 16, topTrailingRadius: 16)
                                 .fill(Color.black)
-                                .frame(width: geometry.size.width * CGFloat(percentageFlex - percentageOverSpend), height: 54)
+                                .frame(width: geometry.size.width * CGFloat(abs(percentageFlex - percentageOverSpend)), height: 54)
                             
-                            Text("\(formatBudgetNumber(testFlexSpendMonthToDate))")
+                            Text("\(formatBudgetNumber(selectedMonthFlex))")
                                 .font(.system(size: 16))
                                 .foregroundColor(.white)
                                 .padding(.leading, 10)
@@ -94,9 +107,9 @@ struct BudgetBarView: View {
                         ZStack(alignment: .leading) {
                             Rectangle()
                                 .fill(Color.black)
-                                .frame(width: geometry.size.width * CGFloat(percentageFlex - percentageOverSpend), height: 54)
+                                .frame(width: geometry.size.width * CGFloat(percentageFlex), height: 54)
                             
-                            Text("\(formatBudgetNumber(testFlexSpendMonthToDate))")
+                            Text("\(formatBudgetNumber(selectedMonthFlex))")
                                 .font(.system(size: 16))
                                 .foregroundColor(.white)
                                 .padding(.leading, 10)
@@ -111,8 +124,9 @@ struct BudgetBarView: View {
                 Rectangle()
                     .fill(Color.black)
                     .frame(width: 2, height: 64)
-                    .offset(x: geometry.size.width * (CGFloat(percentageFlex) + CGFloat(percentageFixed)) - 1, y: 0)
+                    .offset(x: percentageOverSpend > 0 ? geometry.size.width - 1 : geometry.size.width * (CGFloat(percentageFlex) + CGFloat(percentageFixed)) - 1, y: 0)
             }
+            .animation(.easeInOut(duration: 0.2), value: selectedMonthFlex)
         }
         .frame(height: 54)
         .padding(.horizontal)

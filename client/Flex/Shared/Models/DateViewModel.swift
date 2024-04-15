@@ -28,30 +28,12 @@ class DateViewModel: ObservableObject {
         let currentDayDate = currentDate
         currentDay = currentDayDate
         selectedDay = currentDayDate
-        selectedMonthIndex = 11
         selectedDayIndex = calendar.component(.day, from: currentDate) - 1
-        generateDatesForPastMonths()
-    }
-    
-    func datesForSelectedMonth() -> [Date] {
-        guard let monthIndex = dates.firstIndex(where: { calendar.isDate($0.first!, equalTo: selectedMonth, toGranularity: .month) }) else {
-            return []
-        }
-        return dates[monthIndex]
-    }
 
-    func stringForDate(_ date: Date, format: String) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = format
-        return formatter.string(from: date)
-    }
-
-    private func generateDatesForPastMonths() {
-        let calendar = Calendar.current
+        // Generate dates for past months directly in the initializer
         var allDates: [[Date]] = []
-
         for monthOffset in 0..<12 {
-            var components = calendar.dateComponents([.year, .month, .day], from: Date())
+            var components = calendar.dateComponents([.year, .month], from: Date())
             components.month = components.month! - monthOffset
             components.day = 1
 
@@ -69,5 +51,27 @@ class DateViewModel: ObservableObject {
             allDates.insert(datesForMonth, at: 0)
         }
         dates = allDates
+
+        // Calculate selectedMonthIndex directly in the initializer
+        selectedMonthIndex = 0
+        for (index, monthDates) in allDates.enumerated() {
+            if let firstDate = monthDates.first, calendar.isDate(firstDate, equalTo: currentMonth, toGranularity: .month) {
+                selectedMonthIndex = index
+                break
+            }
+        }
+    }
+    
+    func datesForSelectedMonth() -> [Date] {
+        guard let monthIndex = dates.firstIndex(where: { calendar.isDate($0.first!, equalTo: selectedMonth, toGranularity: .month) }) else {
+            return []
+        }
+        return dates[monthIndex]
+    }
+
+    func stringForDate(_ date: Date, format: String) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = format
+        return formatter.string(from: date)
     }
 }
