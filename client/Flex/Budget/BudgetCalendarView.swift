@@ -11,8 +11,10 @@ struct BudgetCalendarView: View {
     @EnvironmentObject var userViewModel: UserViewModel
     @EnvironmentObject var sharedViewModel: DateViewModel
     @EnvironmentObject var budgetViewModel: BudgetViewModel
-    @State private var selectedDate: Date?
+    @State private var selectedDate: Date = Calendar.current.startOfDay(for: Date())
+    @State private var hasTapped: Bool = false
     @State private var scrollPosition: Int?
+    @State private var showingOverlay = false
     
     let columns: [GridItem] = Array(repeating: .init(.flexible(), spacing: 0), count: 7)
     
@@ -77,11 +79,13 @@ struct BudgetCalendarView: View {
 
         Button(action: {
             selectedDate = date
+            hasTapped = true
+            showingOverlay = true
         }) {
             VStack {
                 Text(sharedViewModel.stringForDate(date, format: "d")) // Date
                     .font(.caption)
-                    .foregroundColor(Color.slate500)
+                    .foregroundColor(cellDate == selectedDate ? Color.black : Color.slate500)
                     .fixedSize(horizontal: false, vertical: true) // Prevent stretching
                     .padding(.vertical, 8)
                     .fontWeight(.semibold)
@@ -113,10 +117,25 @@ struct BudgetCalendarView: View {
             .frame(minWidth: 0, maxWidth: .infinity, minHeight: 82.25)
             .background(isPastOrToday ? Color(.slate) : Color.clear)
         }
+        .sheet(isPresented: $showingOverlay) {
+            if hasTapped {
+                TransactionsListOverlay(date: selectedDate)
+                    .environmentObject(budgetViewModel)
+                    .presentationDetents([.fraction(0.50), .fraction(1.0)])
+            }
+        }
         .overlay(
-            RoundedRectangle(cornerRadius: 0)
-                .stroke(cellDate == today || date == selectedDate ? Color.black : Color.slate500.opacity(0.1), lineWidth: 0.75)
+            ZStack {
+                RoundedRectangle(cornerRadius: 0)
+                    .stroke(Color.slate200, lineWidth: 0.75)
+                if cellDate == selectedDate {
+                    RoundedRectangle(cornerRadius: 0)
+                        .stroke(Color.black, lineWidth: 1.0)
+                }
+            }
         )
+        .padding(0.25) // Add padding equal to half the border width
+        .offset(x: -0.25, y: -0.25)
     }
 }
 

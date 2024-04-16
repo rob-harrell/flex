@@ -81,34 +81,48 @@ router.post("/swap_public_token", async (req, res, next) => {
   }
 });
 
-async function syncTransactions(accessToken, cursor) {
-  const options = {
-    access_token: accessToken,
-  };
+async function syncTransactions(accessToken, initialCursor) {
+  let added = [];
+  let modified = [];
+  let removed = [];
+  let cursor = initialCursor;
+  let originalCursor = initialCursor;
 
-  if (cursor) {
-    options.cursor = cursor;
-  }
-  console.log('accessToken', accessToken);
-  console.log('cursor', cursor);
+  while (true) {
+    const options = {
+      access_token: accessToken,
+      cursor: cursor,
+    };
 
-  try {
-    const response = await plaidClient.transactionsSync(options);
-    if (response && response.data) {
-      return {
-        added: response.data.added,
-        removed: response.data.removed,
-        modified: response.data.modified,
-        next_cursor: response.data.next_cursor,
-      };
-    } else {
-      console.error('Error in syncTransactions: No response or data');
-      return null;
+    try {
+      const response = await plaidClient.transactionsSync(options);
+      if (response && response.data) {
+        added = added.concat(response.data.added);
+        modified = modified.concat(response.data.modified);
+        removed = removed.concat(response.data.removed);
+        cursor = response.data.next_cursor;
+
+        if (response.data.has_more) {
+          originalCursor = cursor;
+        } else {
+          break;
+        }
+      } else {
+        console.error('Error in syncTransactions: No response or data');
+        return null;
+      }
+    } catch (error) {
+      console.error('Error in syncTransactions', error);
+      cursor = originalCursor; // Restart the loop with the original cursor
     }
-  } catch (error) {
-    console.error('Error in syncTransactions', error);
-    return null;
   }
+
+  return {
+    added: added,
+    removed: removed,
+    modified: modified,
+    next_cursor: cursor,
+  };
 }
 
 module.exports = {

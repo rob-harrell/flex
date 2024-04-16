@@ -196,10 +196,10 @@ async function saveTransactions(userId, itemId, added, modified, removed) {
       let sub_category = transaction.personal_finance_category.detailed || null;
 
       let result = await t.one(`
-        INSERT INTO transactions (plaid_transaction_id, plaid_account_id, account_id, user_id, category, sub_category, date, authorized_date, name, amount, currency_code, is_removed, pending, merchant_name)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+        INSERT INTO transactions (plaid_transaction_id, plaid_account_id, account_id, user_id, category, sub_category, date, authorized_date, name, amount, currency_code, is_removed, pending, merchant_name, logo_url)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
         RETURNING *
-      `, [transaction.transaction_id, transaction.plaid_account_id, transaction.account_id, userId, category, sub_category, transaction.date, transaction.authorized_date, transaction.name, transaction.amount, transaction.iso_currency_code || '', false, transaction.pending, transaction.merchant_name]);
+      `, [transaction.transaction_id, transaction.plaid_account_id, transaction.account_id, userId, category, sub_category, transaction.date, transaction.authorized_date, transaction.name, transaction.amount, transaction.iso_currency_code || '', false, transaction.pending, transaction.merchant_name, transaction.logo_url]);
       addedResults.push(result);
     }
 
@@ -210,10 +210,10 @@ async function saveTransactions(userId, itemId, added, modified, removed) {
 
       let result = await t.one(`
         UPDATE transactions
-        SET category = $1, sub_category = $2, date = $3, authorized_date = $4, name = $5, amount = $6, currency_code = $7, pending = $8, plaid_account_id = $9, account_id = $10, merchant_name = $11
-        WHERE user_id = $12 AND plaid_transaction_id = $13
+        SET category = $1, sub_category = $2, date = $3, authorized_date = $4, name = $5, amount = $6, currency_code = $7, pending = $8, plaid_account_id = $9, account_id = $10, merchant_name = $11, logo_url = $12
+        WHERE user_id = $13 AND plaid_transaction_id = $14
         RETURNING *
-      `, [category, sub_category, transaction.date, transaction.authorized_date, transaction.name, transaction.amount, transaction.currency_code, transaction.pending, transaction.plaid_account_id, transaction.account_id, transaction.merchant_name, userId, transaction.transaction_id]);
+      `, [category, sub_category, transaction.date, transaction.authorized_date, transaction.name, transaction.amount, transaction.currency_code, transaction.pending, transaction.plaid_account_id, transaction.account_id, transaction.merchant_name, transaction.logo_url, userId, transaction.transaction_id]);
       modifiedResults.push(result);
     }
 
@@ -261,7 +261,7 @@ async function saveCursor(itemId, cursor) {
   try {
     await db.none(`
       UPDATE items
-      SET plaid_cursor = $1
+      SET transaction_cursor = $1
       WHERE id = $2
     `, [cursor, itemId]);
 

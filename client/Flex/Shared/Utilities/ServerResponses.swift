@@ -94,6 +94,7 @@ struct TransactionResponse: Codable, Identifiable {
     let pending: Bool
     let accountId: Int64
     let merchantName: String?
+    let logoURL: String?
 
     enum CodingKeys: String, CodingKey {
         case amount
@@ -108,6 +109,7 @@ struct TransactionResponse: Codable, Identifiable {
         case pending
         case accountId = "account_id"
         case merchantName = "merchant_name"
+        case logoURL = "logo_url"
     }
 }
 

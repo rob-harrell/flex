@@ -27,7 +27,6 @@ class BudgetViewModel: ObservableObject {
     struct TransactionViewModel {
         var id: Int64
         var amount: Double
-        var authorizedDate: Date
         var budgetCategory: String
         var category: String
         var subCategory: String
@@ -39,6 +38,7 @@ class BudgetViewModel: ObservableObject {
         var productCategory: String
         var merchantName: String
         var fixedAmount: Int16
+        var logoURL: String
     }
     
     struct BudgetPreferenceViewModel: Decodable {
@@ -111,7 +111,6 @@ class BudgetViewModel: ObservableObject {
                 TransactionViewModel(
                     id: transaction.id,
                     amount: transaction.amount,
-                    authorizedDate: transaction.authorizedDate ?? Date(), // provide a default value
                     budgetCategory: transaction.budgetCategory ?? "", // provide a default value
                     category: transaction.category ?? "", // provide a default value
                     subCategory: transaction.subCategory ?? "", // provide a default value
@@ -122,7 +121,8 @@ class BudgetViewModel: ObservableObject {
                     pending: transaction.pending,
                     productCategory: transaction.productCategory ?? "", // provide a default value
                     merchantName: transaction.merchantName ?? "", // provide a default value
-                    fixedAmount: transaction.fixedAmount
+                    fixedAmount: transaction.fixedAmount,
+                    logoURL: transaction.logoURL ?? ""
                 )
             }
             print("fetched transactions from core data")
@@ -138,6 +138,10 @@ class BudgetViewModel: ObservableObject {
         dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
 
         for transactionResponse in transactions {
+            if transactionResponse.name == "Returned Payment" {
+                print("Skipped transaction with name: \(transactionResponse.name)")
+                continue
+            }
             let transaction = Transaction(context: context)
             transaction.id = transactionResponse.id
             transaction.amount = transactionResponse.amount
@@ -148,22 +152,21 @@ class BudgetViewModel: ObservableObject {
             transaction.name = transactionResponse.name
             transaction.pending = transactionResponse.pending
             transaction.merchantName = transactionResponse.merchantName
-            
-            // Convert the dates from String to Date
-            guard let dateAsDate = dateFormatter.date(from: transactionResponse.date) else {
-                print("Invalid date: \(transactionResponse.date)")
-                continue
-            }
-            transaction.date = dateAsDate
+            transaction.logoURL = transactionResponse.logoURL
             
             if let authorizedDateString = transactionResponse.authorizedDate {
                 guard let authDateAsDate = dateFormatter.date(from: authorizedDateString) else {
-                    print("Invalid date: \(authorizedDateString)")
+                    print("Invalid authorized date: \(authorizedDateString)")
                     continue
                 }
-                transaction.authorizedDate = authDateAsDate
+                transaction.date = authDateAsDate
             } else {
-                print("authorizedDate is nil")
+                guard let dateAsDate = dateFormatter.date(from: transactionResponse.date) else {
+                    print("Invalid date: \(transactionResponse.date)")
+                    continue
+                }
+                transaction.date = dateAsDate
+                print("authorizedDate is nil, using transaction date instead")
             }
 
             // Assign productCategory and budgetCategory from budgetPreferences
@@ -238,22 +241,21 @@ class BudgetViewModel: ObservableObject {
                 transaction.name = transactionResponse.name
                 transaction.pending = transactionResponse.pending
                 transaction.merchantName = transactionResponse.merchantName
-                
-                // Convert the dates from String to Date
-                guard let dateAsDate = dateFormatter.date(from: transactionResponse.date) else {
-                    print("Invalid date: \(transactionResponse.date)")
-                    continue
-                }
-                transaction.date = dateAsDate
+                transaction.logoURL = transactionResponse.logoURL
                 
                 if let authorizedDateString = transactionResponse.authorizedDate {
                     guard let authDateAsDate = dateFormatter.date(from: authorizedDateString) else {
-                        print("Invalid date: \(authorizedDateString)")
+                        print("Invalid authorized date: \(authorizedDateString)")
                         continue
                     }
-                    transaction.authorizedDate = authDateAsDate
+                    transaction.date = authDateAsDate
                 } else {
-                    print("authorizedDate is nil")
+                    guard let dateAsDate = dateFormatter.date(from: transactionResponse.date) else {
+                        print("Invalid date: \(transactionResponse.date)")
+                        continue
+                    }
+                    transaction.date = dateAsDate
+                    print("authorizedDate is nil, using transaction date instead")
                 }
 
                 // Update the productCategory and budgetCategory from budgetPreferences
@@ -445,12 +447,6 @@ class BudgetViewModel: ObservableObject {
         // Fetch transactions from Core Data
         self.fetchTransactionsFromCoreData()
 
-        // Log fetched transactions
-        print("Fetched transactions:")
-        for transaction in self.transactions {
-            print("ID: \(transaction.id), Amount: \(transaction.amount), Category: \(transaction.category), SubCategory: \(transaction.subCategory), Date: \(transaction.date), BudgetCategory: \(transaction.budgetCategory), ProductCategory: \(transaction.productCategory)")
-        }
-
         // Group transactions by date
         let groupedTransactions = Dictionary(grouping: self.transactions, by: { $0.date })
 
@@ -464,10 +460,6 @@ class BudgetViewModel: ObservableObject {
             self.totalFlexSpendPerDay[date] = totalFlexSpend
         }
 
-        // Log total fixed and flexible spending per day
-        print("Total fixed spending per day: \(self.totalFixedSpendPerDay)")
-        print("Total flexible spending per day: \(self.totalFlexSpendPerDay)")
-
         // Calculate total fixed and flexible spending per month
         self.totalFixedSpendPerMonth = [:]
         self.totalFlexSpendPerMonth = [:]
@@ -478,10 +470,6 @@ class BudgetViewModel: ObservableObject {
             self.totalFixedSpendPerMonth[month] = totalFixedSpend
             self.totalFlexSpendPerMonth[month] = totalFlexSpend
         }
-        
-        // Log total fixed and flexible spending per month
-        print("Total fixed spending per month: \(self.totalFixedSpendPerMonth)")
-        print("Total flexible spending per month: \(self.totalFlexSpendPerMonth)")
 
         // Calculate expenses month to date
         let now = Date()
@@ -496,9 +484,5 @@ class BudgetViewModel: ObservableObject {
             self.monthlySavings[date] = monthlyIncome - totalFixedSpend - totalFlexSpend
         }
         self.currentMonthSavings = monthlyIncome - (monthlyFixedSpend) - self.flexSpendMonthToDate
-
-        // Log monthly savings and current month savings
-        print("Monthly savings: \(self.monthlySavings)")
-        print("Current month savings: \(self.currentMonthSavings)")
     }
 }

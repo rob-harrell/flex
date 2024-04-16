@@ -11,20 +11,16 @@ exports.getTransactionsForUser = async (req, res, next) => {
 
         // Get all items for the user from the database
         const items = await db.getItemsForUser(userId);
-        console.log('Items fetched for user', items);
 
         // Get all accounts for the user from the database
         const accounts = await db.getUserAccounts(userId);
-        console.log('Accounts fetched for user', accounts);
 
         // Filter the accounts to only include checking, savings, and credit card accounts
         const accountTypes = ["checking", "savings", "credit card"];
         const filteredAccounts = accounts.filter(account => accountTypes.includes(account.sub_type.toLowerCase()));
-        console.log('Filtered accounts', filteredAccounts);
 
         // Create a set of the Plaid account IDs for the filtered accounts
         const filteredAccountIds = new Set(filteredAccounts.map(account => account.plaid_account_id));
-        console.log('Filtered account IDs', [...filteredAccountIds]);
 
         // Create a mapping from Plaid account ID to internal account ID
         const accountIdMapping = {};
@@ -39,53 +35,33 @@ exports.getTransactionsForUser = async (req, res, next) => {
 
         // Iterate over each item
         for (let currentItem of items) {
-            let cursor = currentItem.transaction_cursor || null;
-            let hasMore = true;
-            let added = [];
-            let modified = [];
-            let removed = [];
-
-            while (hasMore) {
-                // Fetch transactions from Plaid
-                const response = await syncTransactions(
-                    currentItem.access_token,
-                    cursor
-                );
-                console.log('Transactions fetched from Plaid');
-
-                // Filter the transactions by account ID
-
-                console.log(`Fetched ${response.added.length} new transactions from Plaid`);
-                console.log(`Fetched ${response.modified.length} modified transactions from Plaid`);
-                console.log(`Fetched ${response.removed.length} removed transactions from Plaid`);
-
-                response.added = response.added.filter(transaction => filteredAccountIds.has(transaction.account_id));
-                response.modified = response.modified.filter(transaction => filteredAccountIds.has(transaction.account_id));
-                response.removed = response.removed.filter(transaction => filteredAccountIds.has(transaction.account_id));
-
-                console.log(`${response.added.length} new transactions after filtering`);
-                console.log(`${response.modified.length} modified transactions after filtering`);
-                console.log(`${response.removed.length} removed transactions after filtering`);
-
-                // Add internal account ID to each transaction and remove payment meta
-                response.added = processTransactions(response.added, accountIdMapping);
-                response.modified = processTransactions(response.modified, accountIdMapping);
-                response.removed = processTransactions(response.removed, accountIdMapping);
-
-                // Append new transactions to the list
-                added = added.concat(response.added);
-                modified = modified.concat(response.modified);
-                removed = removed.concat(response.removed);
-
-                // Update cursor and hasMore for the next iteration
-                cursor = response.next_cursor;
-                hasMore = response.has_more;
-            }
-
+            // Log the cursor being used to fetch transactions
+            console.log(`Fetching transactions with cursor: ${currentItem.transaction_cursor || 'null'}`);
+        
+            // Fetch transactions from Plaid
+            const response = await syncTransactions(
+                currentItem.access_token,
+                currentItem.transaction_cursor || null
+            );
+            console.log('Transactions fetched from Plaid');
+        
+            // Filter the transactions by account ID
+            response.added = response.added.filter(transaction => filteredAccountIds.has(transaction.account_id));
+            response.modified = response.modified.filter(transaction => filteredAccountIds.has(transaction.account_id));
+            response.removed = response.removed.filter(transaction => filteredAccountIds.has(transaction.account_id));
+        
+            // Add internal account ID to each transaction and remove payment meta
+            response.added = processTransactions(response.added, accountIdMapping);
+            response.modified = processTransactions(response.modified, accountIdMapping);
+            response.removed = processTransactions(response.removed, accountIdMapping);
+        
             // Save transactions and cursor to the database
-            let savedTransactions = await db.saveTransactions(userId, currentItem.id, added, modified, removed);
-            await db.saveCursor(currentItem.id, cursor);
-
+            let savedTransactions = await db.saveTransactions(userId, currentItem.id, response.added, response.modified, response.removed);
+            
+            // Log the cursor being saved to the database
+            console.log(`Saving cursor: ${response.next_cursor} to the database`);
+            await db.saveCursor(currentItem.id, response.next_cursor);
+        
             // Append transactions to the total list
             allAdded = allAdded.concat(savedTransactions.added);
             allModified = allModified.concat(savedTransactions.modified);
