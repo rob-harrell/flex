@@ -16,7 +16,7 @@ struct BudgetView: View {
         VStack {
             BudgetHeaderView()
                 .padding(.horizontal)
-            BudgetBarView()
+            BudgetBarView(selectedMonth: sharedViewModel.selectedMonth)
                 .padding(.bottom, 30)
                 .padding(.top, -4)
             BudgetCalendarView()

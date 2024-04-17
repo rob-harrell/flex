@@ -14,6 +14,7 @@ struct TransactionsResponse: Codable {
     let modified: [TransactionResponse]
     let removed: [TransactionResponse]
 }
+typealias TransactionHistoryResponse = [TransactionResponse]
 
 struct OTPResponse: Decodable {
     let message: String?

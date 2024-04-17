@@ -2,8 +2,13 @@ const express = require('express');
 const router = express.Router();
 const budgetServices = require('../services/budgetServices'); // Updated path
 
-// Get transactions for user
-router.get('/get_transactions_for_user/:id', budgetServices.getTransactionsForUser, (req, res) => {
+// Get new transactions for user from plaid & store in DB
+router.get('/get_new_transactions_for_user/:id', budgetServices.getNewTransactionsForUser, (req, res) => {
+    res.send(res.locals.data);
+});
+
+//Get entire transaction history from DB for users switching devices
+router.get('/get_transaction_history_for_account/:id', budgetServices.getTransactionHistoryForAccount, (req, res) => {
     res.send(res.locals.data);
 });
 

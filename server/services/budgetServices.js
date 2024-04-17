@@ -3,7 +3,7 @@ const db = require('../db/database.js');
 const { syncTransactions } = require('../routes/plaid');
 
 // Function to get transactions for a user
-exports.getTransactionsForUser = async (req, res, next) => {
+exports.getNewTransactionsForUser = async (req, res, next) => {
     console.log('Getting transactions for user')
     try {
         // Get the user ID from the request parameters
@@ -104,6 +104,17 @@ function processTransactions(transactions, accountIdMapping) {
 
     return processedTransactions;
 }
+
+
+exports.getTransactionHistoryForAccount = async (req, res, next) => {
+    try {
+        const transactions = await db.getTransactionHistoryForAccount(req.params.id); // Fetch transactions for the account id
+        res.locals.data = transactions; // Store the transactions in res.locals.data
+    } catch (error) {
+        res.status(500).send({ message: 'Error fetching transaction history' });
+    }
+    next();
+};
 
 // Function to get budget preferences for a user
 exports.getBudgetPreferencesForUser = async (req, res, next) => {

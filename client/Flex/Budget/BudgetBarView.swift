@@ -11,25 +11,34 @@ struct BudgetBarView: View {
     @EnvironmentObject var userViewModel: UserViewModel
     @EnvironmentObject var sharedViewModel: DateViewModel
     @EnvironmentObject var budgetViewModel: BudgetViewModel
+    @State var selectedMonth: Date
 
     var selectedMonthFixed: Double {
-        if sharedViewModel.currentMonth == sharedViewModel.selectedMonth {
+        if sharedViewModel.currentMonth == selectedMonth {
             return userViewModel.monthlyFixedSpend
         } else {
-            return budgetViewModel.totalFixedSpendPerMonth[sharedViewModel.selectedMonth] ?? 0.0
+            return budgetViewModel.totalFixedSpendPerMonth[selectedMonth] ?? 0.0
         }
     }
     
     var selectedMonthFlex: Double {
-        if sharedViewModel.currentMonth == sharedViewModel.selectedMonth {
+        if sharedViewModel.currentMonth == selectedMonth {
             return budgetViewModel.flexSpendMonthToDate
         } else {
-            return budgetViewModel.totalFlexSpendPerMonth[sharedViewModel.selectedMonth] ?? 0.0
+            return budgetViewModel.totalFlexSpendPerMonth[selectedMonth] ?? 0.0
+        }
+    }
+    
+    var selectedMonthIncome: Double {
+        if sharedViewModel.currentMonth == selectedMonth {
+            return userViewModel.monthlyIncome
+        } else {
+            return budgetViewModel.monthlyIncome[selectedMonth] ?? 0.0
         }
     }
     
     var totalBudget: Double {
-        return max(userViewModel.monthlyIncome, selectedMonthFixed + selectedMonthFlex)
+        return max(selectedMonthIncome, selectedMonthFixed + selectedMonthFlex)
     }
     
     var percentageFixed: Double {
@@ -38,11 +47,12 @@ struct BudgetBarView: View {
     }
     
     var percentageFlex: Double {
-        return selectedMonthFlex / totalBudget
+        let percentage = selectedMonthFlex / totalBudget
+        return max(percentage, 0.0)
     }
     
     var percentageOverSpend: Double {
-        let overSpend = max(0, selectedMonthFlex - (userViewModel.monthlyIncome - selectedMonthFixed))
+        let overSpend = max(0, selectedMonthFlex - (selectedMonthIncome - selectedMonthFixed))
         return overSpend / totalBudget
     }
     
@@ -96,12 +106,16 @@ struct BudgetBarView: View {
                             UnevenRoundedRectangle(topLeadingRadius: 0, bottomLeadingRadius: 0, bottomTrailingRadius: 16, topTrailingRadius: 16)
                                 .fill(Color.black)
                                 .frame(width: geometry.size.width * CGFloat(abs(percentageFlex - percentageOverSpend)), height: 54)
-                            
-                            Text("\(formatBudgetNumber(selectedMonthFlex))")
-                                .font(.system(size: 16))
-                                .foregroundColor(.white)
-                                .padding(.leading, 10)
-                                .fontWeight(.semibold)
+                            HStack {
+                                Text("\(formatBudgetNumber(selectedMonthFlex))")
+                                    .font(.system(size: 16))
+                                    .foregroundColor(.white)
+                                    .padding(.leading, 10)
+                                    .fontWeight(.semibold)
+                                Image(.tiki)
+                                    .foregroundColor(Color.white)
+                                    .font(.system(size: 16))
+                            }
                         }
                     } else {
                         ZStack(alignment: .leading) {
@@ -109,11 +123,16 @@ struct BudgetBarView: View {
                                 .fill(Color.black)
                                 .frame(width: geometry.size.width * CGFloat(percentageFlex), height: 54)
                             
-                            Text("\(formatBudgetNumber(selectedMonthFlex))")
-                                .font(.system(size: 16))
-                                .foregroundColor(.white)
-                                .padding(.leading, 10)
-                                .fontWeight(.semibold)
+                            HStack {
+                                Text("\(formatBudgetNumber(selectedMonthFlex))")
+                                    .font(.system(size: 16))
+                                    .foregroundColor(.white)
+                                    .padding(.leading, 10)
+                                    .fontWeight(.semibold)
+                                Image(.tiki)
+                                    .foregroundColor(Color.white)
+                                    .font(.system(size: 16))
+                            }
                         }
                     }
                     
@@ -128,6 +147,9 @@ struct BudgetBarView: View {
             }
             .animation(.easeInOut(duration: 0.2), value: selectedMonthFlex)
         }
+        .onChange(of: sharedViewModel.selectedMonth) {
+            self.selectedMonth = sharedViewModel.selectedMonth
+        }
         .frame(height: 54)
         .padding(.horizontal)
     }
@@ -135,7 +157,7 @@ struct BudgetBarView: View {
 
 
 #Preview {
-    BudgetBarView()
+    BudgetBarView(selectedMonth: Date())
         .environmentObject(UserViewModel())
         .environmentObject(DateViewModel())
         .environmentObject(BudgetViewModel())

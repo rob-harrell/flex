@@ -45,25 +45,25 @@
     "category":"TRANSFER_IN",
     "subCategory":"TRANSFER_IN_CASH_ADVANCES_AND_LOANS",
     "productCategory":"Transfer",
-    "budgetCategory":"Income"
+    "budgetCategory":"Unknown"
   },
   {
     "category":"TRANSFER_IN",
     "subCategory":"TRANSFER_IN_DEPOSIT",
     "productCategory":"Transfer",
-    "budgetCategory":"Income"
+    "budgetCategory":"Unknown"
   },
   {
     "category":"TRANSFER_IN",
     "subCategory":"TRANSFER_IN_INVESTMENT_AND_RETIREMENT_FUNDS",
     "productCategory":"Transfer",
-    "budgetCategory":"Income"
+    "budgetCategory":"Unknown"
   },
   {
     "category":"TRANSFER_IN",
     "subCategory":"TRANSFER_IN_SAVINGS",
     "productCategory":"Transfer",
-    "budgetCategory":"Income"
+    "budgetCategory":"Unknown"
   },
   {
     "category":"TRANSFER_IN",
@@ -75,7 +75,7 @@
     "category":"TRANSFER_IN",
     "subCategory":"TRANSFER_IN_OTHER_TRANSFER_IN",
     "productCategory":"Transfer",
-    "budgetCategory":"Income"
+    "budgetCategory":"Unknown"
   },
   {
     "category":"TRANSFER_OUT",
@@ -92,19 +92,19 @@
   {
     "category":"TRANSFER_OUT",
     "subCategory":"TRANSFER_OUT_WITHDRAWAL",
-    "productCategory":"Transfers",
+    "productCategory":"Transfer",
     "budgetCategory":"Unknown"
   },
   {
     "category":"TRANSFER_OUT",
     "subCategory":"TRANSFER_OUT_ACCOUNT_TRANSFER",
-    "productCategory":"Transfers",
+    "productCategory":"Transfer",
     "budgetCategory":"Unknown"
   },
   {
     "category":"TRANSFER_OUT",
     "subCategory":"TRANSFER_OUT_OTHER_TRANSFER_OUT",
-    "productCategory":"Transfers",
+    "productCategory":"Transfer",
     "budgetCategory":"Unknown"
   },
   {
@@ -237,7 +237,7 @@
     "category":"FOOD_AND_DRINK",
     "subCategory":"FOOD_AND_DRINK_GROCERIES",
     "productCategory":"Groceries",
-    "budgetCategory":"Fixed"
+    "budgetCategory":"Flex"
   },
   {
     "category":"FOOD_AND_DRINK",
@@ -357,7 +357,7 @@
     "category":"HOME_IMPROVEMENT",
     "subCategory":"HOME_IMPROVEMENT_REPAIR_AND_MAINTENANCE",
     "productCategory":"Home Upgrades",
-    "budgetCategory":"Fixed"
+    "budgetCategory":"Flex"
   },
   {
     "category":"HOME_IMPROVEMENT",
@@ -417,7 +417,7 @@
     "category":"PERSONAL_CARE",
     "subCategory":"PERSONAL_CARE_GYMS_AND_FITNESS_CENTERS",
     "productCategory":"Fitness",
-    "budgetCategory":"Fixed"
+    "budgetCategory":"Flex"
   },
   {
     "category":"PERSONAL_CARE",
@@ -441,25 +441,25 @@
     "category":"GENERAL_SERVICES",
     "subCategory":"GENERAL_SERVICES_ACCOUNTING_AND_FINANCIAL_PLANNING",
     "productCategory":"Services",
-    "budgetCategory":"Fixed"
+    "budgetCategory":"Flex"
   },
   {
     "category":"GENERAL_SERVICES",
     "subCategory":"GENERAL_SERVICES_AUTOMOTIVE",
     "productCategory":"Auto",
-    "budgetCategory":"Fixed"
+    "budgetCategory":"Flex"
   },
   {
     "category":"GENERAL_SERVICES",
     "subCategory":"GENERAL_SERVICES_CHILDCARE",
     "productCategory":"Kids",
-    "budgetCategory":"Fixed"
+    "budgetCategory":"Flex"
   },
   {
     "category":"GENERAL_SERVICES",
     "subCategory":"GENERAL_SERVICES_CONSULTING_AND_LEGAL",
     "productCategory":"Services",
-    "budgetCategory":"Fixed"
+    "budgetCategory":"Flex"
   },
   {
     "category":"GENERAL_SERVICES",
@@ -477,7 +477,7 @@
     "category":"GENERAL_SERVICES",
     "subCategory":"GENERAL_SERVICES_POSTAGE_AND_SHIPPING",
     "productCategory":"Shipping",
-    "budgetCategory":"Fixed"
+    "budgetCategory":"Flex"
   },
   {
     "category":"GENERAL_SERVICES",
@@ -489,7 +489,7 @@
     "category":"GENERAL_SERVICES",
     "subCategory":"GENERAL_SERVICES_OTHER_GENERAL_SERVICES",
     "productCategory":"Services",
-    "budgetCategory":"Fixed"
+    "budgetCategory":"Flex"
   },
   {
     "category":"GOVERNMENT_AND_NON_PROFIT",
@@ -525,19 +525,19 @@
     "category":"TRANSPORTATION",
     "subCategory":"TRANSPORTATION_GAS",
     "productCategory":"Transportation",
-    "budgetCategory":"Fixed"
+    "budgetCategory":"Flex"
   },
   {
     "category":"TRANSPORTATION",
     "subCategory":"TRANSPORTATION_PARKING",
     "productCategory":"Transportation",
-    "budgetCategory":"Fixed"
+    "budgetCategory":"Flex"
   },
   {
     "category":"TRANSPORTATION",
     "subCategory":"TRANSPORTATION_PUBLIC_TRANSIT",
     "productCategory":"Transportation",
-    "budgetCategory":"Fixed"
+    "budgetCategory":"Flex"
   },
   {
     "category":"TRANSPORTATION",
@@ -549,7 +549,7 @@
     "category":"TRANSPORTATION",
     "subCategory":"TRANSPORTATION_TOLLS",
     "productCategory":"Transportation",
-    "budgetCategory":"Fixed"
+    "budgetCategory":"Flex"
   },
   {
     "category":"TRANSPORTATION",
@@ -622,53 +622,5 @@
     "subCategory":"RENT_AND_UTILITIES_OTHER_UTILITIES",
     "productCategory":"Utilities",
     "budgetCategory":"Fixed"
-  },
-  {
-    "category":"CUSTOM",
-    "subCategory":"CUSTOM",
-    "productCategory":"Amazon ",
-    "budgetCategory":"Flex"
-  },
-  {
-    "category":"CUSTOM",
-    "subCategory":"CUSTOM",
-    "productCategory":"Walmart",
-    "budgetCategory":"Flex"
-  },
-  {
-    "category":"CUSTOM",
-    "subCategory":"CUSTOM",
-    "productCategory":"Costco",
-    "budgetCategory":"Flex"
-  },
-  {
-    "category":"CUSTOM",
-    "subCategory":"CUSTOM",
-    "productCategory":"Food delivery",
-    "budgetCategory":"Flex"
-  },
-  {
-    "category":"CUSTOM",
-    "subCategory":"CUSTOM",
-    "productCategory":"Rental Income",
-    "budgetCategory":"Income"
-  },
-  {
-    "category":"CUSTOM",
-    "subCategory":"CUSTOM",
-    "productCategory":"Cash App",
-    "budgetCategory":"Flex"
-  },
-  {
-    "category":"CUSTOM",
-    "subCategory":"CUSTOM",
-    "productCategory":"Venmo",
-    "budgetCategory":"Flex"
-  },
-  {
-    "category":"CUSTOM",
-    "subCategory":"CUSTOM",
-    "productCategory":"Digital Subscriptions",
-    "budgetCategory":"Flex"
   }
 ]

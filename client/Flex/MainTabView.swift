@@ -45,7 +45,8 @@ struct MainTabView: View {
             .onAppear {
                 // Initialize budgetviewmodel
                 loadBudgetPreferences()
-                budgetViewModel.fetchTransactionsFromServer(userId: userViewModel.id, monthlyIncome: userViewModel.monthlyIncome, monthlyFixedSpend: userViewModel.monthlyFixedSpend)
+                budgetViewModel.fetchTransactionHistoryFromServer(userId: userViewModel.id, bankAccounts: userViewModel.bankAccounts, monthlyIncome: userViewModel.monthlyIncome, monthlyFixedSpend: userViewModel.monthlyFixedSpend)
+                budgetViewModel.fetchNewTransactionsFromServer(userId: userViewModel.id, monthlyIncome: userViewModel.monthlyIncome, monthlyFixedSpend: userViewModel.monthlyFixedSpend)
                 print("made it here without error")
                 
                 UITabBarItem.appearance().setTitleTextAttributes([NSAttributedString.Key.font: UIFont.systemFont(ofSize: 12)], for: .normal)
@@ -77,7 +78,8 @@ struct MainTabView: View {
                         }) {
                             HStack{
                                 Image("Money")
-                                Text("\(formatBudgetNumber(userViewModel.monthlyIncome)) income")
+                                let income = sharedViewModel.selectedMonth == sharedViewModel.currentMonth ? userViewModel.monthlyIncome : budgetViewModel.monthlyIncome[sharedViewModel.selectedMonth] ?? 0
+                                Text("\(formatBudgetNumber(income)) \(sharedViewModel.selectedMonth == sharedViewModel.currentMonth ? "est. " : "")income")
                                     .font(.headline)
                                     .fontWeight(.semibold)
                             }

@@ -45,7 +45,7 @@ struct BudgetCalendarView: View {
                 }
                 .scrollTargetLayout()
             }
-            .frame(height: 420)
+            .frame(height: 425)
             .scrollTargetBehavior(.paging)
             .scrollPosition(id: $scrollPosition, anchor: .top)
             .onAppear {
@@ -114,7 +114,7 @@ struct BudgetCalendarView: View {
 
                 Spacer()
             }
-            .frame(minWidth: 0, maxWidth: .infinity, minHeight: 82.25)
+            .frame(minWidth: 0, maxWidth: .infinity, minHeight: 82.75)
             .background(isPastOrToday ? Color(.slate) : Color.clear)
         }
         .sheet(isPresented: $showingOverlay) {

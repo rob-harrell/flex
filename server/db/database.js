@@ -270,6 +270,15 @@ async function saveCursor(itemId, cursor) {
     console.error('Error saving cursor:', error); // Log error message
   }
 }
+
+async function getTransactionHistoryForAccount(accountId) {
+  const transactions = await db.any(`
+    SELECT * FROM transactions 
+    WHERE account_id = $1
+    ORDER BY date DESC
+  `, [accountId]);
+  return transactions;
+}
   
 module.exports = { 
   getUserRecord, 
@@ -290,5 +299,6 @@ module.exports = {
   getItemsForUser, 
   saveTransactions, 
   getInternalAccountId,
-  saveCursor 
+  saveCursor,
+  getTransactionHistoryForAccount 
 };
