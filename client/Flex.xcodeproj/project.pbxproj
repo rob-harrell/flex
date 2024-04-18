@@ -27,6 +27,7 @@
 		D4129F1C2B8C2CE300BB2B7D /* ServerResponses.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4129F1B2B8C2CE300BB2B7D /* ServerResponses.swift */; };
 		D4129F202B8EBF0600BB2B7D /* LinkController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4129F1F2B8EBF0600BB2B7D /* LinkController.swift */; };
 		D417A35F2BCDF4EC001D61F6 /* TransactionsListOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = D417A35E2BCDF4EC001D61F6 /* TransactionsListOverlay.swift */; };
+		D417A3612BD0D03C001D61F6 /* TransactionDateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D417A3602BD0D03C001D61F6 /* TransactionDateView.swift */; };
 		D45892832B8AB09600A8BA32 /* LinkKit in Frameworks */ = {isa = PBXBuildFile; productRef = D45892822B8AB09600A8BA32 /* LinkKit */; };
 		D46B23722BACA2350091C54D /* KeychainAccess in Frameworks */ = {isa = PBXBuildFile; productRef = D46B23712BACA2350091C54D /* KeychainAccess */; };
 		D46B23742BAE1EAB0091C54D /* LoginSignupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46B23732BAE1EAB0091C54D /* LoginSignupView.swift */; };
@@ -87,6 +88,7 @@
 		D4129F1B2B8C2CE300BB2B7D /* ServerResponses.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerResponses.swift; sourceTree = "<group>"; };
 		D4129F1F2B8EBF0600BB2B7D /* LinkController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LinkController.swift; sourceTree = "<group>"; };
 		D417A35E2BCDF4EC001D61F6 /* TransactionsListOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionsListOverlay.swift; sourceTree = "<group>"; };
+		D417A3602BD0D03C001D61F6 /* TransactionDateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionDateView.swift; sourceTree = "<group>"; };
 		D46B23732BAE1EAB0091C54D /* LoginSignupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginSignupView.swift; sourceTree = "<group>"; };
 		D46B23762BAE1F140091C54D /* OTPView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OTPView.swift; sourceTree = "<group>"; };
 		D46B23782BAE1F330091C54D /* UserDetailsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDetailsView.swift; sourceTree = "<group>"; };
@@ -204,7 +206,9 @@
 				D4DD3F102B7C701500D6E987 /* BudgetBarView.swift */,
 				D4005AC72B67247000652FCA /* BudgetCalendarView.swift */,
 				D4005ACB2B67249400652FCA /* BudgetViewModel.swift */,
+				D4005AC52B67245800652FCA /* BudgetFilterView.swift */,
 				D417A35E2BCDF4EC001D61F6 /* TransactionsListOverlay.swift */,
+				D417A3602BD0D03C001D61F6 /* TransactionDateView.swift */,
 			);
 			path = Budget;
 			sourceTree = "<group>";
@@ -212,7 +216,6 @@
 		D4005AAC2B661D7600652FCA /* Trends */ = {
 			isa = PBXGroup;
 			children = (
-				D4005AC52B67245800652FCA /* BudgetFilterView.swift */,
 				D4005AB42B66217C00652FCA /* TrendsView.swift */,
 			);
 			path = Trends;
@@ -434,6 +437,7 @@
 				D4005AB72B67162800652FCA /* SettingsView.swift in Sources */,
 				D4005AC02B67236400652FCA /* BudgetHeaderView.swift in Sources */,
 				D4005AB32B66216900652FCA /* BalancesView.swift in Sources */,
+				D417A3612BD0D03C001D61F6 /* TransactionDateView.swift in Sources */,
 				D47B9D5E2BCA05DD0020228F /* MoneyFormatter.swift in Sources */,
 				D46B237D2BB10B5F0091C54D /* AccountConnectionView.swift in Sources */,
 				D47B9D512BBF51460020228F /* NotificationView.swift in Sources */,

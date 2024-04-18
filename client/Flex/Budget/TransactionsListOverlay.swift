@@ -10,6 +10,7 @@ import SwiftUI
 struct TransactionsListOverlay: View {
     @EnvironmentObject var budgetViewModel: BudgetViewModel
     @Environment(\.presentationMode) var presentationMode
+    @State var selectedFilter: BudgetFilter = .all
     var date: Date
     var dateFormatter: DateFormatter {
         let formatter = DateFormatter()
@@ -20,77 +21,59 @@ struct TransactionsListOverlay: View {
     var body: some View {
         VStack {
             HStack {
-                Text(dateFormatter.string(from: date))
-                    .font(.title)
-                    .fontWeight(.semibold)
+                Button(action: {
+                    //show search overlay
+                }) {
+                    Image(.search)
+                        .resizable()
+                        .frame(width: 32, height: 32)
+                }
+                Spacer()
+                BudgetFilterView(selectedFilter: $selectedFilter)
                 Spacer()
                 Button(action: {
                     presentationMode.wrappedValue.dismiss()
                 }) {
                     Image(systemName: "xmark")
-                        .font(.title)
+                        .font(.title2)
                         .fontWeight(.semibold)
+                        .foregroundColor(.slate500)
                 }
             }
             .padding(.vertical)
 
-            ScrollView {
-                ForEach(["Flex", "Fixed"], id: \.self) { category in
-                    let transactions = budgetViewModel.transactions.filter { $0.budgetCategory == category && Calendar.current.isDate($0.date, inSameDayAs: date) }
-                    let totalAmount = transactions.reduce(0) { $0 + $1.amount }
-
-                    if !transactions.isEmpty {
-                        HStack{
-                            Text(category)
-                                .font(.title2)
-                                .fontWeight(.semibold)
-                            Spacer()
-                            Text("\(formatBudgetNumber(totalAmount))")
-                                .font(.title2)
-                                .fontWeight(.semibold)
-                        }
-                        HStack{
-                            Text("\(transactions.count) \(transactions.count == 1 ? "expense" : "expenses")")
-                                .font(.subheadline)
-                                .foregroundColor(.gray)
-                            Spacer()
-                        }
-
-                        ForEach(transactions, id: \.id) { transaction in
-                            HStack {
-                                AsyncImage(url: URL(string: transaction.logoURL)) { image in
-                                    image
-                                        .resizable()
-                                        .frame(width: 40, height: 40)
-                                } placeholder: {
-                                    Image(systemName: "photo") // Placeholder for the merchant logo
-                                        .frame(width: 40, height: 40)
-                                }
-                                VStack(alignment: .leading) {
-                                    Text(transaction.merchantName.isEmpty ? transaction.name : transaction.merchantName)
-                                        .font(.headline)
-                                        .fontWeight(.medium)
-                                    Text(transaction.productCategory)
-                                        .font(.subheadline)
-                                        .foregroundColor(.gray)
-                                }
-                                Spacer()
-                                Text("$\(Int(transaction.amount))")
-                                    .font(.subheadline)
-                            }
-                            .padding(.vertical, 4)
-                        }
-                        if category == "Flex" {
-                            Spacer().frame(height: 20) // Add 20 points of space after the "Flex" category
-                        }
+            ScrollViewReader { scrollView in
+                ScrollView {
+                    // Filter transactions for the current month and by budgetCategory
+                    let currentMonthTransactions = budgetViewModel.transactions.filter { transaction in
+                        let calendar = Calendar.current
+                        let isCurrentMonth = calendar.isDate(transaction.date, equalTo: date, toGranularity: .month)
+                        let isRelevantCategory = transaction.budgetCategory == "Flex" || transaction.budgetCategory == "Fixed" || transaction.budgetCategory == "Income"
+                        return isCurrentMonth && isRelevantCategory
                     }
-                }                
+
+                    // Group transactions by date
+                    let groupedTransactions = Dictionary(grouping: currentMonthTransactions) { transaction in
+                        Calendar.current.startOfDay(for: transaction.date)
+                    }.sorted { $0.key < $1.key }
+
+                    // Display transactions in ascending order
+                    ForEach(groupedTransactions, id: \.key) { (date, transactions) in
+                        TransactionDateView(date: date, transactions: transactions, selectedFilter: selectedFilter)
+                            .id(date)
+                    }
+                }
+                .animation(nil, value: selectedFilter)
+                .onAppear {
+                    scrollView.scrollTo(date, anchor: .top)
+                }
             }
             Spacer()
         }
         .padding()
     }
 }
+
 
 struct TransactionsListOverlay_Previews: PreviewProvider {
     static var previews: some View {

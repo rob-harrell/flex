@@ -95,8 +95,9 @@ struct BudgetBarView: View {
                                 .padding(.leading, 10)
                                 .fontWeight(.semibold)
                             Image(systemName: "lock.fill")
+                                .font(.system(size: 16))
                                 .foregroundColor(Color.slate500)
-                                .padding(.leading, -4)
+                                .padding(.leading, -6)
                         }
                     }
                     
@@ -123,16 +124,11 @@ struct BudgetBarView: View {
                                 .fill(Color.black)
                                 .frame(width: geometry.size.width * CGFloat(percentageFlex), height: 54)
                             
-                            HStack {
-                                Text("\(formatBudgetNumber(selectedMonthFlex))")
-                                    .font(.system(size: 16))
-                                    .foregroundColor(.white)
-                                    .padding(.leading, 10)
-                                    .fontWeight(.semibold)
-                                Image(.tiki)
-                                    .foregroundColor(Color.white)
-                                    .font(.system(size: 16))
-                            }
+                            Text("\(formatBudgetNumber(selectedMonthFlex))")
+                                .font(.system(size: 16))
+                                .foregroundColor(.white)
+                                .padding(.leading, 10)
+                                .fontWeight(.semibold)
                         }
                     }
                     
