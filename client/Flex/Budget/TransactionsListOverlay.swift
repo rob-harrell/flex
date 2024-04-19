@@ -40,7 +40,9 @@ struct TransactionsListOverlay: View {
                         .foregroundColor(.slate500)
                 }
             }
-            .padding(.vertical)
+            .padding(.horizontal)
+            .padding(.top, 24)
+            .padding(.bottom, 8)
 
             ScrollViewReader { scrollView in
                 ScrollView {
@@ -52,25 +54,40 @@ struct TransactionsListOverlay: View {
                         return isCurrentMonth && isRelevantCategory
                     }
 
+                    // Further filter transactions based on the selected filter
+                    let filteredTransactions = currentMonthTransactions.filter { transaction in
+                        selectedFilter == .all || transaction.budgetCategory.lowercased() == selectedFilter.rawValue.lowercased()
+                    }
+
                     // Group transactions by date
-                    let groupedTransactions = Dictionary(grouping: currentMonthTransactions) { transaction in
+                    let groupedTransactions = Dictionary(grouping: filteredTransactions) { transaction in
                         Calendar.current.startOfDay(for: transaction.date)
                     }.sorted { $0.key < $1.key }
 
                     // Display transactions in ascending order
-                    ForEach(groupedTransactions, id: \.key) { (date, transactions) in
+                    ForEach(groupedTransactions.indices, id: \.self) { index in
+                        let (date, transactions) = groupedTransactions[index]
                         TransactionDateView(date: date, transactions: transactions, selectedFilter: selectedFilter)
                             .id(date)
+                            .padding(.horizontal)
+                            .padding(.vertical, 12)
+                        
+                        // Check if the current date is not the last date
+                        if index != groupedTransactions.count - 1 {
+                            Rectangle()
+                                .fill(Color.slate100)
+                                .frame(height: 8)
+                        }
                     }
                 }
                 .animation(nil, value: selectedFilter)
                 .onAppear {
                     scrollView.scrollTo(date, anchor: .top)
                 }
+                
             }
             Spacer()
         }
-        .padding()
     }
 }
 

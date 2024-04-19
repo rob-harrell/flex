@@ -9,33 +9,44 @@ import SwiftUI
 
 struct BudgetFilterView: View {
     @Binding var selectedFilter: BudgetFilter
+    @Namespace private var animation
 
     var body: some View {
-        HStack(alignment: .center, spacing: 0) {
-            ForEach(BudgetFilter.allCases, id: \.self) { filter in
-                ZStack {
-                    if selectedFilter == filter {
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(Color.black)
-                            .frame(height: 36)
-                    }
+        GeometryReader { geometry in
+            HStack(alignment: .center, spacing: 0) {
+                ForEach(BudgetFilter.allCases, id: \.self) { filter in
                     Button(action: {
                         withAnimation {
                             selectedFilter = filter
                         }
                     }) {
-                        Text(filter.rawValue)
-                            .font(.body)
-                            .fontWeight(selectedFilter == filter ? .semibold : .regular)
-                            .padding(.horizontal, 12) // Adjust horizontal padding
-                            .foregroundColor(selectedFilter == filter ? .white : Color.black)
+                        HStack {
+                            if filter == .fixed {
+                                Image(systemName: "lock.fill")
+                                    .padding(.trailing, -4)
+                            }
+                            Text(filter.rawValue)
+                                .font(.subheadline)
+                        }
+                        .frame(height: 44)
+                        .padding(.horizontal, selectedFilter == .fixed ? (filter == .fixed ? 6 : -6) : (filter == .fixed ? 0 : 20))
+                        .background(
+                            Group {
+                                if selectedFilter == filter {
+                                    RoundedRectangle(cornerRadius: 20)
+                                        .fill(Color.white)
+                                        .matchedGeometryEffect(id: "background", in: animation)
+                                        .frame(height: 36)
+                                }
+                            }
+                        )
                     }
                 }
-                .frame(width: 220 / CGFloat(BudgetFilter.allCases.count)) // Set the width of each button
+                .frame(width: 212 / CGFloat(BudgetFilter.allCases.count))
             }
         }
-        .frame(width: 220) // Set the width of the entire view
-        .background(Color.slate50)
+        .frame(width: 220, height: 44)
+        .background(Color.slate200)
         .cornerRadius(20)
     }
 }
