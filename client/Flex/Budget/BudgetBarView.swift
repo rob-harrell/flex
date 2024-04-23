@@ -85,7 +85,7 @@ struct BudgetBarView: View {
                                 UnevenRoundedRectangle(topLeadingRadius: 16, bottomLeadingRadius: 16, bottomTrailingRadius: 0, topTrailingRadius: 0)
                                     .fill(Color.white)
                             )
-                            .frame(width: geometry.size.width * CGFloat(percentageFixed), height: 54)
+                            .frame(width: geometry.size.width * CGFloat(percentageOverSpend == 0 ? percentageFixed : percentageFixed * (1-percentageOverSpend)), height: 54)
                         
                         HStack {
                             Text("\(formatBudgetNumber(selectedMonthFixed))")
@@ -106,7 +106,7 @@ struct BudgetBarView: View {
                         ZStack(alignment: .leading) {
                             UnevenRoundedRectangle(topLeadingRadius: 0, bottomLeadingRadius: 0, bottomTrailingRadius: 16, topTrailingRadius: 16)
                                 .fill(Color.black)
-                                .frame(width: geometry.size.width * CGFloat(abs(percentageFlex - percentageOverSpend)), height: 54)
+                                .frame(width: geometry.size.width * CGFloat(percentageFlex * (1-percentageOverSpend)), height: 54)
                             Text("\(formatBudgetNumber(selectedMonthFlex))")
                                 .font(.system(size: 16))
                                 .foregroundColor(.white)

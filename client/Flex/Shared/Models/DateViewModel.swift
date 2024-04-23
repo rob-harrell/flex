@@ -12,7 +12,6 @@ class DateViewModel: ObservableObject {
     @Published var selectedDay: Date
     @Published var currentMonth: Date
     @Published var currentDay: Date
-    @Published var selectedMonthIndex: Int
     @Published var selectedDayIndex: Int
     @Published var dates: [[Date]] = []
 
@@ -51,15 +50,6 @@ class DateViewModel: ObservableObject {
             allDates.insert(datesForMonth, at: 0)
         }
         dates = allDates
-
-        // Calculate selectedMonthIndex directly in the initializer
-        selectedMonthIndex = 0
-        for (index, monthDates) in allDates.enumerated() {
-            if let firstDate = monthDates.first, calendar.isDate(firstDate, equalTo: currentMonth, toGranularity: .month) {
-                selectedMonthIndex = index
-                break
-            }
-        }
     }
     
     func datesForSelectedMonth() -> [Date] {

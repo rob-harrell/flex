@@ -61,7 +61,9 @@ struct BudgetCalendarView: View {
             .scrollTargetBehavior(.paging)
             .scrollPosition(id: $scrollPosition, anchor: .top)
             .onAppear {
-                scrollPosition = sharedViewModel.selectedMonthIndex
+                if let index = sharedViewModel.dates.firstIndex(where: { sharedViewModel.calendar.isDate($0.first!, equalTo: sharedViewModel.selectedMonth, toGranularity: .month) }) {
+                        scrollPosition = index
+                    }
             }
             .onChange(of: sharedViewModel.selectedMonth) { oldValue, newValue in
                 let monthIndex = sharedViewModel.dates.firstIndex(where: {
