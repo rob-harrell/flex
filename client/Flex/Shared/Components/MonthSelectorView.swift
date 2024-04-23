@@ -47,8 +47,21 @@ struct MonthSelectorView: View {
                             }
                         }
                     }
-                    .onAppear {
-                        scrollView.scrollTo(sharedViewModel.stringForDate(sharedViewModel.dates.last!.first!, format: "MMMM"), anchor: .bottom)
+                }
+                .onAppear {
+                    let month = sharedViewModel.stringForDate(sharedViewModel.selectedMonth, format: "MMMM")
+                    scrollView.scrollTo(month, anchor: .bottom)
+                }
+                .onChange(of: sharedViewModel.selectedMonth) {
+                    // Scroll to the selected month when it changes
+                    let month = sharedViewModel.stringForDate(sharedViewModel.selectedMonth, format: "MMMM")
+                    scrollView.scrollTo(month, anchor: .bottom)
+                    
+                    // Update selectedMonthIndex
+                    if let index = sharedViewModel.dates.firstIndex(where: {
+                        sharedViewModel.calendar.isDate($0.first!, equalTo: sharedViewModel.selectedMonth, toGranularity: .month)
+                    }) {
+                        sharedViewModel.selectedMonthIndex = index
                     }
                 }
             }

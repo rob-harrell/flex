@@ -23,7 +23,7 @@ struct BudgetHeaderView: View {
     var body: some View {
         VStack(alignment: .leading) {
             HStack{
-                Text("\(savings < 0 ? "-" : "")$\(abs(Int(savings)))")
+                Text("$\(abs(Int(savings)))")
                     .foregroundColor(savings < 0 ? Color(.red600) : Color(.emerald600))
                 Text(savings < 0 ? "over budget" : (sharedViewModel.currentMonth == sharedViewModel.selectedMonth ? "remaining" : "saved"))
             }

@@ -22,7 +22,7 @@ struct TransactionDateView: View {
         let filteredTransactions = transactions.filter { transaction in
             switch selectedFilter {
             case .all:
-                return true
+                return transaction.budgetCategory == "Flex" || transaction.budgetCategory == "Fixed" || transaction.budgetCategory == "Income"
             case .flex:
                 return transaction.budgetCategory == "Flex"
             case .fixed:
@@ -37,7 +37,9 @@ struct TransactionDateView: View {
                         .font(.title3)
                         .fontWeight(.semibold)
                     Spacer()
-                    Text("\(formatBudgetNumber(filteredTransactions.reduce(0) { $0 + $1.amount }))")
+                    let totalAmount = filteredTransactions.reduce(0) { $0 + $1.amount }
+                    Text(totalAmount < 0 ? "+$\(Int(round(abs(totalAmount))))" : "$\(Int(round(totalAmount)))")
+                        .foregroundColor(totalAmount < 0 ? Color.emerald600 : Color.black)
                         .font(.title3)
                         .fontWeight(.semibold)
                 }
@@ -59,10 +61,12 @@ struct TransactionDateView: View {
                             .fontWeight(.medium)
                             .lineLimit(1)
                             .truncationMode(.tail)
+                            .foregroundColor(transaction.budgetCategory == "Fixed" ? Color.slate400 : Color.black)
                         Spacer()
                         HStack {
                             Text(transaction.budgetCategory == "Income" ? "Income" : transaction.productCategory)
                                 .font(.caption)
+                                .foregroundColor(transaction.budgetCategory == "Fixed" ? Color.slate400 : Color.black)
                                 .padding(EdgeInsets(top: 4, leading: 8, bottom: 4, trailing: 8)) // Add padding around the text
                                 .background(transaction.budgetCategory == "Income" ? Color.emerald200 : Color.slate100) // Set the background color
                                 .clipShape(RoundedRectangle(cornerRadius: 12)) // Clip the background to a rounded rectangle

@@ -92,7 +92,19 @@ function processTransactions(transactions, accountIdMapping) {
             console.warn(`No internal account ID mapping found for Plaid account_id: ${transaction.account_id}`);
         }
         transaction.account_id = internalAccountId;
-        
+
+        // Clean merchant name
+        if (transaction.name.toLowerCase() === 'venmo') {
+            transaction.merchant_name = 'Venmo';
+            transaction.logo_url = 'http://localhost:8000/assets/merchant_logos/venmo_logo.png'
+        } else if (transaction.name.toLowerCase().includes('zelle')) {
+            transaction.merchant_name = 'Zelle';
+            transaction.logo_url = 'http://localhost:8000/assets/merchant_logos/zelle_logo.png'
+        } else if (transaction.name.toLowerCase() ===('target')) {
+            transaction.merchant_name = 'Target';
+            transaction.logo_url = 'https://plaid-merchant-logos.plaid.com/target_997.png'
+        }
+
         return transaction;
     });
 

@@ -45,7 +45,7 @@ struct BudgetFilterView: View {
                 .frame(width: 212 / CGFloat(BudgetFilter.allCases.count))
             }
         }
-        .frame(width: 220, height: 44)
+        .frame(width: 216, height: 44)
         .background(Color.slate200)
         .cornerRadius(20)
     }

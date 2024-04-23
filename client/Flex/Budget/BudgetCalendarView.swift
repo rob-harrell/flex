@@ -18,6 +18,13 @@ struct BudgetCalendarView: View {
     
     let columns: [GridItem] = Array(repeating: .init(.flexible(), spacing: 0), count: 7)
     
+    let numberOfRows = 5
+    let cellHeight = 86.0
+    let spacing = 0.0
+    var scrollViewHeight: Double {
+        Double(numberOfRows) * cellHeight + Double(numberOfRows - 1) * spacing
+    }
+    
     var body: some View {
         VStack {
             // Weekday headers
@@ -33,19 +40,24 @@ struct BudgetCalendarView: View {
 
             // Vertical paging ScrollView for the month
             ScrollView {
-                LazyVStack {
+                LazyVStack (spacing: -1) {
                     ForEach(sharedViewModel.dates.indices, id: \.self) { index in
-                        LazyVGrid(columns: columns, spacing: 0) {
-                            ForEach(sharedViewModel.dates[index], id: \.self) { date in
-                                calendarDateView(for: date)
+                        VStack{
+                            Spacer()
+                                .frame(height: 2)
+                            LazyVGrid(columns: columns, spacing: 0) {
+                                ForEach(sharedViewModel.dates[index], id: \.self) { date in
+                                    calendarDateView(for: date)
+                                        .id("\(sharedViewModel.stringForDate(sharedViewModel.selectedMonth, format: "MMMM yyyy"))-\(date)")
+                                }
                             }
+                            .id(index)
                         }
-                        .id(index)
                     }
                 }
                 .scrollTargetLayout()
             }
-            .frame(height: 425)
+            .frame(height: 434)
             .scrollTargetBehavior(.paging)
             .scrollPosition(id: $scrollPosition, anchor: .top)
             .onAppear {
@@ -57,7 +69,9 @@ struct BudgetCalendarView: View {
                     return dateString == sharedViewModel.stringForDate(newValue, format: "MMMM yyyy")
                 })
                 if let index = monthIndex {
-                    scrollPosition = index
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        scrollPosition = index
+                    }
                 }
             }
             .onChange(of: scrollPosition) { oldValue, newValue in
@@ -92,7 +106,8 @@ struct BudgetCalendarView: View {
 
                 if !isFuture {
                     let flexSpend = Int(budgetViewModel.totalFlexSpendPerDay[date, default: 0])
-                    let fixedSpend = Int(budgetViewModel.totalFixedSpendPerDay[date, default: 0])   
+                    let fixedSpend = Int(budgetViewModel.totalFixedSpendPerDay[date, default: 0])  
+                    let income = Int(budgetViewModel.totalIncomePerDay[date, default: 0])
 
                     if flexSpend > 0 {
                         Text("$\(flexSpend)") // Flex spend
@@ -100,7 +115,6 @@ struct BudgetCalendarView: View {
                             .foregroundColor(Color.black)
                             .fixedSize(horizontal: false, vertical: true) // Prevent stretching
                             .fontWeight(.semibold)
-                            .padding(.bottom, 2)
                     }
 
                     if fixedSpend > 0 {
@@ -110,11 +124,21 @@ struct BudgetCalendarView: View {
                             .fixedSize(horizontal: false, vertical: true) // Prevent stretching
                             .fontWeight(.semibold)
                     }
+                    
+                    if abs(income) > 0 {
+                        Text("+$\(abs(income))")
+                            .font(.caption)
+                            .foregroundColor(Color.emerald600)
+                            .fixedSize(horizontal: false, vertical: true) // Prevent stretching
+                            .fontWeight(.semibold)
+                    }
+                    
                 }
 
                 Spacer()
             }
-            .frame(minWidth: 0, maxWidth: .infinity, minHeight: 82.75)
+            .frame(minWidth: 0, maxWidth: .infinity)
+            .frame(height: 86)
             .background(isPastOrToday ? Color(.slate) : Color.clear)
         }
         .sheet(isPresented: $showingOverlay) {

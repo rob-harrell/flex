@@ -38,7 +38,7 @@ struct BudgetBarView: View {
     }
     
     var totalBudget: Double {
-        return max(selectedMonthIncome, selectedMonthFixed + selectedMonthFlex)
+        return max(selectedMonthIncome, selectedMonthFixed + selectedMonthFlex, 1.0)
     }
     
     var percentageFixed: Double {
@@ -107,16 +107,11 @@ struct BudgetBarView: View {
                             UnevenRoundedRectangle(topLeadingRadius: 0, bottomLeadingRadius: 0, bottomTrailingRadius: 16, topTrailingRadius: 16)
                                 .fill(Color.black)
                                 .frame(width: geometry.size.width * CGFloat(abs(percentageFlex - percentageOverSpend)), height: 54)
-                            HStack {
-                                Text("\(formatBudgetNumber(selectedMonthFlex))")
-                                    .font(.system(size: 16))
-                                    .foregroundColor(.white)
-                                    .padding(.leading, 10)
-                                    .fontWeight(.semibold)
-                                Image(.tiki)
-                                    .foregroundColor(Color.white)
-                                    .font(.system(size: 16))
-                            }
+                            Text("\(formatBudgetNumber(selectedMonthFlex))")
+                                .font(.system(size: 16))
+                                .foregroundColor(.white)
+                                .padding(.leading, 10)
+                                .fontWeight(.semibold)
                         }
                     } else {
                         ZStack(alignment: .leading) {
@@ -143,8 +138,29 @@ struct BudgetBarView: View {
             }
             .animation(.easeInOut(duration: 0.2), value: selectedMonthFlex)
         }
+        .onAppear {
+            print("Selected Month: \(selectedMonth)")
+            print("Flex spend month to date: \(budgetViewModel.flexSpendMonthToDate)")
+            print("Total Budget: \(totalBudget)")
+            print("Selected Month Income: \(selectedMonthIncome)")
+            print("Selected Month Flex: \(selectedMonthFlex)")
+            print("Selected Month Fixed: \(selectedMonthFixed)")
+            print("Percentage Fixed: \(percentageFixed * 100)%")
+            print("Percentage Flex: \(percentageFlex * 100)%")
+            print("Percentage OverSpend: \(percentageOverSpend * 100)%")
+        }
         .onChange(of: sharedViewModel.selectedMonth) {
             self.selectedMonth = sharedViewModel.selectedMonth
+            print("Flex spend month to date: \(budgetViewModel.flexSpendMonthToDate)")
+            print("Selected Month: \(selectedMonth)")
+            print("Total Budget: \(totalBudget)")
+            print("Selected Month Income: \(selectedMonthIncome)")
+            print("Selected Month Flex: \(selectedMonthFlex)")
+            print("Selected Month Fixed: \(selectedMonthFixed)")
+            print("Percentage Fixed: \(percentageFixed * 100)%")
+            print("Percentage Flex: \(percentageFlex * 100)%")
+            print("Percentage OverSpend: \(percentageOverSpend * 100)%")
+            
         }
         .frame(height: 54)
         .padding(.horizontal)

@@ -107,8 +107,8 @@ class ServerCommunicator {
                     completion(.failure(.nilData))
                     return
                 }
-                print("Received data from: \(path)")
-                data.printJson()
+                //print("Received data from: \(path)")
+                //data.printJson()
 
                 do {
                     let object = try JSONDecoder().decode(T.self, from: data)

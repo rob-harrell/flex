@@ -14,6 +14,9 @@ struct BudgetView: View {
         
     var body: some View {
         VStack {
+            if budgetViewModel.isCalculatingMetrics {
+                ProgressView()
+            }
             BudgetHeaderView()
                 .padding(.horizontal)
             BudgetBarView(selectedMonth: sharedViewModel.selectedMonth)
@@ -22,6 +25,10 @@ struct BudgetView: View {
             BudgetCalendarView()
         }
         .padding(.top, 20)
+        .padding(.bottom, 2)
+        .onChange(of: sharedViewModel.selectedMonth) {
+                budgetViewModel.calculateBudgetMetrics(for: sharedViewModel.selectedMonth, monthlyIncome: userViewModel.monthlyIncome, monthlyFixedSpend: userViewModel.monthlyFixedSpend)
+        }
     }
 }
 

@@ -21,9 +21,11 @@ class BudgetViewModel: ObservableObject {
     @Published var totalFixedSpendPerMonth: [Date: Double] = [:]
     @Published var totalFlexSpendPerMonth: [Date: Double] = [:]
     @Published var flexSpendMonthToDate: Double = 0.0
+    @Published var totalIncomePerDay: [Date: Double] = [:]
     @Published var monthlyIncome: [Date: Double] = [:]
     @Published var monthlySavings: [Date: Double] = [:]
     @Published var currentMonthSavings: Double = 0.0
+    @Published var isCalculatingMetrics = false
     
     struct TransactionViewModel {
         var id: Int64
@@ -102,9 +104,17 @@ class BudgetViewModel: ObservableObject {
         case transactionNotFound
     }
     
-    func fetchTransactionsFromCoreData() {
+    func fetchTransactionsFromCoreData(for month: Date) {
         let context = CoreDataStack.shared.persistentContainer.viewContext
         let fetchRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
+
+        // Create a date range for the given month
+        let calendar = Calendar.current
+        let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: month))!
+        let endOfMonth = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: startOfMonth)!
+
+        // Fetch transactions from Core Data that fall within the date range
+        fetchRequest.predicate = NSPredicate(format: "(date >= %@) AND (date <= %@)", startOfMonth as NSDate, endOfMonth as NSDate)
 
         do {
             let fetchedTransactions = try context.fetch(fetchRequest)
@@ -126,7 +136,7 @@ class BudgetViewModel: ObservableObject {
                     logoURL: transaction.logoURL ?? ""
                 )
             }
-            print("fetched transactions from core data")
+            print("fetched transactions from core data for month: \(month)")
         } catch {
             print("Failed to fetch transactions from Core Data: \(error)")
         }
@@ -146,9 +156,6 @@ class BudgetViewModel: ObservableObject {
             let transaction = Transaction(context: context)
             transaction.id = transactionResponse.id
             transaction.amount = transactionResponse.amount
-            if transactionResponse.category == "INCOME" {
-                transaction.amount = -transaction.amount
-            }
             transaction.category = transactionResponse.category
             transaction.subCategory = transactionResponse.subCategory
             transaction.currencyCode = transactionResponse.currencyCode
@@ -174,13 +181,15 @@ class BudgetViewModel: ObservableObject {
             }
             
             // Assign productCategory and budgetCategory from budgetPreferences
-            if transactionResponse.name == "Venmo" {
+            if transactionResponse.merchantName == "Venmo" {
+                transaction.productCategory = "Payment apps"
+                transaction.budgetCategory = "Flex"
+            } else if transactionResponse.merchantName == "Zelle" {
                 transaction.productCategory = "Payment apps"
                 transaction.budgetCategory = "Flex"
             } else if transactionResponse.merchantName == "Airbnb" {
                 if transaction.amount < 0 {
                     transaction.budgetCategory = "Income"
-                    transaction.amount = abs(transactionResponse.amount)
                 }
             }  else if let budgetPreference = budgetPreferences.first(where: { $0.category == transaction.category && $0.subCategory == transaction.subCategory }) {
                 transaction.productCategory = budgetPreference.productCategory
@@ -222,7 +231,8 @@ class BudgetViewModel: ObservableObject {
 
         do {
             try context.save()
-            self.calculateBudgetMetrics(monthlyIncome: monthlyIncome, monthlyFixedSpend: monthlyFixedSpend)
+            let currentMonth = Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: Date()))!
+            self.calculateBudgetMetrics(for: currentMonth, monthlyIncome: monthlyIncome, monthlyFixedSpend: monthlyFixedSpend)
         } catch {
             print("Failed to save transactions to Core Data: \(error)")
         }
@@ -291,7 +301,8 @@ class BudgetViewModel: ObservableObject {
 
         do {
             try context.save()
-            self.calculateBudgetMetrics(monthlyIncome: monthlyIncome, monthlyFixedSpend: monthlyFixedSpend)
+            let currentMonth = Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: Date()))!
+            self.calculateBudgetMetrics(for: currentMonth, monthlyIncome: monthlyIncome, monthlyFixedSpend: monthlyFixedSpend)
         } catch {
             print("Failed to save modified transactions to Core Data: \(error)")
         }
@@ -498,16 +509,10 @@ class BudgetViewModel: ObservableObject {
     }
     
     //Mark business logic
-    func calculateBudgetMetrics(monthlyIncome: Double, monthlyFixedSpend: Double) {
-        // Fetch transactions from Core Data
-        self.fetchTransactionsFromCoreData()
-        
-        // Print details of each transaction with a negative amount
-        for transaction in self.transactions {
-            if transaction.name == "Venmo" {
-                print("Date: \(transaction.date), Name: \(transaction.name), Merchant Name: \(transaction.merchantName), Amount: \(transaction.amount), Category: \(transaction.category), subCategory: \(transaction.subCategory), budgetCategory: \(transaction.budgetCategory)")
-            }
-        }
+    func calculateBudgetMetrics(for month: Date, monthlyIncome: Double, monthlyFixedSpend: Double) {
+        self.isCalculatingMetrics = true
+        // Fetch transactions from Core Data for the given month
+        self.fetchTransactionsFromCoreData(for: month)
 
         // Group transactions by date
         let groupedTransactions = Dictionary(grouping: self.transactions, by: { $0.date })
@@ -515,11 +520,20 @@ class BudgetViewModel: ObservableObject {
         // Calculate total fixed and flexible spending per day
         self.totalFixedSpendPerDay = [:]
         self.totalFlexSpendPerDay = [:]
+        self.totalIncomePerDay = [:]
         for (date, transactions) in groupedTransactions {
             let totalFixedSpend = transactions.filter { $0.budgetCategory == "Fixed" }.map { $0.amount }.reduce(0, +)
             let totalFlexSpend = transactions.filter { $0.budgetCategory == "Flex" }.map { $0.amount }.reduce(0, +)
+            let totalIncome = transactions.filter { $0.budgetCategory == "Income"}.map { $0.amount }.reduce(0, +)
             self.totalFixedSpendPerDay[date] = totalFixedSpend
             self.totalFlexSpendPerDay[date] = totalFlexSpend
+            self.totalIncomePerDay[date] = totalIncome
+        }
+        
+        // Print total income per day with non-zero incomes
+        let nonZeroIncomePerDay = self.totalIncomePerDay.filter { $0.value != 0 }
+        for (date, income) in nonZeroIncomePerDay {
+            print("Date: \(date), Income: \(income)")
         }
 
         // Calculate total fixed and flexible spending per month
@@ -543,7 +557,7 @@ class BudgetViewModel: ObservableObject {
         self.monthlyIncome = [:]
         for (month, transactions) in groupedTransactionsByMonth {
             let incomeTransactions = transactions.filter { $0.budgetCategory == "Income" }
-            let totalIncome = incomeTransactions.map { $0.amount }.reduce(0, +)
+            let totalIncome = incomeTransactions.map { abs($0.amount) }.reduce(0, +)
             self.monthlyIncome[month] = totalIncome
         }
 
@@ -555,5 +569,7 @@ class BudgetViewModel: ObservableObject {
             self.monthlySavings[date] = incomeForMonth - totalFixedSpend - totalFlexSpend
         }
         self.currentMonthSavings = monthlyIncome - (monthlyFixedSpend) - self.flexSpendMonthToDate
+        
+        self.isCalculatingMetrics = false
     }
 }

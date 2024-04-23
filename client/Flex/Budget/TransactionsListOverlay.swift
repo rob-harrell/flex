@@ -17,7 +17,7 @@ struct TransactionsListOverlay: View {
         formatter.dateFormat = "MMM d"
         return formatter
     }
-
+    
     var body: some View {
         VStack {
             HStack {
@@ -43,27 +43,27 @@ struct TransactionsListOverlay: View {
             .padding(.horizontal)
             .padding(.top, 24)
             .padding(.bottom, 8)
-
+            
             ScrollViewReader { scrollView in
+                // Filter transactions for the current month and by budgetCategory
+                let currentMonthTransactions = budgetViewModel.transactions.filter { transaction in
+                    let calendar = Calendar.current
+                    let isCurrentMonth = calendar.isDate(transaction.date, equalTo: date, toGranularity: .month)
+                    let isRelevantCategory = transaction.budgetCategory == "Flex" || transaction.budgetCategory == "Fixed" || transaction.budgetCategory == "Income"
+                    return isCurrentMonth && isRelevantCategory
+                }
+                
+                // Further filter transactions based on the selected filter
+                let filteredTransactions = currentMonthTransactions.filter { transaction in
+                    selectedFilter == .all || transaction.budgetCategory.lowercased() == selectedFilter.rawValue.lowercased()
+                }
+                
+                // Group transactions by date
+                let groupedTransactions = Dictionary(grouping: filteredTransactions) { transaction in
+                    Calendar.current.startOfDay(for: transaction.date)
+                }.sorted { $0.key < $1.key }
+
                 ScrollView {
-                    // Filter transactions for the current month and by budgetCategory
-                    let currentMonthTransactions = budgetViewModel.transactions.filter { transaction in
-                        let calendar = Calendar.current
-                        let isCurrentMonth = calendar.isDate(transaction.date, equalTo: date, toGranularity: .month)
-                        let isRelevantCategory = transaction.budgetCategory == "Flex" || transaction.budgetCategory == "Fixed" || transaction.budgetCategory == "Income"
-                        return isCurrentMonth && isRelevantCategory
-                    }
-
-                    // Further filter transactions based on the selected filter
-                    let filteredTransactions = currentMonthTransactions.filter { transaction in
-                        selectedFilter == .all || transaction.budgetCategory.lowercased() == selectedFilter.rawValue.lowercased()
-                    }
-
-                    // Group transactions by date
-                    let groupedTransactions = Dictionary(grouping: filteredTransactions) { transaction in
-                        Calendar.current.startOfDay(for: transaction.date)
-                    }.sorted { $0.key < $1.key }
-
                     // Display transactions in ascending order
                     ForEach(groupedTransactions.indices, id: \.self) { index in
                         let (date, transactions) = groupedTransactions[index]
@@ -80,11 +80,22 @@ struct TransactionsListOverlay: View {
                         }
                     }
                 }
-                .animation(nil, value: selectedFilter)
                 .onAppear {
                     scrollView.scrollTo(date, anchor: .top)
                 }
-                
+                .animation(nil, value: selectedFilter)
+                .onChange(of: selectedFilter) {
+                    // Scroll to the first date with a fixed expense when the selected filter is "fixed"
+                    if selectedFilter == .fixed {
+                        if let firstFixedExpenseDate = groupedTransactions.first(where: { $0.value.contains(where: { $0.budgetCategory.lowercased() == "fixed" }) })?.key {
+                            scrollView.scrollTo(firstFixedExpenseDate, anchor: .top)
+                        }
+                    }
+                    // Scroll to the selected date when the selected filter is "flex"
+                    else if selectedFilter == .flex {
+                        scrollView.scrollTo(date, anchor: .top)
+                    }
+                }
             }
             Spacer()
         }
