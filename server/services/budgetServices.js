@@ -43,7 +43,6 @@ exports.getNewTransactionsForUser = async (req, res, next) => {
                 currentItem.access_token,
                 currentItem.transaction_cursor || null
             );
-            console.log('Transactions fetched from Plaid');
         
             // Filter the transactions by account ID
             response.added = response.added.filter(transaction => filteredAccountIds.has(transaction.account_id));
@@ -52,8 +51,6 @@ exports.getNewTransactionsForUser = async (req, res, next) => {
         
             // Add internal account ID to each transaction and remove payment meta
             response.added = processTransactions(response.added, accountIdMapping);
-            response.modified = processTransactions(response.modified, accountIdMapping);
-            response.removed = processTransactions(response.removed, accountIdMapping);
         
             // Save transactions and cursor to the database
             let savedTransactions = await db.saveTransactions(userId, currentItem.id, response.added, response.modified, response.removed);
@@ -84,6 +81,7 @@ exports.getNewTransactionsForUser = async (req, res, next) => {
 
 function processTransactions(transactions, accountIdMapping) {
     const processedTransactions = transactions.map(transaction => {
+        //console.log(`Processing ${transactions.length} transactions. First transaction:`, transactions[0]);
         // Keep both account_id (Plaid) and internal_account_id
         transaction.plaid_account_id = transaction.account_id;
 
@@ -100,7 +98,7 @@ function processTransactions(transactions, accountIdMapping) {
         } else if (transaction.name.toLowerCase().includes('zelle')) {
             transaction.merchant_name = 'Zelle';
             transaction.logo_url = 'http://localhost:8000/assets/merchant_logos/zelle_logo.png'
-        } else if (transaction.name.toLowerCase() ===('target')) {
+        } else if (transaction.name.toLowerCase() === ('target')) {
             transaction.merchant_name = 'Target';
             transaction.logo_url = 'https://plaid-merchant-logos.plaid.com/target_997.png'
         }

@@ -41,26 +41,27 @@ struct BudgetBarView: View {
         return max(selectedMonthIncome, selectedMonthFixed + selectedMonthFlex, 1.0)
     }
     
+    var overSpend: Double {
+        return max(0, selectedMonthFlex - (selectedMonthIncome - selectedMonthFixed))
+    }
+    
     var percentageFixed: Double {
-        let percentage = selectedMonthFixed / totalBudget
+        let percentage = selectedMonthFixed / (totalBudget + overSpend)
         return max(percentage, 0.2)
     }
     
     var percentageFlex: Double {
-        let percentage = selectedMonthFlex / totalBudget
+        let percentage = selectedMonthFlex / (totalBudget + overSpend)
         return max(percentage, 0.0)
     }
     
-    var percentageOverSpend: Double {
-        let overSpend = max(0, selectedMonthFlex - (selectedMonthIncome - selectedMonthFixed))
-        return overSpend / totalBudget
-    }
+    
     
     var body: some View {
         GeometryReader { geometry in
             ZStack(alignment: .leading) {
                 // Total income bar
-                if percentageOverSpend > 0 {
+                if overSpend > 0 {
                     UnevenRoundedRectangle(topLeadingRadius: 16, bottomLeadingRadius: 16, bottomTrailingRadius: 0, topTrailingRadius: 0)
                         .stroke(Color.black, lineWidth: 1)
                         .background(
@@ -85,7 +86,7 @@ struct BudgetBarView: View {
                                 UnevenRoundedRectangle(topLeadingRadius: 16, bottomLeadingRadius: 16, bottomTrailingRadius: 0, topTrailingRadius: 0)
                                     .fill(Color.white)
                             )
-                            .frame(width: geometry.size.width * CGFloat(percentageOverSpend == 0 ? percentageFixed : percentageFixed * (1-percentageOverSpend)), height: 54)
+                            .frame(width: geometry.size.width * CGFloat(percentageFixed), height: 54)
                         
                         HStack {
                             Text("\(formatBudgetNumber(selectedMonthFixed))")
@@ -94,19 +95,20 @@ struct BudgetBarView: View {
                                 .frame(alignment: .center)
                                 .padding(.leading, 10)
                                 .fontWeight(.semibold)
+                                .minimumScaleFactor(0.9)
                             Image(systemName: "lock.fill")
-                                .font(.system(size: 16))
+                                .font(.system(size: 15))
                                 .foregroundColor(Color.slate500)
-                                .padding(.leading, -6)
+                                .padding(.leading, -7)
                         }
                     }
                     
                     // Flex spend segment
-                    if percentageOverSpend > 0 {
+                    if overSpend > 0 {
                         ZStack(alignment: .leading) {
                             UnevenRoundedRectangle(topLeadingRadius: 0, bottomLeadingRadius: 0, bottomTrailingRadius: 16, topTrailingRadius: 16)
                                 .fill(Color.black)
-                                .frame(width: geometry.size.width * CGFloat(percentageFlex * (1-percentageOverSpend)), height: 54)
+                                .frame(width: geometry.size.width * CGFloat(percentageFlex), height: 54)
                             Text("\(formatBudgetNumber(selectedMonthFlex))")
                                 .font(.system(size: 16))
                                 .foregroundColor(.white)
@@ -134,7 +136,7 @@ struct BudgetBarView: View {
                 Rectangle()
                     .fill(Color.black)
                     .frame(width: 2, height: 64)
-                    .offset(x: percentageOverSpend > 0 ? geometry.size.width - 1 : geometry.size.width * (CGFloat(percentageFlex) + CGFloat(percentageFixed)) - 1, y: 0)
+                    .offset(x: overSpend > 0 ? geometry.size.width - 1 : geometry.size.width * (CGFloat(percentageFlex) + CGFloat(percentageFixed)) - 1, y: 0)
             }
             .animation(.easeInOut(duration: 0.2), value: selectedMonthFlex)
         }
@@ -147,7 +149,7 @@ struct BudgetBarView: View {
             print("Selected Month Fixed: \(selectedMonthFixed)")
             print("Percentage Fixed: \(percentageFixed * 100)%")
             print("Percentage Flex: \(percentageFlex * 100)%")
-            print("Percentage OverSpend: \(percentageOverSpend * 100)%")
+            print("OverSpend: \(overSpend)")
         }
         .onChange(of: sharedViewModel.selectedMonth) {
             self.selectedMonth = sharedViewModel.selectedMonth
@@ -159,7 +161,7 @@ struct BudgetBarView: View {
             print("Selected Month Fixed: \(selectedMonthFixed)")
             print("Percentage Fixed: \(percentageFixed * 100)%")
             print("Percentage Flex: \(percentageFlex * 100)%")
-            print("Percentage OverSpend: \(percentageOverSpend * 100)%")
+            print("OverSpend: \(overSpend)")
             
         }
         .frame(height: 54)

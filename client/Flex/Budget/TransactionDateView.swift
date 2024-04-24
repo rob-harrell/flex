@@ -75,7 +75,7 @@ struct TransactionDateView: View {
                                     .padding(.trailing, -4)
                                     .foregroundColor(.slate400)
                             }
-                            Text("\(transaction.budgetCategory == "Income" ? "+" : transaction.amount < 0 ? "-" : "")$\(abs(Int(transaction.amount)))")
+                            Text("\(transaction.budgetCategory == "Income" ? "+" : transaction.amount < 0 ? "+" : "")$\(abs(Int(transaction.amount)))")
                                 .foregroundColor(transaction.budgetCategory == "Fixed" ? Color.slate400 : transaction.budgetCategory == "Income" ? Color.emerald600 : Color.black)
                                 
                         }

@@ -14,16 +14,28 @@ func formatBudgetNumber(_ n: Double) -> String {
     var format: String = "%.0f"
 
     switch absN {
-    case 1_000_000...:
+    case 10_000_000...:
         suffix = "m"
         divisor = pow(10, 6)
         format = "%.1f"
-    case 1_000...:
+    case 1_000_000...9_999_999:
+        suffix = "m"
+        divisor = pow(10, 6)
+        format = "%.2f"
+    case 100_000...999_999:
+        suffix = "k"
+        divisor = pow(10, 3)
+        format = "%.0f"
+    case 10_000...99_999:
         suffix = "k"
         divisor = pow(10, 3)
         format = "%.1f"
-    case 100...:
-        return String(format: "$%.0f", round(n / 10) * 10)
+    case 1_000...9_999:
+        suffix = "k"
+        divisor = pow(10, 3)
+        format = "%.1f"
+    case 0...999:
+        return String(format: "$%.0f", n)
     default:
         return String(format: "$%.0f", n)
     }

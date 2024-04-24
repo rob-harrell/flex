@@ -101,26 +101,26 @@ struct BudgetCalendarView: View {
             VStack {
                 Text(sharedViewModel.stringForDate(date, format: "d")) // Date
                     .font(.caption)
-                    .foregroundColor(cellDate == selectedDate ? Color.black : Color.slate500)
+                    .foregroundColor(cellDate == selectedDate && hasTapped ? Color.white : (cellDate == today ? Color.black : Color.slate500))
                     .fixedSize(horizontal: false, vertical: true) // Prevent stretching
                     .padding(.vertical, 8)
                     .fontWeight(.semibold)
 
                 if !isFuture {
-                    let flexSpend = Int(budgetViewModel.totalFlexSpendPerDay[date, default: 0])
-                    let fixedSpend = Int(budgetViewModel.totalFixedSpendPerDay[date, default: 0])  
-                    let income = Int(budgetViewModel.totalIncomePerDay[date, default: 0])
+                    let flexSpend = budgetViewModel.totalFlexSpendPerDay[date, default: 0]
+                    let fixedSpend = budgetViewModel.totalFixedSpendPerDay[date, default: 0]
+                    let income = budgetViewModel.totalIncomePerDay[date, default: 0]
 
                     if flexSpend > 0 {
-                        Text("$\(flexSpend)") // Flex spend
+                        Text(formatBudgetNumber(flexSpend)) // Flex spend
                             .font(.caption)
-                            .foregroundColor(Color.black)
+                            .foregroundColor(cellDate == selectedDate && hasTapped ? Color.white : Color.black)
                             .fixedSize(horizontal: false, vertical: true) // Prevent stretching
                             .fontWeight(.semibold)
                     }
 
                     if fixedSpend > 0 {
-                        Text("$\(fixedSpend)") // Fixed spend
+                        Text(formatBudgetNumber(fixedSpend)) // Fixed spend
                             .font(.caption)
                             .foregroundColor(Color.slate500)
                             .fixedSize(horizontal: false, vertical: true) // Prevent stretching
@@ -128,7 +128,7 @@ struct BudgetCalendarView: View {
                     }
                     
                     if abs(income) > 0 {
-                        Text("+$\(abs(income))")
+                        Text(formatBudgetNumber(abs(income)))
                             .font(.caption)
                             .foregroundColor(Color.emerald600)
                             .fixedSize(horizontal: false, vertical: true) // Prevent stretching
@@ -141,20 +141,22 @@ struct BudgetCalendarView: View {
             }
             .frame(minWidth: 0, maxWidth: .infinity)
             .frame(height: 86)
-            .background(isPastOrToday ? Color(.slate) : Color.clear)
+            .background(cellDate == selectedDate && hasTapped ? Color.black : (isPastOrToday ? Color(.slate) : Color.clear))
+            .animation(.default, value: selectedDate)
+
         }
         .sheet(isPresented: $showingOverlay) {
             if hasTapped {
                 TransactionsListOverlay(date: selectedDate)
                     .environmentObject(budgetViewModel)
-                    .presentationDetents([.fraction(0.50), .fraction(1.0)])
+                    .presentationDetents([.fraction(0.35), .fraction(1.0)])
             }
         }
         .overlay(
             ZStack {
                 RoundedRectangle(cornerRadius: 0)
                     .stroke(Color.slate200, lineWidth: 0.75)
-                if cellDate == selectedDate {
+                if cellDate == today || (cellDate == selectedDate && hasTapped) {
                     RoundedRectangle(cornerRadius: 0)
                         .stroke(Color.black, lineWidth: 1.0)
                 }
