@@ -27,17 +27,13 @@ exports.getNewTransactionsForUser = async (req, res, next) => {
         for (let account of filteredAccounts) {
             accountIdMapping[account.plaid_account_id] = account.id;
         }
-        console.log('Account ID mapping', accountIdMapping);
 
         let allAdded = [];
         let allModified = [];
         let allRemoved = [];
 
         // Iterate over each item
-        for (let currentItem of items) {
-            // Log the cursor being used to fetch transactions
-            console.log(`Fetching transactions with cursor: ${currentItem.transaction_cursor || 'null'}`);
-        
+        for (let currentItem of items) {        
             // Fetch transactions from Plaid
             const response = await syncTransactions(
                 currentItem.access_token,
@@ -51,12 +47,11 @@ exports.getNewTransactionsForUser = async (req, res, next) => {
         
             // Add internal account ID to each transaction and remove payment meta
             response.added = processTransactions(response.added, accountIdMapping);
+            response.modified = processTransactions(response.modified, accountIdMapping);
         
             // Save transactions and cursor to the database
             let savedTransactions = await db.saveTransactions(userId, currentItem.id, response.added, response.modified, response.removed);
             
-            // Log the cursor being saved to the database
-            console.log(`Saving cursor: ${response.next_cursor} to the database`);
             await db.saveCursor(currentItem.id, response.next_cursor);
         
             // Append transactions to the total list
@@ -81,7 +76,7 @@ exports.getNewTransactionsForUser = async (req, res, next) => {
 
 function processTransactions(transactions, accountIdMapping) {
     const processedTransactions = transactions.map(transaction => {
-        //console.log(`Processing ${transactions.length} transactions. First transaction:`, transactions[0]);
+        //console.log(`Processing ${transactions.length} transactions. First transaction:`, transactions);
         // Keep both account_id (Plaid) and internal_account_id
         transaction.plaid_account_id = transaction.account_id;
 
@@ -100,9 +95,43 @@ function processTransactions(transactions, accountIdMapping) {
             transaction.logo_url = 'http://localhost:8000/assets/merchant_logos/zelle_logo.png'
         } else if (transaction.name.toLowerCase() === ('target')) {
             transaction.merchant_name = 'Target';
-            transaction.logo_url = 'https://plaid-merchant-logos.plaid.com/target_997.png'
+            transaction.logo_url = 'http://plaid-merchant-logos.plaid.com/target_997.png'
+        } else if (transaction.merchant_name && transaction.merchant_name.toLowerCase() === ('potterybarn')) {
+            transaction.merchant_name = 'Pottery Barn';
+            transaction.logo_url = 'http://localhost:8000/assets/merchant_logos/pottery_barn_logo.png'
+        } else if (transaction.merchant_name && transaction.merchant_name.toLowerCase() === ('barrysbootcamp')) {
+            transaction.merchant_name = 'Barry\'s Bootcamp';
+            transaction.logo_url = 'http://localhost:8000/assets/merchant_logos/barrys_bootcamp_logo.png'
+        } else if (transaction.merchant_name && transaction.merchant_name.toLowerCase() === ('so cal gas paid')) {
+            transaction.merchant_name = 'SoCal Gas';
+            transaction.logo_url = 'http://localhost:8000/assets/merchant_logos/SoCalGas_logo.png'
+        } else if (transaction.merchant_name && transaction.merchant_name.toLowerCase() === ('sofi')) {
+            transaction.logo_url = 'http://localhost:8000/assets/merchant_logos/sofi_logo.png'
+        } else if (transaction.name.toLowerCase().includes ('snap inc direct dep')) {
+            transaction.merchant_name = 'Snap Inc';
+            transaction.logo_url = 'http://localhost:8000/assets/merchant_logos/snap_logo.png'
+        } else if (transaction.name.toLowerCase().includes ('bank of america mortgage')) {
+            transaction.merchant_name = 'Bank of America Mortgage';
+            transaction.logo_url = 'http://localhost:8000/assets/merchant_logos/boa_logo.png'
+        } else if (transaction.merchant_name && transaction.merchant_name.toLowerCase() === ('affirm')) {
+            transaction.logo_url = 'http://localhost:8000/assets/merchant_logos/affirm_logo.jpeg'
+        } else if (transaction.merchant_name && transaction.merchant_name.toLowerCase() === ('agia insurance trans')) {
+            transaction.merchant_name = 'Agia Insurance';
+            transaction.logo_url = 'http://localhost:8000/assets/merchant_logos/agia_insurance_logo.jpeg'
+        } else if (transaction.name.toLowerCase().includes ('name:gusto')) {
+            transaction.merchant_name = 'Gusto';
+            transaction.logo_url = 'http://localhost:8000/assets/merchant_logos/gusto_logo.png'
+        } else if (transaction.merchant_name && transaction.merchant_name.toLowerCase() === ('bristol farms')) {
+            transaction.logo_url = 'http://localhost:8000/assets/merchant_logos/bristol_farms_logo.png'
+        } else if (transaction.name.toLowerCase().includes ('so cal edison co-directpay')) {
+            transaction.merchant_name = 'SoCal Edison';
+            transaction.logo_url = 'http://localhost:8000/assets/merchant_logos/socal_edison_logo.png'
+        } else if (transaction.merchant_name && transaction.merchant_name.toLowerCase() === ('amica')) {
+            transaction.logo_url = 'http://localhost:8000/assets/merchant_logos/amica_logo.png'
+        } else if (transaction.merchant_name && transaction.merchant_name.toLowerCase().includes ('southwest airlines')) {
+            transaction.merchant_name = 'Southwest Airlines';
+            transaction.logo_url = 'http://localhost:8000/assets/merchant_logos/southwest_logo.png'
         }
-
         return transaction;
     });
 

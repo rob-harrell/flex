@@ -29,6 +29,7 @@ struct BudgetView: View {
         .onChange(of: sharedViewModel.selectedMonth) {
                 budgetViewModel.calculateBudgetMetrics(for: sharedViewModel.selectedMonth, monthlyIncome: userViewModel.monthlyIncome, monthlyFixedSpend: userViewModel.monthlyFixedSpend)
         }
+        .id(sharedViewModel.dates)
     }
 }
 

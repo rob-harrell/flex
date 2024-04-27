@@ -507,7 +507,7 @@
     "category":"GOVERNMENT_AND_NON_PROFIT",
     "subCategory":"GOVERNMENT_AND_NON_PROFIT_TAX_PAYMENT",
     "productCategory":"Taxes",
-    "budgetCategory":"Flex"
+    "budgetCategory":"Fixed"
   },
   {
     "category":"GOVERNMENT_AND_NON_PROFIT",

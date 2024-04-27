@@ -46,16 +46,12 @@ async function invalidateSessionToken(sessionToken) {
 }
 
 async function getPlaidAccountInfo(itemId, accessToken, plaidClient) {
-  console.log('getPlaidAccountInfo called with itemId:', itemId, 'accessToken:', accessToken);
-
   // Use the access_token to get item data
   const itemResponse = await plaidClient.itemGet({ access_token: accessToken });
   const plaidInstitutionId = itemResponse.data.item.institution_id; // get the institution_id from the item response
-  console.log('plaidInstitutionId:', plaidInstitutionId);
 
   // Check if the institution already exists in your database
   let institution = await getInstitutionByPlaidId(plaidInstitutionId);
-  console.log('institution:', institution);
 
   if (!institution) {
     // If it doesn't exist, get the institution data from Plaid
@@ -80,7 +76,7 @@ async function getPlaidAccountInfo(itemId, accessToken, plaidClient) {
     } else {
         console.log('No logo available for this institution');
         // Use the default logo
-        logoPath = '../assets/institution_logos/39ccb2e7-90d2-4c60-84b0-aea399e180ad.png';
+        logoPath = '39ccb2e7-90d2-4c60-84b0-aea399e180ad.png';
     }
 
     // Store the institution data in your database

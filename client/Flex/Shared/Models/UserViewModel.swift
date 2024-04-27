@@ -397,7 +397,6 @@ class UserViewModel: ObservableObject {
         let allAccountsFetchRequest: NSFetchRequest<Account> = Account.fetchRequest()
         do {
             let allAccounts = try context.fetch(allAccountsFetchRequest)
-            print("Accounts in CoreData after upsert: \(allAccounts)")
         } catch {
             print("Failed to fetch accounts from CoreData: \(error)")
         }

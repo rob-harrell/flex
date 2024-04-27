@@ -183,10 +183,10 @@ class BudgetViewModel: ObservableObject {
             // Assign productCategory and budgetCategory from budgetPreferences
             if transactionResponse.merchantName == "Venmo" {
                 transaction.productCategory = "Payment apps"
-                transaction.budgetCategory = "Flex"
+                transaction.budgetCategory = transactionResponse.amount < 0 ? "Income" : "Flex"
             } else if transactionResponse.merchantName == "Zelle" {
                 transaction.productCategory = "Payment apps"
-                transaction.budgetCategory = "Flex"
+                transaction.budgetCategory = transactionResponse.amount < 0 ? "Income" : "Flex"
             } else if transactionResponse.merchantName == "Airbnb" {
                 if transaction.amount < 0 {
                     transaction.budgetCategory = "Income"
@@ -530,12 +530,6 @@ class BudgetViewModel: ObservableObject {
             self.totalIncomePerDay[date] = totalIncome
         }
         
-        // Print total income per day with non-zero incomes
-        let nonZeroIncomePerDay = self.totalIncomePerDay.filter { $0.value != 0 }
-        for (date, income) in nonZeroIncomePerDay {
-            print("Date: \(date), Income: \(income)")
-        }
-
         // Calculate total fixed and flexible spending per month
         self.totalFixedSpendPerMonth = [:]
         self.totalFlexSpendPerMonth = [:]
@@ -551,7 +545,10 @@ class BudgetViewModel: ObservableObject {
         let now = Date()
         let startOfMonth = Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: now))!
         let range = startOfMonth...now
-        self.flexSpendMonthToDate = self.totalFlexSpendPerDay.filter { range.contains($0.key) }.values.reduce(0, +)
+        let flexSpendTransactions = self.totalFlexSpendPerDay.filter { range.contains($0.key) }
+
+        self.flexSpendMonthToDate = flexSpendTransactions.values.reduce(0, +)
+        print("Flex spend month to date: \(flexSpendMonthToDate)")
 
         // Calculate total income per month
         self.monthlyIncome = [:]

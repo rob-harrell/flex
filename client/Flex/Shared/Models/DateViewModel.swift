@@ -14,6 +14,7 @@ class DateViewModel: ObservableObject {
     @Published var currentMonth: Date
     @Published var currentDay: Date
     @Published var dates: [[Date]] = []
+    @Published var isFirstTransactionDateAvailable: Bool = false
 
     let monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
     let calendar = Calendar.current
@@ -27,16 +28,47 @@ class DateViewModel: ObservableObject {
         let currentDayDate = currentDate
         currentDay = currentDayDate
         selectedDay = currentDayDate
-        
-        let firstTransactionDate = getFirstTransactionDate()
+
+        // Call updateDates() to populate the dates array
+        updateDates()
+    }
+
+    func generateDatesForCurrentMonth() {
+        var datesForCurrentMonth: [Date] = []
+        let range = calendar.range(of: .day, in: .month, for: currentMonth)!
+        let daysCount = range.count
+        var components = calendar.dateComponents([.year, .month], from: currentMonth)
+        for day in 1...daysCount {
+            components.day = day
+            if let date = calendar.date(from: components) {
+                datesForCurrentMonth.append(date)
+            }
+        }
+        dates = [datesForCurrentMonth]
+    }
+    
+    func updateDates() {
+        var firstTransactionDate: Date
+        if let date = UserDefaults.standard.object(forKey: "FirstTransactionDate") as? Date {
+            // First transaction date is available in UserDefaults
+            isFirstTransactionDateAvailable = true
+            firstTransactionDate = date
+        } else {
+            // First transaction date is not available in UserDefaults
+            isFirstTransactionDateAvailable = false
+            // Fetch the first transaction date from the transaction history
+            firstTransactionDate = getFirstTransactionDateFromTransactionHistory()
+        }
 
         // Calculate the number of months between the first transaction date and the current date
-        let monthDifference = calendar.dateComponents([.month], from: firstTransactionDate, to: currentDate).month!
+        let firstTransactionComponents = calendar.dateComponents([.year, .month], from: firstTransactionDate)
+        let currentComponents = calendar.dateComponents([.year, .month], from: Date())
+        let monthDifference = (currentComponents.year! - firstTransactionComponents.year!) * 12 + (currentComponents.month! - firstTransactionComponents.month!)
 
         // Generate dates for all months between the first transaction date and today
         var allDates: [[Date]] = []
         for monthOffset in 0...monthDifference {
-            var components = calendar.dateComponents([.year, .month], from: currentDate)
+            var components = calendar.dateComponents([.year, .month], from: Date())
             components.month = components.month! - monthOffset
             components.day = 1
 
@@ -56,23 +88,22 @@ class DateViewModel: ObservableObject {
         dates = allDates
     }
     
-    func getFirstTransactionDate() -> Date {
-        // Check if the first transaction date is already saved in the user defaults
-        if let firstTransactionDate = UserDefaults.standard.object(forKey: "firstTransactionDate") as? Date {
-            return firstTransactionDate
-        }
-
+    func getFirstTransactionDateFromTransactionHistory() -> Date {
         let context = CoreDataStack.shared.persistentContainer.viewContext
         let fetchRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
 
         // Fetch all transactions from Core Data
         fetchRequest.sortDescriptors = [NSSortDescriptor(key: "date", ascending: true)]
+        fetchRequest.predicate = NSPredicate(format: "date != nil")
 
         do {
             let fetchedTransactions = try context.fetch(fetchRequest)
             if let firstTransaction = fetchedTransactions.first, let firstTransactionDate = firstTransaction.date {
-                // Save the first transaction date to the user defaults
-                UserDefaults.standard.set(firstTransactionDate, forKey: "firstTransactionDate")
+                print("First transaction date from Core Data: \(firstTransactionDate)")
+                
+                // Store the first transaction date in UserDefaults for future use
+                UserDefaults.standard.set(firstTransactionDate, forKey: "FirstTransactionDate")
+                
                 return firstTransactionDate
             }
         } catch {
@@ -80,6 +111,7 @@ class DateViewModel: ObservableObject {
         }
         
         // If no transactions were found, return the current date
+        print("No transactions found, returning current date")
         return Date()
     }
     
