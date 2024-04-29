@@ -12,15 +12,9 @@ struct BudgetHeaderView: View {
     @EnvironmentObject var sharedViewModel: DateViewModel
     @EnvironmentObject var budgetViewModel: BudgetViewModel
 
-    var savings: Double {
-        if sharedViewModel.selectedMonth == sharedViewModel.currentMonth {
-            return budgetViewModel.currentMonthSavings
-        } else {
-            return budgetViewModel.monthlySavings[sharedViewModel.selectedMonth] ?? 0
-        }
-    } 
-
     var body: some View {
+        var savings = budgetViewModel.selectedMonthSavings
+        
         VStack(alignment: .leading) {
             HStack{
                 Text("$\(abs(Int(savings)))")

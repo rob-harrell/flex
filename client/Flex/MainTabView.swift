@@ -14,6 +14,7 @@ struct MainTabView: View {
     @EnvironmentObject var budgetViewModel: BudgetViewModel
     @State private var selectedTab: Tab = .budget
     @State private var showingMonthSelection = false
+    @State private var budgetCustomizationStep: BudgetCustomizationStep = .income
     
     var body: some View {
         NavigationView {
@@ -23,7 +24,7 @@ struct MainTabView: View {
                         Label("Budget", image: "Budget")
                     }
                     .tag(Tab.budget)
-
+                
                 BalancesView()
                     .tabItem {
                         Label("Balances", image: "Balances")
@@ -79,12 +80,11 @@ struct MainTabView: View {
                             MonthSelectorView(showingMonthSelection: $showingMonthSelection)
                         }
                         Button(action: {
-                                    // Handle the button tap
+                            // Handle the button tap
                         }) {
                             HStack{
                                 Image("Money")
-                                let income = sharedViewModel.selectedMonth == sharedViewModel.currentMonth ? userViewModel.monthlyIncome : budgetViewModel.monthlyIncome[sharedViewModel.selectedMonth] ?? 0
-                                Text("\(formatBudgetNumber(income)) \(sharedViewModel.selectedMonth == sharedViewModel.currentMonth ? "est. " : "")income")
+                                Text("\(formatBudgetNumber(budgetViewModel.selectedMonthIncome)) \(sharedViewModel.selectedMonth == sharedViewModel.currentMonth ? "est. " : "")income")
                                     .font(.headline)
                                     .fontWeight(.semibold)
                             }
@@ -94,15 +94,39 @@ struct MainTabView: View {
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                        Button(action: {
-                            // Handle the button tap
-                        }) {
-                            Image("Bell")
-                        }
+                    Button(action: {
+                        // Handle the button tap
+                    }) {
+                        Image("Bell")
+                    }
                 }
             }
+            
         }
         .padding(.top, 4)
+        .sheet(isPresented: Binding<Bool>(
+            get: { !self.userViewModel.hasCompletedBudgetCustomization },
+            set: { _ in }
+        )) {
+            VStack {
+                switch budgetCustomizationStep {
+                case .income:
+                    IncomeConfirmationView(nextAction: { budgetCustomizationStep = .fixedSpend })
+                        .environmentObject(budgetViewModel)
+                case .fixedSpend:
+                    FixedSpendConfirmationView(nextAction: { budgetCustomizationStep = .final })
+                        .environmentObject(budgetViewModel)
+                case .final:
+                    FinalConfirmationView(doneAction: { userViewModel.hasCompletedBudgetCustomization = true })
+                        .environmentObject(budgetViewModel)
+                }
+            }
+            .padding(16)
+            .interactiveDismissDisabled()
+            .presentationDetents([.fraction(0.9)])
+            .presentationDragIndicator(.visible)
+            .presentationCornerRadius(24)
+        }
     }
     
     private func loadBudgetPreferences() {
@@ -129,12 +153,18 @@ struct MainTabView: View {
             print("Failed to fetch BudgetPreference: \(error)")
         }
     }
-        
+    
     enum Tab {
         case budget
         case balances
         case trends
         case settings
+    }
+    
+    enum BudgetCustomizationStep {
+        case income
+        case fixedSpend
+        case final
     }
 }
 

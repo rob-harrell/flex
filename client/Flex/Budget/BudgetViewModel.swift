@@ -13,19 +13,31 @@ import KeychainAccess
 
 
 class BudgetViewModel: ObservableObject {
-    @Published var spendingData: [Date: Double] = [:]
-    @Published var transactions: [TransactionViewModel] = []
-    @Published var budgetPreferences: [BudgetPreferenceViewModel] = []
-    @Published var totalFixedSpendPerDay: [Date: Double] = [:]
-    @Published var totalFlexSpendPerDay: [Date: Double] = [:]
-    @Published var totalFixedSpendPerMonth: [Date: Double] = [:]
-    @Published var totalFlexSpendPerMonth: [Date: Double] = [:]
-    @Published var flexSpendMonthToDate: Double = 0.0
-    @Published var totalIncomePerDay: [Date: Double] = [:]
-    @Published var monthlyIncome: [Date: Double] = [:]
-    @Published var monthlySavings: [Date: Double] = [:]
-    @Published var currentMonthSavings: Double = 0.0
+    //Monthly budget metrics
+    @Published var selectedMonthTransactions: [TransactionViewModel] = [] //Holds the selected month's transactions for use in calulating budget metrics
+    @Published var budgetPreferences: [BudgetPreferenceViewModel] = [] //To be used in the future
+    @Published var selectedMonthFixedSpendPerDay: [Date: Double] = [:] //Holds selected month's fixed spend for use in budget metrics and calendar view
+    @Published var selectedMonthFlexSpendPerDay: [Date: Double] = [:] //Holds selected month's income for use in budget metrics and calendar view
+    @Published var selectedMonthIncomePerDay: [Date: Double] = [:] //Holds selected month's income for use in budget metrics and calendar view
+    @Published var selectedMonthFixedSpend: Double = 0.0 //The selected month's fixed spend ***need to update calculation*** --> change to double
+    @Published var selectedMonthFlexSpend: Double = 0.0 //The selected month's flex spend ***need to consolidate with flexspendmonthtodate*** --> change to double
+    @Published var selectedMonthIncome: Double = 0.0 //The selected month's income --> change to double
+    @Published var selectedMonthSavings: Double = 0.0 //Selected month's savings --> change to double
+
+    //Income breakdown metrics
+    @Published var workMonthlyIncome: [Date: Double] = [:] //needs to be populated by fetching transactions from core for previous two full months #####
+    @Published var benefitsMonthlyIncome: [Date: Double] = [:] //same as above
+    @Published var accrualsMonthlyIncome: [Date: Double] = [:] //same as above
+    @Published var pensionMonthlyIncome: [Date: Double] = [:]//same as above
+    @Published var avgRecentWorkIncome: Double = 0 //same as above
+    @Published var avgRecentBenefitsIncome: Double = 0 //same as above
+    @Published var avgRecentAccrualsIncome: Double = 0 //same as above
+    @Published var avgRecentPensionIncome: Double = 0 //same as above
+    @Published var avgTotalRecentIncome: Double = 0 //same as above
+    
     @Published var isCalculatingMetrics = false
+    
+    //Fixed spend breakdown metrics
     
     struct TransactionViewModel {
         var id: Int64
@@ -104,21 +116,16 @@ class BudgetViewModel: ObservableObject {
         case transactionNotFound
     }
     
-    func fetchTransactionsFromCoreData(for month: Date) {
+    func fetchTransactionsFromCoreData(from startDate: Date, to endDate: Date) -> [TransactionViewModel] {
         let context = CoreDataStack.shared.persistentContainer.viewContext
         let fetchRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
 
-        // Create a date range for the given month
-        let calendar = Calendar.current
-        let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: month))!
-        let endOfMonth = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: startOfMonth)!
-
         // Fetch transactions from Core Data that fall within the date range
-        fetchRequest.predicate = NSPredicate(format: "(date >= %@) AND (date <= %@)", startOfMonth as NSDate, endOfMonth as NSDate)
+        fetchRequest.predicate = NSPredicate(format: "(date >= %@) AND (date <= %@)", startDate as NSDate, endDate as NSDate)
 
         do {
             let fetchedTransactions = try context.fetch(fetchRequest)
-            transactions = fetchedTransactions.map { transaction in
+            let transactionViewModels = fetchedTransactions.map { transaction in
                 TransactionViewModel(
                     id: transaction.id,
                     amount: transaction.amount,
@@ -136,9 +143,11 @@ class BudgetViewModel: ObservableObject {
                     logoURL: transaction.logoURL ?? ""
                 )
             }
-            print("fetched transactions from core data for month: \(month)")
+            print("fetched transactions from core data from: \(startDate) to: \(endDate)")
+            return transactionViewModels
         } catch {
             print("Failed to fetch transactions from Core Data: \(error)")
+            return []
         }
     }
     
@@ -232,7 +241,7 @@ class BudgetViewModel: ObservableObject {
         do {
             try context.save()
             let currentMonth = Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: Date()))!
-            self.calculateBudgetMetrics(for: currentMonth, monthlyIncome: monthlyIncome, monthlyFixedSpend: monthlyFixedSpend)
+            self.calculateSelectedMonthBudgetMetrics(for: currentMonth, monthlyIncome: monthlyIncome, monthlyFixedSpend: monthlyFixedSpend)
         } catch {
             print("Failed to save transactions to Core Data: \(error)")
         }
@@ -302,7 +311,7 @@ class BudgetViewModel: ObservableObject {
         do {
             try context.save()
             let currentMonth = Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: Date()))!
-            self.calculateBudgetMetrics(for: currentMonth, monthlyIncome: monthlyIncome, monthlyFixedSpend: monthlyFixedSpend)
+            self.calculateSelectedMonthBudgetMetrics(for: currentMonth, monthlyIncome: monthlyIncome, monthlyFixedSpend: monthlyFixedSpend)
         } catch {
             print("Failed to save modified transactions to Core Data: \(error)")
         }
@@ -396,9 +405,15 @@ class BudgetViewModel: ObservableObject {
             switch result {
             case .success(let transactionsResponse):
                 DispatchQueue.main.async {
-                    self.saveTransactionsToCoreData(transactionsResponse.added, userId: userId, monthlyIncome: monthlyIncome, monthlyFixedSpend: monthlyFixedSpend)
-                    self.modifyTransactionsInCoreData(transactionsResponse.modified, userId: userId, monthlyIncome: monthlyIncome, monthlyFixedSpend: monthlyFixedSpend)
-                    self.removeTransactionsFromCoreData(transactionsResponse.removed, userId: userId)
+                    if !transactionsResponse.added.isEmpty {
+                        self.saveTransactionsToCoreData(transactionsResponse.added, userId: userId, monthlyIncome: monthlyIncome, monthlyFixedSpend: monthlyFixedSpend)
+                    }
+                    if !transactionsResponse.modified.isEmpty {
+                        self.modifyTransactionsInCoreData(transactionsResponse.modified, userId: userId, monthlyIncome: monthlyIncome, monthlyFixedSpend: monthlyFixedSpend)
+                    }
+                    if !transactionsResponse.removed.isEmpty {
+                        self.removeTransactionsFromCoreData(transactionsResponse.removed, userId: userId)
+                    }
                 }
             case .failure(let error):
                 print("Failed to fetch user data from server: \(error)")
@@ -509,64 +524,150 @@ class BudgetViewModel: ObservableObject {
     }
     
     //Mark business logic
-    func calculateBudgetMetrics(for month: Date, monthlyIncome: Double, monthlyFixedSpend: Double) {
+    func calculateSelectedMonthBudgetMetrics(for month: Date, monthlyIncome: Double, monthlyFixedSpend: Double) {
         self.isCalculatingMetrics = true
+        
+        // Create a date range for the given month
+        let calendar = Calendar.current
+        let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: month))!
+        let endOfMonth = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: startOfMonth)!
+        
         // Fetch transactions from Core Data for the given month
-        self.fetchTransactionsFromCoreData(for: month)
+        self.selectedMonthTransactions = self.fetchTransactionsFromCoreData(from: startOfMonth, to: endOfMonth)
 
         // Group transactions by date
-        let groupedTransactions = Dictionary(grouping: self.transactions, by: { $0.date })
+        let groupedTransactionsByDay = Dictionary(grouping: self.selectedMonthTransactions, by: { $0.date })
 
-        // Calculate total fixed and flexible spending per day
-        self.totalFixedSpendPerDay = [:]
-        self.totalFlexSpendPerDay = [:]
-        self.totalIncomePerDay = [:]
-        for (date, transactions) in groupedTransactions {
-            let totalFixedSpend = transactions.filter { $0.budgetCategory == "Fixed" }.map { $0.amount }.reduce(0, +)
-            let totalFlexSpend = transactions.filter { $0.budgetCategory == "Flex" }.map { $0.amount }.reduce(0, +)
-            let totalIncome = transactions.filter { $0.budgetCategory == "Income"}.map { $0.amount }.reduce(0, +)
-            self.totalFixedSpendPerDay[date] = totalFixedSpend
-            self.totalFlexSpendPerDay[date] = totalFlexSpend
-            self.totalIncomePerDay[date] = totalIncome
+        // Calculate total fixed and flexible spending and income per day
+        self.selectedMonthFixedSpendPerDay = [:]
+        self.selectedMonthFlexSpendPerDay = [:]
+        self.selectedMonthIncomePerDay = [:]
+
+        for (date, transactions) in groupedTransactionsByDay {
+            var totalFixedSpend = 0.0
+            var totalFlexSpend = 0.0
+            var totalIncome = 0.0
+
+            for transaction in transactions {
+                switch transaction.budgetCategory {
+                case "Fixed":
+                    totalFixedSpend += transaction.amount
+                case "Flex":
+                    totalFlexSpend += transaction.amount
+                case "Income":
+                    totalIncome += transaction.amount
+                default:
+                    break
+                }
+            }
+
+            self.selectedMonthFixedSpendPerDay[date] = totalFixedSpend
+            self.selectedMonthFlexSpendPerDay[date] = totalFlexSpend
+            self.selectedMonthIncomePerDay[date] = totalIncome
         }
+
+        // Calculate total fixed and flexible spending and income for the month
+        self.selectedMonthFlexSpend = self.selectedMonthFlexSpendPerDay.values.reduce(0, +)
         
-        // Calculate total fixed and flexible spending per month
-        self.totalFixedSpendPerMonth = [:]
-        self.totalFlexSpendPerMonth = [:]
-        let groupedTransactionsByMonth = Dictionary(grouping: self.transactions, by: { Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: $0.date))! })
-        for (month, transactions) in groupedTransactionsByMonth {
-            let totalFixedSpend = transactions.filter { $0.budgetCategory == "Fixed" }.map { $0.amount }.reduce(0, +)
-            let totalFlexSpend = transactions.filter { $0.budgetCategory == "Flex" }.map { $0.amount }.reduce(0, +)
-            self.totalFixedSpendPerMonth[month] = totalFixedSpend
-            self.totalFlexSpendPerMonth[month] = totalFlexSpend
+        let currentMonth = Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: Date()))!
+
+        //Calculate fixed and income based on arguments if current month
+        if Calendar.current.isDate(month, equalTo: currentMonth, toGranularity: .month) {
+            self.selectedMonthFixedSpend = monthlyFixedSpend
+            self.selectedMonthIncome = monthlyIncome
+        } else {
+            self.selectedMonthFixedSpend = self.selectedMonthFixedSpendPerDay.values.reduce(0, +)
+            self.selectedMonthIncome = self.selectedMonthIncomePerDay.values.reduce(0, +)
         }
 
-        // Calculate expenses month to date
-        let now = Date()
-        let startOfMonth = Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: now))!
-        let range = startOfMonth...now
-        let flexSpendTransactions = self.totalFlexSpendPerDay.filter { range.contains($0.key) }
-
-        self.flexSpendMonthToDate = flexSpendTransactions.values.reduce(0, +)
-        print("Flex spend month to date: \(flexSpendMonthToDate)")
-
-        // Calculate total income per month
-        self.monthlyIncome = [:]
-        for (month, transactions) in groupedTransactionsByMonth {
-            let incomeTransactions = transactions.filter { $0.budgetCategory == "Income" }
-            let totalIncome = incomeTransactions.map { abs($0.amount) }.reduce(0, +)
-            self.monthlyIncome[month] = totalIncome
-        }
-
-        // Calculate monthly savings and current month savings
-        self.monthlySavings = [:]
-        for (date, totalFixedSpend) in self.totalFixedSpendPerMonth {
-            let totalFlexSpend = self.totalFlexSpendPerMonth[date] ?? 0
-            let incomeForMonth = self.monthlyIncome[date] ?? monthlyIncome
-            self.monthlySavings[date] = incomeForMonth - totalFixedSpend - totalFlexSpend
-        }
-        self.currentMonthSavings = monthlyIncome - (monthlyFixedSpend) - self.flexSpendMonthToDate
-        
+        // Calculate savings for the month
+        self.selectedMonthSavings = selectedMonthIncome - selectedMonthFixedSpend - selectedMonthFlexSpend
+       
         self.isCalculatingMetrics = false
+    }
+    
+    func calculateRecentIncomeStats() {
+        // Create a date range for the past two complete months
+        let calendar = Calendar.current
+        let startOfCurrentMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: Date()))!
+        let startOfPreviousMonth = calendar.date(byAdding: .month, value: -1, to: startOfCurrentMonth)!
+        let startOfTwoMonthsAgo = calendar.date(byAdding: .month, value: -1, to: startOfPreviousMonth)!
+        let endOfPreviousMonth = calendar.date(byAdding: .day, value: -1, to: startOfCurrentMonth)!
+
+        // Fetch transactions from Core Data for the past two complete months
+        let transactions = self.fetchTransactionsFromCoreData(from: startOfTwoMonthsAgo, to: endOfPreviousMonth)
+
+        // Group transactions by month
+        let groupedTransactionsByMonth = Dictionary(grouping: transactions, by: { Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: $0.date))! })
+
+        // Calculate total fixed and flexible spending and income per month
+        self.workMonthlyIncome = [:]
+        self.benefitsMonthlyIncome = [:]
+        self.accrualsMonthlyIncome = [:]
+        self.pensionMonthlyIncome = [:]
+
+        for (month, transactions) in groupedTransactionsByMonth {
+            var totalFixedSpend = 0.0
+            var totalFlexSpend = 0.0
+            var totalIncome = 0.0
+            var totalWorkIncome = 0.0
+            var totalBenefitsIncome = 0.0
+            var totalAccrualsIncome = 0.0
+            var totalPensionIncome = 0.0
+
+            for transaction in transactions {
+                switch transaction.budgetCategory {
+                case "Fixed":
+                    totalFixedSpend += transaction.amount
+                case "Flex":
+                    totalFlexSpend += transaction.amount
+                case "Income":
+                    totalIncome += transaction.amount
+                default:
+                    break
+                }
+
+                switch transaction.productCategory {
+                case "Paycheck":
+                    totalWorkIncome += transaction.amount
+                case "Benefits":
+                    totalBenefitsIncome += transaction.amount
+                case "Dividends & Interest":
+                    totalAccrualsIncome += transaction.amount
+                case "Pension":
+                    totalPensionIncome += transaction.amount
+                default:
+                    break
+                }
+            }
+            self.workMonthlyIncome[month] = totalWorkIncome
+            self.benefitsMonthlyIncome[month] = totalBenefitsIncome
+            self.accrualsMonthlyIncome[month] = totalAccrualsIncome
+            self.pensionMonthlyIncome[month] = totalPensionIncome
+        }
+
+        // Calculate averages
+        let sortedWorkIncome = self.workMonthlyIncome.sorted(by: { $0.key < $1.key })
+        let sortedBenefitsIncome = self.benefitsMonthlyIncome.sorted(by: { $0.key < $1.key })
+        let sortedAccrualsIncome = self.accrualsMonthlyIncome.sorted(by: { $0.key < $1.key })
+        let sortedPensionsIncome = self.pensionMonthlyIncome.sorted(by: { $0.key < $1.key })
+
+        let recentWorkIncome = Array(sortedWorkIncome.dropLast().suffix(2))
+        self.avgRecentWorkIncome = recentWorkIncome.reduce(0, { $0 + $1.value }) / Double(recentWorkIncome.count)
+
+        let recentBenefitsIncome = Array(sortedBenefitsIncome.dropLast().suffix(2))
+        self.avgRecentBenefitsIncome = recentBenefitsIncome.reduce(0, { $0 + $1.value }) / Double(recentBenefitsIncome.count)
+
+        let recentAccrualsIncome = Array(sortedAccrualsIncome.dropLast().suffix(2))
+        self.avgRecentAccrualsIncome = recentAccrualsIncome.reduce(0, { $0 + $1.value }) / Double(recentAccrualsIncome.count)
+        
+        let recentPensionIncome = Array(sortedPensionsIncome.dropLast().suffix(2))
+        self.avgRecentPensionIncome = recentPensionIncome.reduce(0, { $0 + $1.value })
+
+        self.avgTotalRecentIncome = (self.avgRecentWorkIncome + self.avgRecentBenefitsIncome + self.avgRecentAccrualsIncome + self.avgRecentPensionIncome)
+    }
+    
+    func calculateFixedSpendBreakdown() {
+        
     }
 }

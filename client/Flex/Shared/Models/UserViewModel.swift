@@ -14,8 +14,8 @@ class UserViewModel: ObservableObject {
     @Published var firstName: String = ""
     @Published var lastName: String = ""
     @Published var phone: String = ""
-    @Published var monthlyIncome: Double = 10000.0
-    @Published var monthlyFixedSpend: Double = 5000.0
+    @Published var monthlyIncome: Double = 0.0
+    @Published var monthlyFixedSpend: Double = 0.0
     @Published var birthDate: String = ""
     @Published var sessionToken: String = ""
     @Published var bankAccounts: [BankAccount] = []

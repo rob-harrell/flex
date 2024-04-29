@@ -46,7 +46,7 @@ struct TransactionsListOverlay: View {
             
             ScrollViewReader { scrollView in
                 // Filter transactions for the current month and by budgetCategory
-                let currentMonthTransactions = budgetViewModel.transactions.filter { transaction in
+                let currentMonthTransactions = budgetViewModel.selectedMonthTransactions.filter { transaction in
                     let calendar = Calendar.current
                     let isCurrentMonth = calendar.isDate(transaction.date, equalTo: date, toGranularity: .month)
                     let isRelevantCategory = transaction.budgetCategory == "Flex" || transaction.budgetCategory == "Fixed" || transaction.budgetCategory == "Income"

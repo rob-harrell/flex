@@ -29,6 +29,9 @@
 		D417A35F2BCDF4EC001D61F6 /* TransactionsListOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = D417A35E2BCDF4EC001D61F6 /* TransactionsListOverlay.swift */; };
 		D417A3612BD0D03C001D61F6 /* TransactionDateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D417A3602BD0D03C001D61F6 /* TransactionDateView.swift */; };
 		D45892832B8AB09600A8BA32 /* LinkKit in Frameworks */ = {isa = PBXBuildFile; productRef = D45892822B8AB09600A8BA32 /* LinkKit */; };
+		D462342C2BDD872400818169 /* IncomeConfirmationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D462342B2BDD872400818169 /* IncomeConfirmationView.swift */; };
+		D462342E2BDD873100818169 /* FixedSpendConfirmationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D462342D2BDD873100818169 /* FixedSpendConfirmationView.swift */; };
+		D46234302BDD873D00818169 /* FinalConfirmationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D462342F2BDD873D00818169 /* FinalConfirmationView.swift */; };
 		D46B23722BACA2350091C54D /* KeychainAccess in Frameworks */ = {isa = PBXBuildFile; productRef = D46B23712BACA2350091C54D /* KeychainAccess */; };
 		D46B23742BAE1EAB0091C54D /* LoginSignupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46B23732BAE1EAB0091C54D /* LoginSignupView.swift */; };
 		D46B23772BAE1F140091C54D /* OTPView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46B23762BAE1F140091C54D /* OTPView.swift */; };
@@ -89,6 +92,9 @@
 		D4129F1F2B8EBF0600BB2B7D /* LinkController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LinkController.swift; sourceTree = "<group>"; };
 		D417A35E2BCDF4EC001D61F6 /* TransactionsListOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionsListOverlay.swift; sourceTree = "<group>"; };
 		D417A3602BD0D03C001D61F6 /* TransactionDateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionDateView.swift; sourceTree = "<group>"; };
+		D462342B2BDD872400818169 /* IncomeConfirmationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IncomeConfirmationView.swift; sourceTree = "<group>"; };
+		D462342D2BDD873100818169 /* FixedSpendConfirmationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FixedSpendConfirmationView.swift; sourceTree = "<group>"; };
+		D462342F2BDD873D00818169 /* FinalConfirmationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FinalConfirmationView.swift; sourceTree = "<group>"; };
 		D46B23732BAE1EAB0091C54D /* LoginSignupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginSignupView.swift; sourceTree = "<group>"; };
 		D46B23762BAE1F140091C54D /* OTPView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OTPView.swift; sourceTree = "<group>"; };
 		D46B23782BAE1F330091C54D /* UserDetailsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDetailsView.swift; sourceTree = "<group>"; };
@@ -156,6 +162,7 @@
 		D4005A7C2B65F69D00652FCA /* Flex */ = {
 			isa = PBXGroup;
 			children = (
+				D462342A2BDD870100818169 /* Budget Customization */,
 				D46B23752BAE1EF00091C54D /* Launch */,
 				D4005A7D2B65F69D00652FCA /* FlexApp.swift */,
 				D4005AA72B65F6F600652FCA /* MainTabView.swift */,
@@ -274,6 +281,16 @@
 				D47B9D5D2BCA05DD0020228F /* MoneyFormatter.swift */,
 			);
 			path = Utilities;
+			sourceTree = "<group>";
+		};
+		D462342A2BDD870100818169 /* Budget Customization */ = {
+			isa = PBXGroup;
+			children = (
+				D462342B2BDD872400818169 /* IncomeConfirmationView.swift */,
+				D462342D2BDD873100818169 /* FixedSpendConfirmationView.swift */,
+				D462342F2BDD873D00818169 /* FinalConfirmationView.swift */,
+			);
+			path = "Budget Customization";
 			sourceTree = "<group>";
 		};
 		D46B23752BAE1EF00091C54D /* Launch */ = {
@@ -434,12 +451,14 @@
 				D4005AC62B67245800652FCA /* BudgetFilterView.swift in Sources */,
 				D46B23772BAE1F140091C54D /* OTPView.swift in Sources */,
 				D4129F202B8EBF0600BB2B7D /* LinkController.swift in Sources */,
+				D46234302BDD873D00818169 /* FinalConfirmationView.swift in Sources */,
 				D4005AB72B67162800652FCA /* SettingsView.swift in Sources */,
 				D4005AC02B67236400652FCA /* BudgetHeaderView.swift in Sources */,
 				D4005AB32B66216900652FCA /* BalancesView.swift in Sources */,
 				D417A3612BD0D03C001D61F6 /* TransactionDateView.swift in Sources */,
 				D47B9D5E2BCA05DD0020228F /* MoneyFormatter.swift in Sources */,
 				D46B237D2BB10B5F0091C54D /* AccountConnectionView.swift in Sources */,
+				D462342E2BDD873100818169 /* FixedSpendConfirmationView.swift in Sources */,
 				D47B9D512BBF51460020228F /* NotificationView.swift in Sources */,
 				D4129F182B8C20F300BB2B7D /* PlaidLinkViewModel.swift in Sources */,
 				D49D59D12B785501001C0D0A /* MonthSelectorView.swift in Sources */,
@@ -454,6 +473,7 @@
 				D48EF48E2B95759000117E8B /* UserViewModel.swift in Sources */,
 				D46EDED92BA51721002FF9BE /* FlexClientDataModel.xcdatamodeld in Sources */,
 				D4129F1A2B8C21B300BB2B7D /* ServerCommunicator.swift in Sources */,
+				D462342C2BDD872400818169 /* IncomeConfirmationView.swift in Sources */,
 				D4005AA82B65F6F600652FCA /* MainTabView.swift in Sources */,
 				D4005A7E2B65F69D00652FCA /* FlexApp.swift in Sources */,
 				D4DD3F112B7C701500D6E987 /* BudgetBarView.swift in Sources */,

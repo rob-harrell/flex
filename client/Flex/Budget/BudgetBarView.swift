@@ -12,52 +12,18 @@ struct BudgetBarView: View {
     @EnvironmentObject var sharedViewModel: DateViewModel
     @EnvironmentObject var budgetViewModel: BudgetViewModel
     @State var selectedMonth: Date
-
-    var selectedMonthFixed: Double {
-        if sharedViewModel.currentMonth == selectedMonth {
-            return userViewModel.monthlyFixedSpend
-        } else {
-            return budgetViewModel.totalFixedSpendPerMonth[selectedMonth] ?? 0.0
-        }
-    }
-    
-    var selectedMonthFlex: Double {
-        if sharedViewModel.currentMonth == selectedMonth {
-            return budgetViewModel.flexSpendMonthToDate
-        } else {
-            return budgetViewModel.totalFlexSpendPerMonth[selectedMonth] ?? 0.0
-        }
-    }
-    
-    var selectedMonthIncome: Double {
-        if sharedViewModel.currentMonth == selectedMonth {
-            return userViewModel.monthlyIncome
-        } else {
-            return budgetViewModel.monthlyIncome[selectedMonth] ?? 0.0
-        }
-    }
-    
-    var totalBudget: Double {
-        return max(selectedMonthIncome, selectedMonthFixed + selectedMonthFlex, 1.0)
-    }
-    
-    var overSpend: Double {
-        return max(0, selectedMonthFlex - (selectedMonthIncome - selectedMonthFixed))
-    }
-    
-    var percentageFixed: Double {
-        let percentage = selectedMonthFixed / (totalBudget + overSpend)
-        return max(percentage, 0.2)
-    }
-    
-    var percentageFlex: Double {
-        let percentage = selectedMonthFlex / (totalBudget + overSpend)
-        return max(percentage, 0.0)
-    }
-    
-    
     
     var body: some View {
+        let selectedMonthFixed = budgetViewModel.selectedMonthFixedSpend
+        let selectedMonthFlex = budgetViewModel.selectedMonthFlexSpend
+        let selectedMonthIncome = budgetViewModel.selectedMonthIncome
+
+        let totalBudget: Double = max(selectedMonthIncome, selectedMonthFixed + selectedMonthFlex, 1.0)
+        let overSpend: Double = max(0, selectedMonthFlex - (selectedMonthIncome - selectedMonthFixed))
+        let percentageFixed: Double = max(selectedMonthFixed / (totalBudget + overSpend), 0.2)
+        let percentageFlex: Double = max(selectedMonthFlex / (totalBudget + overSpend), 0.0)
+        
+        
         GeometryReader { geometry in
             ZStack(alignment: .leading) {
                 // Total income bar

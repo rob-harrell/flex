@@ -107,9 +107,9 @@ struct BudgetCalendarView: View {
                     .fontWeight(.semibold)
 
                 if !isFuture {
-                    let flexSpend = budgetViewModel.totalFlexSpendPerDay[date, default: 0]
-                    let fixedSpend = budgetViewModel.totalFixedSpendPerDay[date, default: 0]
-                    let income = budgetViewModel.totalIncomePerDay[date, default: 0]
+                    let flexSpend = budgetViewModel.selectedMonthFlexSpendPerDay[date, default: 0]
+                    let fixedSpend = budgetViewModel.selectedMonthFixedSpendPerDay[date, default: 0]
+                    let income = budgetViewModel.selectedMonthIncomePerDay[date, default: 0]
 
                     if flexSpend > 0 {
                         Text(formatBudgetNumber(flexSpend)) // Flex spend
@@ -150,6 +150,7 @@ struct BudgetCalendarView: View {
                 TransactionsListOverlay(date: selectedDate)
                     .environmentObject(budgetViewModel)
                     .presentationDetents([.fraction(0.35), .fraction(1.0)])
+                    .presentationCornerRadius(24)
             }
         }
         .overlay(

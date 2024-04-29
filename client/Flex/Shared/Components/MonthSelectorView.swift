@@ -32,6 +32,7 @@ struct MonthSelectorView: View {
             .presentationDetents([.fraction(0.30), .fraction(0.80)])
             .padding(.bottom, 16)
             .padding(.top, 0)
+            .presentationCornerRadius(24)
             Spacer()
         }
     }

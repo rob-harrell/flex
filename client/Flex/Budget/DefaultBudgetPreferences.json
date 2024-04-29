@@ -2,25 +2,25 @@
   {
     "category":"INCOME",
     "subCategory":"INCOME_DIVIDENDS",
-    "productCategory":"Accruals",
+    "productCategory":"Interest & Dividends",
     "budgetCategory":"Income"
   },
   {
     "category":"INCOME",
     "subCategory":"INCOME_INTEREST_EARNED",
-    "productCategory":"Accruals",
+    "productCategory":"Interest & Dividends",
     "budgetCategory":"Income"
   },
   {
     "category":"INCOME",
     "subCategory":"INCOME_RETIREMENT_PENSION",
-    "productCategory":"Benefits",
+    "productCategory":"Pension",
     "budgetCategory":"Income"
   },
   {
     "category":"INCOME",
     "subCategory":"INCOME_TAX_REFUND",
-    "productCategory":"Miscellaneous",
+    "productCategory":"Tax Refund",
     "budgetCategory":"Income"
   },
   {
@@ -32,13 +32,13 @@
   {
     "category":"INCOME",
     "subCategory":"INCOME_WAGES",
-    "productCategory":"Work",
+    "productCategory":"Paycheck",
     "budgetCategory":"Income"
   },
   {
     "category":"INCOME",
     "subCategory":"INCOME_OTHER_INCOME",
-    "productCategory":"Miscellaneous",
+    "productCategory":"Misc Income",
     "budgetCategory":"Income"
   },
   {
