@@ -85,7 +85,7 @@ struct BudgetCalendarView: View {
     }
         
         
-   @ViewBuilder
+    @ViewBuilder
     private func calendarDateView(for date: Date) -> some View {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
@@ -101,7 +101,7 @@ struct BudgetCalendarView: View {
             VStack {
                 Text(sharedViewModel.stringForDate(date, format: "d")) // Date
                     .font(.caption)
-                    .foregroundColor(cellDate == selectedDate && hasTapped ? Color.white : (cellDate == today ? Color.black : Color.slate500))
+                    .foregroundColor(cellDate == selectedDate && showingOverlay ? Color.white : (cellDate == today ? Color.black : Color.slate500))
                     .fixedSize(horizontal: false, vertical: true) // Prevent stretching
                     .padding(.vertical, 8)
                     .fontWeight(.semibold)
@@ -114,7 +114,7 @@ struct BudgetCalendarView: View {
                     if flexSpend > 0 {
                         Text(formatBudgetNumber(flexSpend)) // Flex spend
                             .font(.caption)
-                            .foregroundColor(cellDate == selectedDate && hasTapped ? Color.white : Color.black)
+                            .foregroundColor(cellDate == selectedDate && showingOverlay ? Color.white : Color.black)
                             .fixedSize(horizontal: false, vertical: true) // Prevent stretching
                             .fontWeight(.semibold)
                     }
@@ -141,7 +141,7 @@ struct BudgetCalendarView: View {
             }
             .frame(minWidth: 0, maxWidth: .infinity)
             .frame(height: 86)
-            .background(cellDate == selectedDate && hasTapped ? Color.black : (isPastOrToday ? Color(.slate) : Color.clear))
+            .background(cellDate == selectedDate && showingOverlay ? Color.black : (isPastOrToday ? Color(.slate) : Color.clear))
             .animation(.default, value: selectedDate)
 
         }
@@ -157,7 +157,7 @@ struct BudgetCalendarView: View {
             ZStack {
                 RoundedRectangle(cornerRadius: 0)
                     .stroke(Color.slate200, lineWidth: 0.75)
-                if cellDate == today || (cellDate == selectedDate && hasTapped) {
+                if cellDate == today {
                     RoundedRectangle(cornerRadius: 0)
                         .stroke(Color.black, lineWidth: 1.0)
                 }

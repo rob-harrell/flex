@@ -1,0 +1,82 @@
+[
+    {
+        "name": "Venmo",
+        "logo": "http://localhost:8000/assets/merchant_logos/venmo_logo.png",
+        "keywords": ["venmo"]
+    },
+    {
+        "name": "Zelle",
+        "logo": "http://localhost:8000/assets/merchant_logos/zelle_logo.png",
+        "keywords": ["zelle"]
+    },
+    {
+        "name": "Target",
+        "logo": "http://plaid-merchant-logos.plaid.com/target_997.png",
+        "keywords": ["target"]
+    },
+    {
+        "name": "Pottery Barn",
+        "logo": "http://localhost:8000/assets/merchant_logos/pottery_barn_logo.png",
+        "keywords": ["potterybarn"]
+    },
+    {
+        "name": "Barry's Bootcamp",
+        "logo": "http://localhost:8000/assets/merchant_logos/barrys_bootcamp_logo.png",
+        "keywords": ["barrysbootcamp"]
+    },
+    {
+        "name": "SoCal Gas",
+        "logo": "http://localhost:8000/assets/merchant_logos/SoCalGas_logo.png",
+        "keywords": ["so cal gas paid"]
+    },
+    {
+        "name": "Sofi",
+        "logo": "http://localhost:8000/assets/merchant_logos/sofi_logo.png",
+        "keywords": ["sofi"]
+    },
+    {
+        "name": "Snap Inc",
+        "logo": "http://localhost:8000/assets/merchant_logos/snap_logo.png",
+        "keywords": ["snap inc direct dep"]
+    },
+    {
+        "name": "Bank of America Mortgage",
+        "logo": "http://localhost:8000/assets/merchant_logos/boa_logo.png",
+        "keywords": ["bank of america mortgage"]
+    },
+    {
+        "name": "Affirm",
+        "logo": "http://localhost:8000/assets/merchant_logos/affirm_logo.jpeg",
+        "keywords": ["affirm"]
+    },
+    {
+        "name": "Agia Insurance",
+        "logo": "http://localhost:8000/assets/merchant_logos/agia_insurance_logo.jpeg",
+        "keywords": ["agia insurance trans"]
+    },
+    {
+        "name": "Gusto",
+        "logo": "http://localhost:8000/assets/merchant_logos/gusto_logo.png",
+        "keywords": ["name:gusto"]
+    },
+    {
+        "name": "Bristol Farms",
+        "logo": "http://localhost:8000/assets/merchant_logos/bristol_farms_logo.png",
+        "keywords": ["bristol farms"]
+    },
+    {
+        "name": "SoCal Edison",
+        "logo": "http://localhost:8000/assets/merchant_logos/socal_edison_logo.png",
+        "keywords": ["so cal edison co-directpay"]
+    },
+    {
+        "name": "Amica",
+        "logo": "http://localhost:8000/assets/merchant_logos/amica_logo.png",
+        "keywords": ["amica"]
+    },
+    {
+        "name": "Southwest Airlines",
+        "logo": "http://localhost:8000/assets/merchant_logos/southwest_logo.png",
+        "keywords": ["southwest airlines"]
+    }
+]

@@ -49,12 +49,13 @@ struct MainTabView: View {
                 loadBudgetPreferences()
                 budgetViewModel.fetchTransactionHistoryFromServer(userId: userViewModel.id, bankAccounts: userViewModel.bankAccounts, monthlyIncome: userViewModel.monthlyIncome, monthlyFixedSpend: userViewModel.monthlyFixedSpend)
                 budgetViewModel.fetchNewTransactionsFromServer(userId: userViewModel.id, monthlyIncome: userViewModel.monthlyIncome, monthlyFixedSpend: userViewModel.monthlyFixedSpend)
-                DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
                     DispatchQueue.main.async {
                         if !sharedViewModel.isFirstTransactionDateAvailable {
                             print("using transactions history to load dates array")
                             sharedViewModel.updateDates()
                         }
+                        budgetViewModel.calculateSelectedMonthBudgetMetrics(for: sharedViewModel.selectedMonth, monthlyIncome: userViewModel.monthlyIncome, monthlyFixedSpend: userViewModel.monthlyFixedSpend)
                     }
                 }
             }
@@ -122,6 +123,7 @@ struct MainTabView: View {
                 }
             }
             .padding(16)
+            .padding(.top, 8)
             .interactiveDismissDisabled()
             .presentationDetents([.fraction(0.9)])
             .presentationDragIndicator(.visible)

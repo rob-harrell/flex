@@ -14,30 +14,41 @@ import KeychainAccess
 
 class BudgetViewModel: ObservableObject {
     //Monthly budget metrics
-    @Published var selectedMonthTransactions: [TransactionViewModel] = [] //Holds the selected month's transactions for use in calulating budget metrics
-    @Published var budgetPreferences: [BudgetPreferenceViewModel] = [] //To be used in the future
-    @Published var selectedMonthFixedSpendPerDay: [Date: Double] = [:] //Holds selected month's fixed spend for use in budget metrics and calendar view
-    @Published var selectedMonthFlexSpendPerDay: [Date: Double] = [:] //Holds selected month's income for use in budget metrics and calendar view
-    @Published var selectedMonthIncomePerDay: [Date: Double] = [:] //Holds selected month's income for use in budget metrics and calendar view
-    @Published var selectedMonthFixedSpend: Double = 0.0 //The selected month's fixed spend ***need to update calculation*** --> change to double
-    @Published var selectedMonthFlexSpend: Double = 0.0 //The selected month's flex spend ***need to consolidate with flexspendmonthtodate*** --> change to double
-    @Published var selectedMonthIncome: Double = 0.0 //The selected month's income --> change to double
-    @Published var selectedMonthSavings: Double = 0.0 //Selected month's savings --> change to double
+    @Published var selectedMonthTransactions: [TransactionViewModel] = []
+    @Published var budgetPreferences: [BudgetPreferenceViewModel] = []
+    @Published var selectedMonthFixedSpendPerDay: [Date: Double] = [:]
+    @Published var selectedMonthFlexSpendPerDay: [Date: Double] = [:]
+    @Published var selectedMonthIncomePerDay: [Date: Double] = [:]
+    @Published var selectedMonthFixedSpend: Double = 0.0
+    @Published var selectedMonthFlexSpend: Double = 0.0
+    @Published var selectedMonthIncome: Double = 0.0
+    @Published var selectedMonthSavings: Double = 0.0
 
     //Income breakdown metrics
-    @Published var workMonthlyIncome: [Date: Double] = [:] //needs to be populated by fetching transactions from core for previous two full months #####
-    @Published var benefitsMonthlyIncome: [Date: Double] = [:] //same as above
-    @Published var accrualsMonthlyIncome: [Date: Double] = [:] //same as above
-    @Published var pensionMonthlyIncome: [Date: Double] = [:]//same as above
-    @Published var avgRecentWorkIncome: Double = 0 //same as above
-    @Published var avgRecentBenefitsIncome: Double = 0 //same as above
-    @Published var avgRecentAccrualsIncome: Double = 0 //same as above
-    @Published var avgRecentPensionIncome: Double = 0 //same as above
-    @Published var avgTotalRecentIncome: Double = 0 //same as above
+    @Published var avgRecentWorkIncome: Double = 0
+    @Published var avgRecentBenefitsIncome: Double = 0
+    @Published var avgRecentAccrualsIncome: Double = 0
+    @Published var avgRecentPensionIncome: Double = 0
+    @Published var avgTotalRecentIncome: Double = 0
     
     @Published var isCalculatingMetrics = false
     
     //Fixed spend breakdown metrics
+    @Published var recentHousingCosts: Double = 0
+    @Published var recentInsuranceCosts: Double = 0
+    @Published var recentStudentLoans: Double = 0
+    @Published var recentOtherLoans: Double = 0
+    @Published var recentCarPayment: Double = 0
+    @Published var recentGasAndElectrical: Double = 0
+    @Published var recentInternetAndCable: Double = 0
+    @Published var recentSewageAndWaste: Double = 0
+    @Published var recentPhoneBill: Double = 0
+    @Published var recentWaterBill: Double = 0
+    @Published var recentOtherUtilities: Double = 0
+    @Published var recentStorageCosts: Double = 0
+    @Published var recentNursingCosts: Double = 0
+    @Published var avgTotalRecentFixedSpend: Double = 0
+    
     
     struct TransactionViewModel {
         var id: Int64
@@ -143,7 +154,6 @@ class BudgetViewModel: ObservableObject {
                     logoURL: transaction.logoURL ?? ""
                 )
             }
-            print("fetched transactions from core data from: \(startDate) to: \(endDate)")
             return transactionViewModels
         } catch {
             print("Failed to fetch transactions from Core Data: \(error)")
@@ -555,7 +565,7 @@ class BudgetViewModel: ObservableObject {
                 case "Flex":
                     totalFlexSpend += transaction.amount
                 case "Income":
-                    totalIncome += transaction.amount
+                    totalIncome += abs(transaction.amount)
                 default:
                     break
                 }
@@ -586,7 +596,7 @@ class BudgetViewModel: ObservableObject {
         self.isCalculatingMetrics = false
     }
     
-    func calculateRecentIncomeStats() {
+    func calculateRecentBudgetStats() {
         // Create a date range for the past two complete months
         let calendar = Calendar.current
         let startOfCurrentMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: Date()))!
@@ -594,80 +604,96 @@ class BudgetViewModel: ObservableObject {
         let startOfTwoMonthsAgo = calendar.date(byAdding: .month, value: -1, to: startOfPreviousMonth)!
         let endOfPreviousMonth = calendar.date(byAdding: .day, value: -1, to: startOfCurrentMonth)!
 
+        // Print the start and end dates
+        print("Start of two months ago: \(startOfTwoMonthsAgo)")
+        print("End of previous month: \(endOfPreviousMonth)")
+
         // Fetch transactions from Core Data for the past two complete months
-        let transactions = self.fetchTransactionsFromCoreData(from: startOfTwoMonthsAgo, to: endOfPreviousMonth)
+        let recentTransactions = self.fetchTransactionsFromCoreData(from: startOfTwoMonthsAgo, to: endOfPreviousMonth)
 
-        // Group transactions by month
-        let groupedTransactionsByMonth = Dictionary(grouping: transactions, by: { Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: $0.date))! })
+        // Define income and fixed spend sources to show
+        var recentWorkIncome = 0.0
+        var recentBenefitsIncome = 0.0
+        var recentAccrualsIncome = 0.0
+        var recentPensionIncome = 0.0
+        var recentHousingCosts = 0.0
+        var recentStudentLoans = 0.0
+        var recentOtherLoans = 0.0
+        var recentCarPayment = 0.0
+        var recentGasAndElectrical = 0.0
+        var recentInternetAndCable = 0.0
+        var recentSewageAndWaste = 0.0
+        var recentPhoneBill = 0.0
+        var recentWaterBill = 0.0
+        var recentOtherUtilities = 0.0
+        var recentStorageCosts = 0.0
+        var recentNursingCosts = 0.0
 
-        // Calculate total fixed and flexible spending and income per month
-        self.workMonthlyIncome = [:]
-        self.benefitsMonthlyIncome = [:]
-        self.accrualsMonthlyIncome = [:]
-        self.pensionMonthlyIncome = [:]
-
-        for (month, transactions) in groupedTransactionsByMonth {
-            var totalFixedSpend = 0.0
-            var totalFlexSpend = 0.0
-            var totalIncome = 0.0
-            var totalWorkIncome = 0.0
-            var totalBenefitsIncome = 0.0
-            var totalAccrualsIncome = 0.0
-            var totalPensionIncome = 0.0
-
-            for transaction in transactions {
-                switch transaction.budgetCategory {
-                case "Fixed":
-                    totalFixedSpend += transaction.amount
-                case "Flex":
-                    totalFlexSpend += transaction.amount
-                case "Income":
-                    totalIncome += transaction.amount
-                default:
-                    break
-                }
-
-                switch transaction.productCategory {
-                case "Paycheck":
-                    totalWorkIncome += transaction.amount
-                case "Benefits":
-                    totalBenefitsIncome += transaction.amount
-                case "Dividends & Interest":
-                    totalAccrualsIncome += transaction.amount
-                case "Pension":
-                    totalPensionIncome += transaction.amount
-                default:
-                    break
-                }
+        for transaction in recentTransactions {
+            switch transaction.productCategory {
+            case "Paycheck":
+                recentWorkIncome += transaction.amount
+            case "Benefits":
+                recentBenefitsIncome += transaction.amount
+            case "Dividends & Interest":
+                recentAccrualsIncome += transaction.amount
+            case "Pension":
+                recentPensionIncome += transaction.amount
+            case "Housing":
+                recentHousingCosts += transaction.amount
+            case "Insurance":
+                recentInsuranceCosts += transaction.amount
+            case "Sudent Loan":
+                recentStudentLoans += transaction.amount
+            case "Other Loans":
+                recentOtherLoans += transaction.amount
+            case "Auto Loan":
+                recentCarPayment += transaction.amount
+            case "Gas & Electricity":
+                recentGasAndElectrical += transaction.amount
+            case "Internet & Cable":
+                recentInternetAndCable += transaction.amount
+            case "Sewage & Waste Management":
+                recentSewageAndWaste += transaction.amount
+            case "Phone Bill":
+                recentPhoneBill += transaction.amount
+            case "Water Bill":
+                recentWaterBill += transaction.amount
+            case "Other Utilities":
+                recentOtherUtilities += transaction.amount
+            case "Storage":
+                recentStorageCosts += transaction.amount
+            case "Nursing Care":
+                recentNursingCosts += transaction.amount
+                
+            default:
+                break
             }
-            self.workMonthlyIncome[month] = totalWorkIncome
-            self.benefitsMonthlyIncome[month] = totalBenefitsIncome
-            self.accrualsMonthlyIncome[month] = totalAccrualsIncome
-            self.pensionMonthlyIncome[month] = totalPensionIncome
         }
 
-        // Calculate averages
-        let sortedWorkIncome = self.workMonthlyIncome.sorted(by: { $0.key < $1.key })
-        let sortedBenefitsIncome = self.benefitsMonthlyIncome.sorted(by: { $0.key < $1.key })
-        let sortedAccrualsIncome = self.accrualsMonthlyIncome.sorted(by: { $0.key < $1.key })
-        let sortedPensionsIncome = self.pensionMonthlyIncome.sorted(by: { $0.key < $1.key })
+        // Calculate recent income averages
+        self.avgRecentWorkIncome = recentWorkIncome / 2
+        self.avgRecentBenefitsIncome = recentBenefitsIncome / 2
+        self.avgRecentAccrualsIncome = recentAccrualsIncome / 2
+        self.avgRecentPensionIncome = recentPensionIncome / 2
+        self.avgTotalRecentIncome = abs(self.avgRecentWorkIncome + self.avgRecentBenefitsIncome + self.avgRecentAccrualsIncome + self.avgRecentPensionIncome)
 
-        let recentWorkIncome = Array(sortedWorkIncome.dropLast().suffix(2))
-        self.avgRecentWorkIncome = recentWorkIncome.reduce(0, { $0 + $1.value }) / Double(recentWorkIncome.count)
+        //Calculate recent fixed spend averages
+        self.recentHousingCosts = recentHousingCosts / 2
+        self.recentInsuranceCosts = recentInsuranceCosts / 2
+        self.recentStudentLoans = recentStudentLoans / 2
+        self.recentOtherLoans = recentOtherLoans / 2
+        self.recentCarPayment = recentCarPayment / 2
+        self.recentGasAndElectrical = recentGasAndElectrical / 2
+        self.recentInternetAndCable = recentInternetAndCable / 2
+        self.recentSewageAndWaste = recentSewageAndWaste / 2
+        self.recentPhoneBill = recentPhoneBill / 2
+        self.recentWaterBill = recentWaterBill / 2
+        self.recentOtherUtilities = recentOtherUtilities / 2
+        self.recentStorageCosts = recentStorageCosts / 2
+        self.recentNursingCosts = recentNursingCosts / 2
+        self.avgTotalRecentFixedSpend = (self.recentHousingCosts + self.recentInsuranceCosts + self.recentStudentLoans + self.recentOtherLoans + self.recentCarPayment + self.recentGasAndElectrical + self.recentInternetAndCable + self.recentSewageAndWaste + self.recentPhoneBill + self.recentWaterBill + self.recentOtherUtilities + self.recentStorageCosts + self.recentNursingCosts)
 
-        let recentBenefitsIncome = Array(sortedBenefitsIncome.dropLast().suffix(2))
-        self.avgRecentBenefitsIncome = recentBenefitsIncome.reduce(0, { $0 + $1.value }) / Double(recentBenefitsIncome.count)
-
-        let recentAccrualsIncome = Array(sortedAccrualsIncome.dropLast().suffix(2))
-        self.avgRecentAccrualsIncome = recentAccrualsIncome.reduce(0, { $0 + $1.value }) / Double(recentAccrualsIncome.count)
-        
-        let recentPensionIncome = Array(sortedPensionsIncome.dropLast().suffix(2))
-        self.avgRecentPensionIncome = recentPensionIncome.reduce(0, { $0 + $1.value })
-
-        self.avgTotalRecentIncome = (self.avgRecentWorkIncome + self.avgRecentBenefitsIncome + self.avgRecentAccrualsIncome + self.avgRecentPensionIncome)
     }
     
-    func calculateFixedSpendBreakdown() {
-        
-    }
 }
