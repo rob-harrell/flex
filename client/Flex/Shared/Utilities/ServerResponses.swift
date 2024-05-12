@@ -96,6 +96,8 @@ struct TransactionResponse: Codable, Identifiable {
     let accountId: Int64
     let merchantName: String?
     let logoURL: String?
+    let productCategory: String
+    let budgetCategory: String
 
     enum CodingKeys: String, CodingKey {
         case amount
@@ -111,6 +113,8 @@ struct TransactionResponse: Codable, Identifiable {
         case accountId = "account_id"
         case merchantName = "merchant_name"
         case logoURL = "logo_url"
+        case productCategory = "product_category"
+        case budgetCategory = "budget_category"
     }
 }
 

@@ -46,7 +46,6 @@ struct MainTabView: View {
             .onAppear {
                 UITabBarItem.appearance().setTitleTextAttributes([NSAttributedString.Key.font: UIFont.systemFont(ofSize: 12)], for: .normal)
                 UITabBarItem.appearance().setTitleTextAttributes([NSAttributedString.Key.font: UIFont.systemFont(ofSize: 12)], for: .selected)
-                loadBudgetPreferences()
                 budgetViewModel.fetchTransactionHistoryFromServer(userId: userViewModel.id, bankAccounts: userViewModel.bankAccounts, monthlyIncome: userViewModel.monthlyIncome, monthlyFixedSpend: userViewModel.monthlyFixedSpend)
                 budgetViewModel.fetchNewTransactionsFromServer(userId: userViewModel.id, monthlyIncome: userViewModel.monthlyIncome, monthlyFixedSpend: userViewModel.monthlyFixedSpend)
                 DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
@@ -105,55 +104,6 @@ struct MainTabView: View {
             
         }
         .padding(.top, 4)
-        .sheet(isPresented: Binding<Bool>(
-            get: { !self.userViewModel.hasCompletedBudgetCustomization },
-            set: { _ in }
-        )) {
-            VStack {
-                switch budgetCustomizationStep {
-                case .income:
-                    IncomeConfirmationView(nextAction: { budgetCustomizationStep = .fixedSpend })
-                        .environmentObject(budgetViewModel)
-                case .fixedSpend:
-                    FixedSpendConfirmationView(nextAction: { budgetCustomizationStep = .final })
-                        .environmentObject(budgetViewModel)
-                case .final:
-                    FinalConfirmationView(doneAction: { userViewModel.hasCompletedBudgetCustomization = true })
-                        .environmentObject(budgetViewModel)
-                }
-            }
-            .padding(16)
-            .padding(.top, 8)
-            .interactiveDismissDisabled()
-            .presentationDetents([.fraction(0.9)])
-            .presentationDragIndicator(.visible)
-            .presentationCornerRadius(24)
-        }
-    }
-    
-    private func loadBudgetPreferences() {
-        let fetchRequest: NSFetchRequest<BudgetPreference> = BudgetPreference.fetchRequest()
-        do {
-            let context = CoreDataStack.shared.persistentContainer.viewContext
-            let budgetPreferences = try context.fetch(fetchRequest)
-            if budgetPreferences.isEmpty {
-                // If the user has not edited budget preferences, load from the default CSV file
-                if !userViewModel.hasEditedBudgetPreferences {
-                    if let defaultBudgetPreferences = budgetViewModel.loadDefaultBudgetPreferencesFromJSON() {
-                        budgetViewModel.budgetPreferences = defaultBudgetPreferences
-                        budgetViewModel.saveBudgetPreferencesToCoreData(defaultBudgetPreferences, userId: userViewModel.id) // Save to Core Data
-                    }
-                } else {
-                    // Otherwise, fetch from the server
-                    budgetViewModel.fetchBudgetPreferencesFromServer(userId: userViewModel.id)
-                }
-            } else {
-                // If budget preferences exist in Core Data, hydrate state with them
-                budgetViewModel.budgetPreferences = budgetPreferences.map { BudgetViewModel.BudgetPreferenceViewModel(from: $0) }
-            }
-        } catch {
-            print("Failed to fetch BudgetPreference: \(error)")
-        }
     }
     
     enum Tab {

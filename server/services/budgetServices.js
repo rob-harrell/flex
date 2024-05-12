@@ -1,6 +1,30 @@
 // Import necessary modules or libraries
 const db = require('../db/database.js'); 
 const { syncTransactions } = require('../routes/plaid');
+const fs = require('fs');
+
+// Load merchant and category mapping files
+const merchant_mappings_array = JSON.parse(fs.readFileSync('MerchantNameLogoMappings.json', 'utf8'));
+const merchant_mappings = merchant_mappings_array.reduce((acc, item) => {
+    for (const keyword of item.keywords) {
+        acc[keyword] = {
+            name: item.name,
+            logo: item.logo
+        };
+    }
+    return acc;
+}, {});
+
+const category_mappings_array = JSON.parse(fs.readFileSync('DefaultBudgetPreferences.json', 'utf8'));
+const category_mappings = category_mappings_array.reduce((acc, item) => {
+    const key = `${item.category}_${item.subCategory}`;
+    acc[key] = {
+        productCategory: item.productCategory,
+        budgetCategory: item.budgetCategory
+    };
+    return acc;
+}, {});
+
 
 // Function to get transactions for a user
 exports.getNewTransactionsForUser = async (req, res, next) => {
@@ -87,51 +111,34 @@ function processTransactions(transactions, accountIdMapping) {
         transaction.account_id = internalAccountId;
 
         // Clean merchant name
-        if (transaction.name.toLowerCase() === 'venmo') {
-            transaction.merchant_name = 'Venmo';
-            transaction.logo_url = 'http://localhost:8000/assets/merchant_logos/venmo_logo.png'
-        } else if (transaction.name.toLowerCase().includes('zelle')) {
-            transaction.merchant_name = 'Zelle';
-            transaction.logo_url = 'http://localhost:8000/assets/merchant_logos/zelle_logo.png'
-        } else if (transaction.name.toLowerCase() === ('target')) {
-            transaction.merchant_name = 'Target';
-            transaction.logo_url = 'http://plaid-merchant-logos.plaid.com/target_997.png'
-        } else if (transaction.merchant_name && transaction.merchant_name.toLowerCase() === ('potterybarn')) {
-            transaction.merchant_name = 'Pottery Barn';
-            transaction.logo_url = 'http://localhost:8000/assets/merchant_logos/pottery_barn_logo.png'
-        } else if (transaction.merchant_name && transaction.merchant_name.toLowerCase() === ('barrysbootcamp')) {
-            transaction.merchant_name = 'Barry\'s Bootcamp';
-            transaction.logo_url = 'http://localhost:8000/assets/merchant_logos/barrys_bootcamp_logo.png'
-        } else if (transaction.merchant_name && transaction.merchant_name.toLowerCase() === ('so cal gas paid')) {
-            transaction.merchant_name = 'SoCal Gas';
-            transaction.logo_url = 'http://localhost:8000/assets/merchant_logos/SoCalGas_logo.png'
-        } else if (transaction.merchant_name && transaction.merchant_name.toLowerCase() === ('sofi')) {
-            transaction.logo_url = 'http://localhost:8000/assets/merchant_logos/sofi_logo.png'
-        } else if (transaction.name.toLowerCase().includes ('snap inc direct dep')) {
-            transaction.merchant_name = 'Snap Inc';
-            transaction.logo_url = 'http://localhost:8000/assets/merchant_logos/snap_logo.png'
-        } else if (transaction.name.toLowerCase().includes ('bank of america mortgage')) {
-            transaction.merchant_name = 'Bank of America Mortgage';
-            transaction.logo_url = 'http://localhost:8000/assets/merchant_logos/boa_logo.png'
-        } else if (transaction.merchant_name && transaction.merchant_name.toLowerCase() === ('affirm')) {
-            transaction.logo_url = 'http://localhost:8000/assets/merchant_logos/affirm_logo.jpeg'
-        } else if (transaction.merchant_name && transaction.merchant_name.toLowerCase() === ('agia insurance trans')) {
-            transaction.merchant_name = 'Agia Insurance';
-            transaction.logo_url = 'http://localhost:8000/assets/merchant_logos/agia_insurance_logo.jpeg'
-        } else if (transaction.name.toLowerCase().includes ('name:gusto')) {
-            transaction.merchant_name = 'Gusto';
-            transaction.logo_url = 'http://localhost:8000/assets/merchant_logos/gusto_logo.png'
-        } else if (transaction.merchant_name && transaction.merchant_name.toLowerCase() === ('bristol farms')) {
-            transaction.logo_url = 'http://localhost:8000/assets/merchant_logos/bristol_farms_logo.png'
-        } else if (transaction.name.toLowerCase().includes ('so cal edison co-directpay')) {
-            transaction.merchant_name = 'SoCal Edison';
-            transaction.logo_url = 'http://localhost:8000/assets/merchant_logos/socal_edison_logo.png'
-        } else if (transaction.merchant_name && transaction.merchant_name.toLowerCase() === ('amica')) {
-            transaction.logo_url = 'http://localhost:8000/assets/merchant_logos/amica_logo.png'
-        } else if (transaction.merchant_name && transaction.merchant_name.toLowerCase().includes ('southwest airlines')) {
-            transaction.merchant_name = 'Southwest Airlines';
-            transaction.logo_url = 'http://localhost:8000/assets/merchant_logos/southwest_logo.png'
+        if (!transaction.merchant_name) {
+            const keywords = transaction.name.toLowerCase().split(' ');
+            for (const keyword of keywords) {
+                if (merchant_mappings[keyword]) {
+                    transaction.merchant_name = merchant_mappings[keyword].name;
+                    transaction.logo_url = merchant_mappings[keyword].logo;
+                    break;
+                }
+            }
         }
+
+        // Handle payment app transactions
+        if (transaction.merchant_name === 'Venmo' || transaction.merchant_name === 'Zelle') {
+            transaction.product_category = 'Payment apps';
+            transaction.budget_category = transaction.amount < 0 ? 'Income' : 'Flex';
+        } else {
+            // Add product_category and budget_category fields
+            const key = `${transaction.personal_finance_category.primary}_${transaction.personal_finance_category.detailed}`;
+            if (category_mappings[key]) {
+                transaction.product_category = category_mappings[key].productCategory;
+                transaction.budget_category = category_mappings[key].budgetCategory;
+            } else {
+                // Handle case where category and subCategory are not found in the mapping
+                transaction.product_category = 'Unknown';
+                transaction.budget_category = 'Unknown';
+            }
+        }
+
         return transaction;
     });
 

@@ -3,7 +3,25 @@ const pgTypes = require('pg').types;
 const { queryResultErrorCode } = pgp.errors;
 const cs = new pgp.helpers.ColumnSet(['?id', 'firstname', 'lastname', 'phone', 'monthly_income', 'monthly_fixed_spend', 'birth_date', 'has_entered_user_details', 'has_completed_account_creation', 'has_completed_notification_selection', 'push_notifications_enabled', 'sms_notifications_enabled', 'has_edited_budget_preferences', 'has_completed_budget_customization'], {table: 'users'});
 const csBudgetPreferences = new pgp.helpers.ColumnSet(['?id', 'user_id', 'category', 'sub_category', 'budget_category', 'created', 'updated', 'product_category', 'fixed_amount'], {table: 'budget_preferences'});
-
+const transaction_columns = [
+  'plaid_transaction_id',
+  'plaid_account_id',
+  'account_id',
+  'user_id',
+  'category',
+  'sub_category',
+  'date',
+  'authorized_date',
+  'name',
+  'amount',
+  'currency_code',
+  'is_removed',
+  'pending',
+  'merchant_name',
+  'logo_url',
+  'product_category',
+  'budget_category'
+];
 
 // Override default type parsing for integers and floats
 pgTypes.setTypeParser(pgTypes.builtins.INT8, parseInt);
@@ -186,38 +204,53 @@ async function getItemsForUser(userId) {
 async function saveTransactions(userId, itemId, added, modified, removed) {
   // Start a transaction
   return await db.tx(async t => {
-    let addedResults = [];
-    let modifiedResults = [];
-    let removedResults = [];
-
     // Insert added transactions
-    for (let transaction of added) {
-      let category = transaction.personal_finance_category.primary || null;
-      let sub_category = transaction.personal_finance_category.detailed || null;
+    let addedResults = [];
+    if (added.length > 0) {
+      let transactionsData = added.map(transaction => ({
+        plaid_transaction_id: transaction.transaction_id,
+        plaid_account_id: transaction.plaid_account_id,
+        account_id: transaction.account_id,
+        user_id: userId,
+        category: transaction.personal_finance_category.primary || null,
+        sub_category: transaction.personal_finance_category.detailed || null,
+        date: transaction.date,
+        authorized_date: transaction.authorized_date,
+        name: transaction.name,
+        amount: transaction.amount,
+        currency_code: transaction.iso_currency_code || '',
+        is_removed: false,
+        pending: transaction.pending,
+        merchant_name: transaction.merchant_name,
+        logo_url: transaction.logo_url,
+        product_category: transaction.product_category,
+        budget_category: transaction.budget_category
+      }));
 
-      let result = await t.one(`
-        INSERT INTO transactions (plaid_transaction_id, plaid_account_id, account_id, user_id, category, sub_category, date, authorized_date, name, amount, currency_code, is_removed, pending, merchant_name, logo_url)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-        RETURNING *
-      `, [transaction.transaction_id, transaction.plaid_account_id, transaction.account_id, userId, category, sub_category, transaction.date, transaction.authorized_date, transaction.name, transaction.amount, transaction.iso_currency_code || '', false, transaction.pending, transaction.merchant_name, transaction.logo_url]);
-      addedResults.push(result);
-    }
+      // Generate bulk insert query
+      const query = pgp.helpers.insert(transactionsData, transaction_columns, 'transactions') + ' RETURNING *';
+
+      // Execute query
+      addedResults = await t.any(query);
+   }
 
     // Update modified transactions
+    let modifiedResults = [];
     for (let transaction of modified) {
       let category = transaction.personal_finance_category.primary || null;
       let sub_category = transaction.personal_finance_category.detailed || null;
 
       let result = await t.one(`
         UPDATE transactions
-        SET category = $1, sub_category = $2, date = $3, authorized_date = $4, name = $5, amount = $6, currency_code = $7, pending = $8, plaid_account_id = $9, account_id = $10, merchant_name = $11, logo_url = $12
+        SET category = $1, sub_category = $2, date = $3, authorized_date = $4, name = $5, amount = $6, currency_code = $7, pending = $8, plaid_account_id = $9, account_id = $10, merchant_name = $11, logo_url = $12, product_category = $15, budget_category = $16
         WHERE user_id = $13 AND plaid_transaction_id = $14
         RETURNING *
-      `, [category, sub_category, transaction.date, transaction.authorized_date, transaction.name, transaction.amount, transaction.currency_code, transaction.pending, transaction.plaid_account_id, transaction.account_id, transaction.merchant_name, transaction.logo_url, userId, transaction.transaction_id]);
+      `, [category, sub_category, transaction.date, transaction.authorized_date, transaction.name, transaction.amount, transaction.currency_code, transaction.pending, transaction.plaid_account_id, transaction.account_id, transaction.merchant_name, transaction.logo_url, userId, transaction.transaction_id, product_category, budget_category]);
       modifiedResults.push(result);
     }
 
     // Mark removed transactions
+    let removedResults = [];
     for (let transaction of removed) {
       let result = await t.one(`
         UPDATE transactions
