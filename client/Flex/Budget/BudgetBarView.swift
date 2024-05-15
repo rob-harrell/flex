@@ -29,16 +29,16 @@ struct BudgetBarView: View {
                 // Total income bar
                 if overSpend > 0 {
                     UnevenRoundedRectangle(topLeadingRadius: 16, bottomLeadingRadius: 16, bottomTrailingRadius: 0, topTrailingRadius: 0)
-                        .stroke(Color.black, lineWidth: 1)
+                        .stroke(Color.clear, lineWidth: 1)
                         .background(
                             UnevenRoundedRectangle(topLeadingRadius: 16, bottomLeadingRadius: 16, bottomTrailingRadius: 0, topTrailingRadius: 0)
-                                .fill(Color.red400)
+                                .fill(Color.red300)
                         )
                         .frame(width: geometry.size.width, height: 54)
                     
                 } else {
                     Rectangle()
-                        .fill(Color.emerald300)
+                        .fill(Color.emerald200)
                         .frame(width: geometry.size.width, height: 54)
                         .cornerRadius(16)
                 }

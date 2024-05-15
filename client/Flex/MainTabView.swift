@@ -55,6 +55,9 @@ struct MainTabView: View {
                             sharedViewModel.updateDates()
                         }
                         budgetViewModel.calculateSelectedMonthBudgetMetrics(for: sharedViewModel.selectedMonth, monthlyIncome: userViewModel.monthlyIncome, monthlyFixedSpend: userViewModel.monthlyFixedSpend)
+                        budgetViewModel.calculateRecentBudgetStats()
+                        userViewModel.monthlyIncome = budgetViewModel.avgTotalRecentIncome
+                        userViewModel.monthlyFixedSpend = budgetViewModel.avgTotalRecentFixedSpend
                     }
                 }
             }
@@ -84,9 +87,7 @@ struct MainTabView: View {
                         }) {
                             HStack{
                                 Image("Money")
-                                Text("\(formatBudgetNumber(budgetViewModel.selectedMonthIncome)) \(sharedViewModel.selectedMonth == sharedViewModel.currentMonth ? "est. " : "")income")
-                                    .font(.headline)
-                                    .fontWeight(.semibold)
+                                Text("\(sharedViewModel.selectedMonth == sharedViewModel.currentMonth ? formatBudgetNumber(userViewModel.monthlyIncome) : formatBudgetNumber(budgetViewModel.selectedMonthIncome)) \(sharedViewModel.selectedMonth == sharedViewModel.currentMonth ? "est. " : "")income")
                             }
                         }
                         .padding(.horizontal, 4)
@@ -104,6 +105,33 @@ struct MainTabView: View {
             
         }
         .padding(.top, 4)
+        .sheet(isPresented: Binding<Bool>(
+            get: { !self.userViewModel.hasCompletedBudgetCustomization },
+            set: { _ in }
+        )) {
+            VStack {
+                switch budgetCustomizationStep {
+                case .income:
+                    IncomeConfirmationView(nextAction: { budgetCustomizationStep = .fixedSpend })
+                        .environmentObject(budgetViewModel)
+                case .fixedSpend:
+                    FixedSpendConfirmationView(nextAction: { budgetCustomizationStep = .final }, backAction: { budgetCustomizationStep = .income })
+                        .environmentObject(budgetViewModel)
+                case .final:
+                    FinalConfirmationView(nextAction: {budgetCustomizationStep = .confirm}, doneAction: { userViewModel.hasCompletedBudgetCustomization = true }, backAction: { budgetCustomizationStep = .fixedSpend }, editIncome: { budgetCustomizationStep = .income})
+                        .environmentObject(budgetViewModel)
+                case .confirm:
+                    ConfirmBudgetView(doneAction: { userViewModel.hasCompletedBudgetCustomization = true}, backAction: { budgetCustomizationStep = .final})
+                }
+                
+            }
+            .padding(16)
+            .padding(.top, 12)
+            .interactiveDismissDisabled()
+            .presentationDetents([.fraction(0.9)])
+            .presentationDragIndicator(.visible)
+            .presentationCornerRadius(24)
+        }
     }
     
     enum Tab {
@@ -117,6 +145,7 @@ struct MainTabView: View {
         case income
         case fixedSpend
         case final
+        case confirm
     }
 }
 

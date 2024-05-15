@@ -13,12 +13,12 @@ struct BudgetHeaderView: View {
     @EnvironmentObject var budgetViewModel: BudgetViewModel
 
     var body: some View {
-        var savings = budgetViewModel.selectedMonthSavings
+        let savings = budgetViewModel.selectedMonthSavings
         
         VStack(alignment: .leading) {
             HStack{
                 Text("$\(abs(Int(savings)))")
-                    .foregroundColor(savings < 0 ? Color(.red600) : Color(.emerald600))
+                    .foregroundColor(savings < 0 ? Color(.red500) : Color(.emerald500))
                 Text(savings < 0 ? "over budget" : (sharedViewModel.currentMonth == sharedViewModel.selectedMonth ? "remaining" : "saved"))
             }
             Text("after all spending")
