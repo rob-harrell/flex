@@ -74,8 +74,9 @@ struct IncomeConfirmationView: View {
                                     userViewModel.monthlyIncome += source.income
                                     removedIncomes[source.name] = false
                                 }) {
-                                    Text("Add")
-                                        .font(.caption)
+                                    Text("+ Add")
+                                        .font(.system(size: 14))
+                                        .fontWeight(.medium)
                                         .padding(8)
                                         .background(Color.black)
                                         .foregroundColor(.white)
@@ -127,10 +128,12 @@ struct IncomeConfirmationView: View {
                     }
                     if isFocused {
                         Button(action: {
-                            if let value = Double(manualIncomeString) {
+                            if let value = Double(manualIncomeString), value > 0 {
                                 userViewModel.monthlyIncome = budgetViewModel.avgTotalRecentIncome + value
                                 print(userViewModel.monthlyIncome)
                                 isFocused = false
+                            } else {
+                                // Handle invalid manual income
                             }
                         }) {
                             Text("Done")
@@ -142,6 +145,7 @@ struct IncomeConfirmationView: View {
                                 .foregroundColor(.white)
                                 .cornerRadius(16)
                         }
+                        .disabled(!(Double(manualIncomeString) != nil && Double(manualIncomeString)! > 0))
                     }
                 }
                 

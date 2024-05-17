@@ -67,9 +67,10 @@ struct LoginSignupView: View {
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(Color.black) 
+                            .background(Color.black)
                             .cornerRadius(12)
                     }
+                    .disabled(!isValidPhoneNumber(phoneNumber))
                     .padding(.horizontal)
                     
                     Text("By entering here I agree to all the language in Flex's ")
@@ -87,6 +88,12 @@ struct LoginSignupView: View {
             }
         }
     }
+}
+
+func isValidPhoneNumber(_ phoneNumber: String) -> Bool {
+    let phoneNumberRegex = "^\\d{10}$"
+    let valid = NSPredicate(format: "SELF MATCHES %@", phoneNumberRegex).evaluate(with: phoneNumber)
+    return valid
 }
 
 #Preview {

@@ -200,8 +200,9 @@ struct FixedSpendConfirmationView: View {
                                     userViewModel.monthlyFixedSpend += source.amount
                                     removedFixedExpenses[source.name] = false
                                 }) {
-                                    Text("Add")
-                                        .font(.caption)
+                                    Text("+ Add")
+                                        .font(.system(size: 14))
+                                        .fontWeight(.medium)
                                         .padding(8)
                                         .background(Color.black)
                                         .foregroundColor(.white)
@@ -252,10 +253,12 @@ struct FixedSpendConfirmationView: View {
                     }
                     if isFocused {
                         Button(action: {
-                            if let value = Double(manualFixedString) {
+                            if let value = Double(manualFixedString), value > 0 {
                                 userViewModel.monthlyFixedSpend = budgetViewModel.avgTotalRecentFixedSpend + value
                                 print(userViewModel.monthlyIncome)
                                 isFocused = false
+                            } else {
+                                // Handle invalid manual expense
                             }
                         }) {
                             Text("Done")
@@ -267,6 +270,7 @@ struct FixedSpendConfirmationView: View {
                                 .foregroundColor(.white)
                                 .cornerRadius(16)
                         }
+                        .disabled(!(Double(manualFixedString) != nil && Double(manualFixedString)! > 0))
                     }
                 }
                 

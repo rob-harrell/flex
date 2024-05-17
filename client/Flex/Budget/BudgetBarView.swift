@@ -11,6 +11,8 @@ struct BudgetBarView: View {
     @EnvironmentObject var userViewModel: UserViewModel
     @EnvironmentObject var sharedViewModel: DateViewModel
     @EnvironmentObject var budgetViewModel: BudgetViewModel
+    @Binding var selectedBudgetConfigTab: BudgetConfigTab
+    @Binding var showingBudgetConfigSheet: Bool
     @State var selectedMonth: Date
     
     var body: some View {
@@ -46,13 +48,23 @@ struct BudgetBarView: View {
                 HStack(spacing: 0) {
                     // Fixed spend segment
                     ZStack(alignment: .leading) {
-                        UnevenRoundedRectangle(topLeadingRadius: 16, bottomLeadingRadius: 16, bottomTrailingRadius: 0, topTrailingRadius: 0)
-                            .stroke(Color.slate200, lineWidth: 1)
-                            .background(
-                                UnevenRoundedRectangle(topLeadingRadius: 16, bottomLeadingRadius: 16, bottomTrailingRadius: 0, topTrailingRadius: 0)
-                                    .fill(Color.white)
-                            )
-                            .frame(width: geometry.size.width * CGFloat(percentageFixed), height: 54)
+                        Button(action: {
+                            selectedBudgetConfigTab = .fixedSpend
+                            showingBudgetConfigSheet.toggle()
+                        }) {
+                            UnevenRoundedRectangle(topLeadingRadius: 16, bottomLeadingRadius: 16, bottomTrailingRadius: 0, topTrailingRadius: 0)
+                                .stroke(Color.slate200, lineWidth: 1)
+                                .background(
+                                    UnevenRoundedRectangle(topLeadingRadius: 16, bottomLeadingRadius: 16, bottomTrailingRadius: 0, topTrailingRadius: 0)
+                                        .fill(Color.white)
+                                )
+                                .frame(width: geometry.size.width * CGFloat(percentageFixed), height: 54)
+                        }
+                        .sheet(isPresented: $showingBudgetConfigSheet, onDismiss: {
+                            self.showingBudgetConfigSheet = false
+                        }) {
+                            BudgetConfigTabView(selectedTab: $selectedBudgetConfigTab)
+                        }
                         
                         HStack {
                             Text("\(formatBudgetNumber(selectedMonthFixed))")
@@ -72,9 +84,19 @@ struct BudgetBarView: View {
                     // Flex spend segment
                     if overSpend > 0 {
                         ZStack(alignment: .leading) {
-                            UnevenRoundedRectangle(topLeadingRadius: 0, bottomLeadingRadius: 0, bottomTrailingRadius: 16, topTrailingRadius: 16)
-                                .fill(Color.black)
-                                .frame(width: geometry.size.width * CGFloat(percentageFlex), height: 54)
+                            Button(action: {
+                                selectedBudgetConfigTab = .flexSpend
+                                showingBudgetConfigSheet.toggle()
+                            }) {
+                                UnevenRoundedRectangle(topLeadingRadius: 0, bottomLeadingRadius: 0, bottomTrailingRadius: 16, topTrailingRadius: 16)
+                                    .fill(Color.black)
+                                    .frame(width: geometry.size.width * CGFloat(percentageFlex), height: 54)
+                            }
+                            .sheet(isPresented: $showingBudgetConfigSheet, onDismiss: {
+                                self.showingBudgetConfigSheet = false
+                            }) {
+                                BudgetConfigTabView(selectedTab: $selectedBudgetConfigTab)
+                            }
                             Text("\(formatBudgetNumber(selectedMonthFlex))")
                                 .font(.system(size: 16))
                                 .foregroundColor(.white)
@@ -83,10 +105,19 @@ struct BudgetBarView: View {
                         }
                     } else {
                         ZStack(alignment: .leading) {
-                            Rectangle()
-                                .fill(Color.black)
-                                .frame(width: geometry.size.width * CGFloat(percentageFlex), height: 54)
-                            
+                            Button(action: {
+                                selectedBudgetConfigTab = .fixedSpend
+                                showingBudgetConfigSheet.toggle()
+                            }) {
+                                Rectangle()
+                                    .fill(Color.black)
+                                    .frame(width: geometry.size.width * CGFloat(percentageFlex), height: 54)
+                            }
+                            .sheet(isPresented: $showingBudgetConfigSheet, onDismiss: {
+                                self.showingBudgetConfigSheet = false
+                            }) {
+                                BudgetConfigTabView(selectedTab: $selectedBudgetConfigTab)
+                            }
                             Text("\(formatBudgetNumber(selectedMonthFlex))")
                                 .font(.system(size: 16))
                                 .foregroundColor(.white)
@@ -94,10 +125,8 @@ struct BudgetBarView: View {
                                 .fontWeight(.semibold)
                         }
                     }
-                    
                     Spacer()
                 }
-                
                 // Vertical black line to mark the end of the income bar
                 Rectangle()
                     .fill(Color.black)
@@ -114,9 +143,8 @@ struct BudgetBarView: View {
     }
 }
 
-
 #Preview {
-    BudgetBarView(selectedMonth: Date())
+    BudgetBarView(selectedBudgetConfigTab: .constant(.income), showingBudgetConfigSheet: .constant(false), selectedMonth: Date())
         .environmentObject(UserViewModel())
         .environmentObject(DateViewModel())
         .environmentObject(BudgetViewModel())

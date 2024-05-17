@@ -11,6 +11,9 @@ struct BudgetView: View {
     @EnvironmentObject var userViewModel: UserViewModel
     @EnvironmentObject var sharedViewModel: DateViewModel
     @EnvironmentObject var budgetViewModel: BudgetViewModel
+    @Binding var selectedBudgetConfigTab: BudgetConfigTab
+    @Binding var showingBudgetConfigSheet: Bool
+
         
     var body: some View {
         VStack {
@@ -19,7 +22,7 @@ struct BudgetView: View {
             }
             BudgetHeaderView()
                 .padding(.horizontal)
-            BudgetBarView(selectedMonth: sharedViewModel.selectedMonth)
+            BudgetBarView(selectedBudgetConfigTab: $selectedBudgetConfigTab, showingBudgetConfigSheet: $showingBudgetConfigSheet, selectedMonth: sharedViewModel.selectedMonth)
                 .padding(.bottom, 30)
                 .padding(.top, -4)
             BudgetCalendarView()
@@ -34,7 +37,7 @@ struct BudgetView: View {
 }
 
 #Preview {
-    BudgetView()
+    BudgetView(selectedBudgetConfigTab: .constant(.income), showingBudgetConfigSheet: .constant(false))
         .environmentObject(UserViewModel())
         .environmentObject(DateViewModel())
         .environmentObject(BudgetViewModel())

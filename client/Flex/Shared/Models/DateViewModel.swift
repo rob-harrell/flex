@@ -14,7 +14,6 @@ class DateViewModel: ObservableObject {
     @Published var currentMonth: Date
     @Published var currentDay: Date
     @Published var dates: [[Date]] = []
-    @Published var isFirstTransactionDateAvailable: Bool = false
 
     let monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
     let calendar = Calendar.current
@@ -51,11 +50,9 @@ class DateViewModel: ObservableObject {
         var firstTransactionDate: Date
         if let date = UserDefaults.standard.object(forKey: "FirstTransactionDate") as? Date {
             // First transaction date is available in UserDefaults
-            isFirstTransactionDateAvailable = true
             firstTransactionDate = date
         } else {
             // First transaction date is not available in UserDefaults
-            isFirstTransactionDateAvailable = false
             // Fetch the first transaction date from the transaction history
             firstTransactionDate = getFirstTransactionDateFromTransactionHistory()
         }

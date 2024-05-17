@@ -15,11 +15,13 @@ struct MainTabView: View {
     @State private var selectedTab: Tab = .budget
     @State private var showingMonthSelection = false
     @State private var budgetCustomizationStep: BudgetCustomizationStep = .income
+    @State private var showingBudgetConfigSheet = false
+    @State private var selectedBudgetConfigTab: BudgetConfigTab = .income
     
     var body: some View {
         NavigationView {
             TabView(selection: $selectedTab) {
-                BudgetView()
+                BudgetView(selectedBudgetConfigTab: $selectedBudgetConfigTab, showingBudgetConfigSheet: $showingBudgetConfigSheet)
                     .tabItem {
                         Label("Budget", image: "Budget")
                     }
@@ -46,24 +48,25 @@ struct MainTabView: View {
             .onAppear {
                 UITabBarItem.appearance().setTitleTextAttributes([NSAttributedString.Key.font: UIFont.systemFont(ofSize: 12)], for: .normal)
                 UITabBarItem.appearance().setTitleTextAttributes([NSAttributedString.Key.font: UIFont.systemFont(ofSize: 12)], for: .selected)
-                budgetViewModel.fetchTransactionHistoryFromServer(userId: userViewModel.id, bankAccounts: userViewModel.bankAccounts, monthlyIncome: userViewModel.monthlyIncome, monthlyFixedSpend: userViewModel.monthlyFixedSpend)
-                budgetViewModel.fetchNewTransactionsFromServer(userId: userViewModel.id, monthlyIncome: userViewModel.monthlyIncome, monthlyFixedSpend: userViewModel.monthlyFixedSpend)
-                DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-                    DispatchQueue.main.async {
-                        if !sharedViewModel.isFirstTransactionDateAvailable {
-                            print("using transactions history to load dates array")
-                            sharedViewModel.updateDates()
+                //userViewModel.hasCompletedBudgetCustomization = false
+                budgetViewModel.fetchNewTransactionsFromServer(userId: userViewModel.id) { success in
+                    if success {
+                        if !UserDefaults.standard.bool(forKey: "hasFetchedFullTransactionHistory") {
+                            budgetViewModel.fetchTransactionHistoryFromServer(userId: userViewModel.id, bankAccounts: userViewModel.bankAccounts) { success in
+                                if success {
+                                    self.updateAndCalculateBudgetMetrics()
+                                }
+                            }
+                        } else {
+                            self.updateAndCalculateBudgetMetrics()
                         }
-                        budgetViewModel.calculateSelectedMonthBudgetMetrics(for: sharedViewModel.selectedMonth, monthlyIncome: userViewModel.monthlyIncome, monthlyFixedSpend: userViewModel.monthlyFixedSpend)
-                        budgetViewModel.calculateRecentBudgetStats()
-                        userViewModel.monthlyIncome = budgetViewModel.avgTotalRecentIncome
-                        userViewModel.monthlyFixedSpend = budgetViewModel.avgTotalRecentFixedSpend
                     }
                 }
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     HStack {
+                        //Date button
                         Button(action: {
                             showingMonthSelection.toggle()
                         }) {
@@ -82,8 +85,10 @@ struct MainTabView: View {
                         .sheet(isPresented: $showingMonthSelection) {
                             MonthSelectorView(showingMonthSelection: $showingMonthSelection)
                         }
+                        
+                        //Income button
                         Button(action: {
-                            // Handle the button tap
+                            showingBudgetConfigSheet.toggle()
                         }) {
                             HStack{
                                 Image("Money")
@@ -92,6 +97,11 @@ struct MainTabView: View {
                         }
                         .padding(.horizontal, 4)
                         .background(RoundedRectangle(cornerRadius: 24).stroke(Color.slate200, lineWidth: 1))
+                        .sheet(isPresented: $showingBudgetConfigSheet, onDismiss: {
+                            self.showingBudgetConfigSheet = false
+                        }) {
+                            BudgetConfigTabView(selectedTab: $selectedBudgetConfigTab)
+                        }
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -147,6 +157,22 @@ struct MainTabView: View {
         case final
         case confirm
     }
+    
+    private func updateAndCalculateBudgetMetrics() {
+        DispatchQueue.main.async {
+            if UserDefaults.standard.object(forKey: "FirstTransactionDate") == nil {
+                print("First transaction date not found in user defaults; checking transactions history to store it")
+                sharedViewModel.updateDates()
+            }
+            budgetViewModel.calculateSelectedMonthBudgetMetrics(for: sharedViewModel.selectedMonth, monthlyIncome: userViewModel.monthlyIncome, monthlyFixedSpend: userViewModel.monthlyFixedSpend)
+            budgetViewModel.calculateRecentBudgetStats()
+            if !userViewModel.hasCompletedBudgetCustomization {
+                userViewModel.monthlyIncome = budgetViewModel.avgTotalRecentIncome
+                userViewModel.monthlyFixedSpend = budgetViewModel.avgTotalRecentFixedSpend
+            }
+        }
+    }
+    
 }
 
 #Preview {

@@ -177,7 +177,7 @@
     "category":"BANK_FEES",
     "subCategory":"BANK_FEES_OTHER_BANK_FEES",
     "productCategory":"Bank fees",
-    "budgetCategory":"Fixed"
+    "budgetCategory":"Flex"
   },
   {
     "category":"ENTERTAINMENT",

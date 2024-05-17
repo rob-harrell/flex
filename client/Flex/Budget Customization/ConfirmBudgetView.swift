@@ -166,11 +166,16 @@ struct ConfirmBudgetView: View {
             .frame(height: 54)
             .padding(.bottom, 20)
             .animation(.easeInOut(duration: 0.5), value: selectedMonthFlex)
+            .onAppear{
+                print(percentageFixed)
+                print(percentageFlex)
+            }
             
             Spacer()
             
             Button(action: {
                 doneAction()
+                userViewModel.updateUserOnServer()
             }) {
                 Text("Continue to calendar")
                     .font(.headline)

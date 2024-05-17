@@ -107,7 +107,7 @@ class BudgetViewModel: ObservableObject {
         }
     }
     
-    func saveTransactionsToCoreData(_ transactions: [TransactionResponse], userId: Int64, monthlyIncome: Double, monthlyFixedSpend: Double) {
+    func saveTransactionsToCoreData(_ transactions: [TransactionResponse], userId: Int64) {
         let context = CoreDataStack.shared.persistentContainer.viewContext
         let dateFormatter = ISO8601DateFormatter()
         dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
@@ -182,7 +182,7 @@ class BudgetViewModel: ObservableObject {
         }
     }
     
-    func modifyTransactionsInCoreData(_ transactions: [TransactionResponse], userId: Int64, monthlyIncome: Double, monthlyFixedSpend: Double) {
+    func modifyTransactionsInCoreData(_ transactions: [TransactionResponse], userId: Int64) {
         let context = CoreDataStack.shared.persistentContainer.viewContext
         let dateFormatter = ISO8601DateFormatter()
         dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
@@ -236,8 +236,6 @@ class BudgetViewModel: ObservableObject {
 
         do {
             try context.save()
-            let currentMonth = Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: Date()))!
-            self.calculateSelectedMonthBudgetMetrics(for: currentMonth, monthlyIncome: monthlyIncome, monthlyFixedSpend: monthlyFixedSpend)
         } catch {
             print("Failed to save modified transactions to Core Data: \(error)")
         }
@@ -275,7 +273,7 @@ class BudgetViewModel: ObservableObject {
     //MARK server
     
     //Call every time user opens app
-    func fetchNewTransactionsFromServer(userId: Int64, monthlyIncome: Double, monthlyFixedSpend: Double) {
+    func fetchNewTransactionsFromServer(userId: Int64, completion: @escaping (Bool) -> Void) {
         let keychain = Keychain(service: "robharrell.Flex")
         let sessionToken = keychain["sessionToken"] ?? ""
 
@@ -289,24 +287,27 @@ class BudgetViewModel: ObservableObject {
             case .success(let transactionsResponse):
                 DispatchQueue.main.async {
                     if !transactionsResponse.added.isEmpty {
-                        self.saveTransactionsToCoreData(transactionsResponse.added, userId: userId, monthlyIncome: monthlyIncome, monthlyFixedSpend: monthlyFixedSpend)
+                        self.saveTransactionsToCoreData(transactionsResponse.added, userId: userId)
                     }
                     if !transactionsResponse.modified.isEmpty {
-                        self.modifyTransactionsInCoreData(transactionsResponse.modified, userId: userId, monthlyIncome: monthlyIncome, monthlyFixedSpend: monthlyFixedSpend)
+                        self.modifyTransactionsInCoreData(transactionsResponse.modified, userId: userId)
                     }
                     if !transactionsResponse.removed.isEmpty {
                         self.removeTransactionsFromCoreData(transactionsResponse.removed, userId: userId)
                     }
+                    completion(true)
                 }
             case .failure(let error):
                 print("Failed to fetch user data from server: \(error)")
+                completion(false)
             }
         }
     }
     
     //Call every time user opens app in case user has switched device
-    func fetchTransactionHistoryFromServer(userId: Int64, bankAccounts: [UserViewModel.BankAccount], monthlyIncome: Double, monthlyFixedSpend: Double) {
+    func fetchTransactionHistoryFromServer(userId: Int64, bankAccounts: [UserViewModel.BankAccount], completion: @escaping (Bool) -> Void) {
         let context = CoreDataStack.shared.persistentContainer.viewContext
+        let dispatchGroup = DispatchGroup()
 
         for bankAccount in bankAccounts {
             let transactionFetchRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
@@ -315,6 +316,8 @@ class BudgetViewModel: ObservableObject {
             do {
                 let transactions = try context.fetch(transactionFetchRequest)
                 if transactions.isEmpty {
+                    dispatchGroup.enter()
+
                     let path = "/budget/get_transaction_history_for_account/\(bankAccount.id)"
                     let keychain = Keychain(service: "robharrell.Flex")
                     let sessionToken = keychain["sessionToken"] ?? ""
@@ -328,17 +331,23 @@ class BudgetViewModel: ObservableObject {
                         case .success(let transactionsResponse):
                             DispatchQueue.main.async {
                                 if !transactionsResponse.isEmpty {
-                                    self.saveTransactionsToCoreData(transactionsResponse, userId: userId, monthlyIncome: monthlyIncome, monthlyFixedSpend: monthlyFixedSpend)
+                                    self.saveTransactionsToCoreData(transactionsResponse, userId: userId)
                                 }
+                                dispatchGroup.leave()
                             }
                         case .failure(let error):
                             print("Failed to fetch transaction history from server: \(error)")
+                            dispatchGroup.leave()
                         }
                     }
                 }
             } catch {
                 print("Failed to fetch transactions from Core Data: \(error)")
             }
+        }
+        dispatchGroup.notify(queue: .main) {
+            UserDefaults.standard.set(true, forKey: "hasFetchedFullTransactionHistory")
+            completion(true)
         }
     }
     
@@ -412,10 +421,6 @@ class BudgetViewModel: ObservableObject {
         let startOfPreviousMonth = calendar.date(byAdding: .month, value: -1, to: startOfCurrentMonth)!
         let startOfTwoMonthsAgo = calendar.date(byAdding: .month, value: -1, to: startOfPreviousMonth)!
         let endOfPreviousMonth = calendar.date(byAdding: .day, value: -1, to: startOfCurrentMonth)!
-
-        // Print the start and end dates
-        print("Start of two months ago: \(startOfTwoMonthsAgo)")
-        print("End of previous month: \(endOfPreviousMonth)")
 
         // Fetch transactions from Core Data for the past two complete months
         let recentTransactions = self.fetchTransactionsFromCoreData(from: startOfTwoMonthsAgo, to: endOfPreviousMonth)
