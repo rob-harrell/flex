@@ -3,8 +3,6 @@ require("dotenv").config();
 const express = require("express");
 const bodyParser = require("body-parser");
 
-const APP_PORT = process.env.APP_PORT || 8000;
-
 const app = express();
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -18,14 +16,14 @@ app.use((req, res, next) => {
 });
 
 // Import your route modules
-const userRoutes = require('./routes/user');
-const accountsRoutes = require('./routes/accounts');
-const plaidRoutes = require('./routes/plaid');
-const budgetRoutes = require('./routes/budget');
-const twilioRoutes = require('./routes/twilio');
+const userRoutes = require('../routes/user');
+const accountsRoutes = require('../routes/accounts');
+const plaidRoutes = require('../routes/plaid');
+const budgetRoutes = require('../routes/budget');
+const twilioRoutes = require('../routes/twilio');
 
 //Session token validation
-const { validateSessionToken } = require('./services/userServices');
+const { validateSessionToken } = require('../services/userServices');
 
 async function checkSessionToken(req, res, next) {
   console.log('Received a request');
@@ -53,10 +51,6 @@ app.use('/plaid', checkSessionToken, plaidRoutes.router);
 app.use('/budget', checkSessionToken, budgetRoutes);
 app.use('/twilio', twilioRoutes);
 
-const server = app.listen(APP_PORT, function () {
-  console.log(`Server is up and running at http://localhost:${APP_PORT}/`);
-});
-
 const errorHandler = function (err, req, res, next) {
   console.error(`Your error:`);
   console.error(err);
@@ -71,4 +65,5 @@ const errorHandler = function (err, req, res, next) {
 };
 app.use(errorHandler);
 
-
+// Export the app object
+module.exports = app;
