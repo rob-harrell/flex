@@ -11,6 +11,12 @@ app.use(bodyParser.json());
 app.use(express.static("public"));
 app.use('/assets', express.static('assets'));
 
+// Add the logging middleware here
+app.use((req, res, next) => {
+  console.log(`Received a ${req.method} request at ${req.path}`);
+  next();
+});
+
 // Import your route modules
 const userRoutes = require('./routes/user');
 const accountsRoutes = require('./routes/accounts');

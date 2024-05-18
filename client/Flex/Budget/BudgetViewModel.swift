@@ -274,6 +274,7 @@ class BudgetViewModel: ObservableObject {
     
     //Call every time user opens app
     func fetchNewTransactionsFromServer(userId: Int64, completion: @escaping (Bool) -> Void) {
+        print("Fetching new transactions from server")
         let keychain = Keychain(service: "robharrell.Flex")
         let sessionToken = keychain["sessionToken"] ?? ""
 
