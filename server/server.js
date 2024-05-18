@@ -47,6 +47,8 @@ const errorHandler = function (err, req, res, next) {
 app.use(errorHandler);
 
 async function checkSessionToken(req, res, next) {
+  console.log('Received a request');
+  
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {

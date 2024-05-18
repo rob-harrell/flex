@@ -43,7 +43,7 @@ class ServerCommunicator {
     }
 
 
-    init(baseURL: String = "http://localhost:8000/") {
+    init(baseURL: String = "https://flex-lake.vercel.app/") {
         self.baseURL = baseURL
     }
 
