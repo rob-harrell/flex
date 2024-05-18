@@ -20,4 +20,4 @@ xcuserdata/
 Pods/
 
 # Vercel
-server/.vercel
+.vercel
