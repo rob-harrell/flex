@@ -21,6 +21,25 @@ const twilioRoutes = require('./routes/twilio');
 //Session token validation
 const { validateSessionToken } = require('./services/userServices');
 
+async function checkSessionToken(req, res, next) {
+  console.log('Received a request');
+  
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ message: 'No session token provided' });
+  }
+
+  const sessionToken = authHeader.replace('Bearer ', '');
+
+  const isValid = await validateSessionToken(sessionToken);
+  if (!isValid) {
+    return res.status(401).json({ message: 'Invalid session token' });
+  }
+
+  next();
+}
+
 // Use the routes as middleware
 app.use('/user', checkSessionToken, userRoutes);
 app.use('/accounts', checkSessionToken, accountsRoutes);
@@ -46,21 +65,4 @@ const errorHandler = function (err, req, res, next) {
 };
 app.use(errorHandler);
 
-async function checkSessionToken(req, res, next) {
-  console.log('Received a request');
-  
-  const authHeader = req.headers.authorization;
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ message: 'No session token provided' });
-  }
-
-  const sessionToken = authHeader.replace('Bearer ', '');
-
-  const isValid = await validateSessionToken(sessionToken);
-  if (!isValid) {
-    return res.status(401).json({ message: 'Invalid session token' });
-  }
-
-  next();
-}
