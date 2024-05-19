@@ -43,7 +43,7 @@ class ServerCommunicator {
     }
 
 
-    init(baseURL: String = "https://flex-lake.vercel.app/") {
+    init(baseURL: String = "http://localhost:8000/") {
         self.baseURL = baseURL
     }
 
@@ -92,6 +92,8 @@ class ServerCommunicator {
         default:
             break
         }
+        // Add the logging line here
+        print("Sending a \(httpMethod) request to \(path)")
 
         // Create the task
         let task = URLSession.shared.dataTask(with: request) { (data, _, error) in
@@ -131,6 +133,8 @@ class ServerCommunicator {
         httpMethod: HTTPMethod,
         params: [String: Any]? = nil
     ) {
+        print("Sending a \(httpMethod) request to \(path)")
+
         callMyServer(path: path, httpMethod: httpMethod, params: params) { (_: Result<DummyDecodable, ServerCommunicator.Error>) in
             // Do nothing here
         }
