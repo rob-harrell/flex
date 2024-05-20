@@ -20,5 +20,5 @@ xcuserdata/
 Pods/
 
 # Vercel
-server/.vercel
 server/.env.development.local
+.vercel
