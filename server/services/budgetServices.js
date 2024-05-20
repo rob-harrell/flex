@@ -2,9 +2,15 @@
 const db = require('../db/database.js'); 
 const { syncTransactions } = require('../routes/plaid');
 const fs = require('fs');
+const path = require('path');
+console.log("Current working directory:", process.cwd());
 
-// Load merchant and category mapping files
-const merchant_mappings_array = JSON.parse(fs.readFileSync('MerchantNameLogoMappings.json', 'utf8'));
+// Construct the path to the MerchantNameLogoMappings.json file
+const merchantFilePath = path.join(__dirname, '..', 'MerchantNameLogoMappings.json');
+
+// Read the MerchantNameLogoMappings.json file
+const merchant_mappings_array = JSON.parse(fs.readFileSync(merchantFilePath, 'utf8'));
+
 const merchant_mappings = merchant_mappings_array.reduce((acc, item) => {
     for (const keyword of item.keywords) {
         acc[keyword] = {
@@ -15,7 +21,12 @@ const merchant_mappings = merchant_mappings_array.reduce((acc, item) => {
     return acc;
 }, {});
 
-const category_mappings_array = JSON.parse(fs.readFileSync('DefaultBudgetPreferences.json', 'utf8'));
+// Construct the path to the DefaultBudgetPreferences.json file
+const categoryFilePath = path.join(__dirname, '..', 'DefaultBudgetPreferences.json');
+
+// Read the DefaultBudgetPreferences.json file
+const category_mappings_array = JSON.parse(fs.readFileSync(categoryFilePath, 'utf8'));
+
 const category_mappings = category_mappings_array.reduce((acc, item) => {
     const key = `${item.category}_${item.subCategory}`;
     acc[key] = {

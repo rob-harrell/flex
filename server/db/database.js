@@ -1,4 +1,5 @@
-const pgp = require('pg-promise')();
+const pg = require('pg');
+const { Pool } = pg;
 const pgTypes = require('pg').types;
 const { queryResultErrorCode } = pgp.errors;
 const cs = new pgp.helpers.ColumnSet(['?id', 'firstname', 'lastname', 'phone', 'monthly_income', 'monthly_fixed_spend', 'birth_date', 'has_entered_user_details', 'has_completed_account_creation', 'has_completed_notification_selection', 'push_notifications_enabled', 'sms_notifications_enabled', 'has_edited_budget_preferences', 'has_completed_budget_customization'], {table: 'users'});
@@ -29,7 +30,13 @@ pgTypes.setTypeParser(pgTypes.builtins.FLOAT8, parseFloat);
 pgTypes.setTypeParser(pgTypes.builtins.NUMERIC, parseFloat);
 pgTypes.setTypeParser(pgTypes.builtins.TIMESTAMP, str => new Date(str));
 
-const db = pgp('postgres://rob@localhost:5432/flex_db');
+//const db = pgp('postgres://rob@localhost:5432/flex_db');
+
+const pool = new Pool({
+  connectionString: process.env.POSTGRES_URL,
+});
+
+const db = pool;
 
 async function createUser(phoneNumber, sessionToken) {
   const user = await db.one(`

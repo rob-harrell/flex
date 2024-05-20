@@ -4,7 +4,7 @@ const twilio = require('twilio');
 const userServices = require('../services/userServices');
 const uuid = require('uuid');
 
-require('dotenv').config();
+//require('dotenv').config();
 
 // Load the environment variables
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
