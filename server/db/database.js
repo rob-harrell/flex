@@ -33,7 +33,6 @@ pgTypes.setTypeParser(pgTypes.builtins.TIMESTAMP, str => new Date(str));
 
 //const db = pgp('postgres://rob@localhost:5432/flex_db');
 
-//adding a comment
 const pool = new Pool({
   connectionString: process.env.POSTGRES_URL,
 });
