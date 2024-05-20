@@ -7,7 +7,7 @@ console.log('Current working directory:', process.cwd());
 
 
 // Construct the path to the MerchantNameLogoMappings.json file
-const merchantFilePath = path.join(process.cwd(), 'server', 'MerchantNameLogoMappings.json');
+const merchantFilePath = path.join(__dirname, '..', 'MerchantNameLogoMappings.json');
 
 // Read the MerchantNameLogoMappings.json file
 const merchant_mappings_array = JSON.parse(fs.readFileSync(merchantFilePath, 'utf8'));
@@ -23,7 +23,7 @@ const merchant_mappings = merchant_mappings_array.reduce((acc, item) => {
 }, {});
 
 // Construct the path to the DefaultBudgetPreferences.json file
-const categoryFilePath = path.join(process.cwd(), 'server', 'DefaultBudgetPreferences.json');
+const categoryFilePath = path.join(__dirname, '..', 'DefaultBudgetPreferences.json');
 
 // Read the DefaultBudgetPreferences.json file
 const category_mappings_array = JSON.parse(fs.readFileSync(categoryFilePath, 'utf8'));
