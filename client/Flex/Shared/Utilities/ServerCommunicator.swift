@@ -42,7 +42,6 @@ class ServerCommunicator {
         }
     }
 
-    //update based on environment
     init(baseURL: String = "https://flex-lake.vercel.app/") {
         self.baseURL = baseURL
     }
