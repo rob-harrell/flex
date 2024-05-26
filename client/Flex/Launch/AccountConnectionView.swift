@@ -18,17 +18,14 @@ struct AccountConnectionView: View {
     var body: some View {
         ScrollView {
             VStack (alignment: .leading) {
-                
                 Text("Connect Accounts")
                     .bold()
                     .font(.title)
                     .padding()
-                
                 Text("The more accounts you add, the more accurate\nyour budget will be.")
                     .font(.callout)
                     .padding(.horizontal)
                     .foregroundColor(.slate500)
-                
                 HStack{
                     Image(.lock)
                     Text("Bank level security")
@@ -36,7 +33,6 @@ struct AccountConnectionView: View {
                         .fontWeight(.medium)
                 }
                 .padding(.horizontal)
-                
                 HStack{
                     Image(.checkingAccountsIcon)
                     VStack (alignment: .leading) {
@@ -57,7 +53,6 @@ struct AccountConnectionView: View {
                     }
                 }
                 .padding()
-                
                 ForEach(userViewModel.bankAccounts.filter { $0.subType == "checking" || $0.subType == "savings"}) { account in
                     HStack {
                         AsyncImage(url: URL(string: "http://localhost:8000/assets/institution_logos/\(account.logoPath)")!) { phase in
@@ -111,10 +106,9 @@ struct AccountConnectionView: View {
                     }
                 }
                 .padding()
-                
                 ForEach(userViewModel.bankAccounts.filter { $0.subType == "credit card" }) { account in
                     HStack {
-                        AsyncImage(url: URL(string: "http://localhost:8000/assets/institution_logos/\(account.logoPath)")!) { phase in
+                        AsyncImage(url: URL(string: "\(ServerCommunicator.shared.baseURL)assets/institution_logos/\(account.logoPath)")!) { phase in
                             switch phase {
                             case .empty:
                                 ProgressView()
@@ -145,8 +139,9 @@ struct AccountConnectionView: View {
                     }
                     .padding()
                 }
+            }
                 
-                Spacer()
+            Spacer()
                 
                 Button(action: {
                     userViewModel.hasCompletedAccountCreation = true
@@ -178,7 +173,6 @@ struct AccountConnectionView: View {
                     }
                 }
             )
-        }
     }
     
     private func createHandler() -> Result<Handler, Error> {
@@ -199,3 +193,5 @@ struct AccountConnectionView: View {
     AccountConnectionView()
         .environmentObject(UserViewModel())
 }
+
+

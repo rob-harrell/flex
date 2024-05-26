@@ -1,10 +1,9 @@
 // Import necessary modules or libraries
 const db = require('../db/database.js'); 
 const { syncTransactions } = require('../routes/plaid');
+const { saveImage } = require('./imageServices');
 const fs = require('fs');
 const path = require('path');
-console.log('Current working directory:', process.cwd());
-
 
 // Construct the path to the MerchantNameLogoMappings.json file
 const merchantFilePath = path.join(__dirname, '..', 'MerchantNameLogoMappings.json');
@@ -110,8 +109,8 @@ exports.getNewTransactionsForUser = async (req, res, next) => {
     next();
 }
 
-function processTransactions(transactions, accountIdMapping) {
-    const processedTransactions = transactions.map(transaction => {
+async function processTransactions(transactions, accountIdMapping) {
+    const processedTransactions = await Promise.all(transactions.map(async transaction => {
         //console.log(`Processing ${transactions.length} transactions. First transaction:`, transactions);
         // Keep both account_id (Plaid) and internal_account_id
         transaction.plaid_account_id = transaction.account_id;
@@ -128,7 +127,10 @@ function processTransactions(transactions, accountIdMapping) {
             for (const keyword of keywords) {
                 if (merchant_mappings[keyword]) {
                     transaction.merchant_name = merchant_mappings[keyword].name;
-                    transaction.logo_url = merchant_mappings[keyword].logo;
+                    // Save the logo as a blob and get the blob URL
+                    if (merchant_mappings[keyword].logo) {
+                        transaction.logo_url = await saveImage(merchant_mappings[keyword].logo, 'merchant_logos');
+                    }
                     break;
                 }
             }
@@ -152,7 +154,7 @@ function processTransactions(transactions, accountIdMapping) {
         }
 
         return transaction;
-    });
+    }));
 
     // Log the number of transactions that have undefined account_id
     const undefinedAccountIdCount = processedTransactions.filter(transaction => transaction.account_id === undefined).length;

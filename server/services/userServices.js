@@ -1,5 +1,5 @@
 const { createUser: createDbUser, updateUser: updateDbUser, updateDBSessionToken, getUserRecord, getUserRecordByPhone, getUserAccounts, createItem, updateItem, getInstitutionByPlaidId, createInstitution, createAccount, invalidateSessionToken: invalidateDbSessionToken, getUserBySessionToken } = require("../db/database");
-const { saveImage } = require('./institutionServices.js');
+const { saveImage } = require('./imageServices.js');
 
 async function createUser(phoneNumber, sessionToken) {
   const user = await createDbUser(phoneNumber, sessionToken);
@@ -67,23 +67,26 @@ async function getPlaidAccountInfo(itemId, accessToken, plaidClient) {
     // Get the base64 logo data
     const base64Logo = institutionResponse.data.institution.logo;
 
-    // Save the logo as an image file and get the file path
-    let logoPath = null;
+    // Save the logo as a blob and get the blob URL
+    let logoUrl = null;
     if (base64Logo) {
-        // Save the logo as an image file and get the file path
-        logoPath = await saveImage(base64Logo);
-        console.log('logoPath:', logoPath);
+      logoUrl = await saveImage(base64Logo, 'institution_logos');
+      console.log('logoUrl:', logoUrl);
     } else {
-        console.log('No logo available for this institution');
-        // Use the default logo
-        logoPath = '39ccb2e7-90d2-4c60-84b0-aea399e180ad.png';
+      console.log('No logo available for this institution');
+      // Use the default logo
+      if (plaidInstitutionId === 'ins_56') {
+        logoUrl = 'https://flex-wheat.vercel.app/assets/images/chase_logo.png';
+      } else {
+        logoUrl = 'https://flex-wheat.vercel.app/assets/images/default_logo.png';
+      }
     }
 
     // Store the institution data in your database
     institution = await createInstitution({
       plaid_institution_id: plaidInstitutionId,
       institution_name: institutionResponse.data.institution.name,
-      logo_path: logoPath, // store the path to the logo image file
+      logo_url: logoUrl, // store the URL to the logo blob
     });
     console.log('newly created institution:', institution);
   }

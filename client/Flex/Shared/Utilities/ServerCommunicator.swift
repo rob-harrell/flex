@@ -11,8 +11,8 @@ import Foundation
 /// Just a helper class that simplifies some of the work involved in calling our server
 ///
 class ServerCommunicator {
-    
     static let shared = ServerCommunicator()
+    let baseURL: String
 
     enum HTTPMethod: String {
         case get = "GET"
@@ -42,8 +42,7 @@ class ServerCommunicator {
         }
     }
 
-    //update
-    init(baseURL: String = "https://flex-lake.vercel.app/") {
+    init(baseURL: String = "https://flex-wheat.vercel.app/") {
         self.baseURL = baseURL
     }
 
@@ -139,9 +138,6 @@ class ServerCommunicator {
             // Do nothing here
         }
     }
-
-
-    private let baseURL: String
 }
 
 extension Data {

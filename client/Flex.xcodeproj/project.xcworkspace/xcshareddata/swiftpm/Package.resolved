@@ -14,8 +14,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/plaid/plaid-link-ios",
       "state" : {
-        "revision" : "b82d5d833f91c9c32e96c8b555da9f4341a8b14c",
-        "version" : "5.2.1"
+        "revision" : "fd5e2affd37c8a5ffd617cd3c9849df8aa7c6dba",
+        "version" : "5.5.0"
       }
     },
     {
@@ -23,8 +23,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/swiftcsv/SwiftCSV.git",
       "state" : {
-        "revision" : "b61dcd1b2b1120e751cee4cd64a16ff10364885d",
-        "version" : "0.9.1"
+        "revision" : "6ab5d0fe9b6ef3c79d717eefa70862df389e74d9",
+        "version" : "0.10.0"
       }
     }
   ],
