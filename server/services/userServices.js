@@ -68,17 +68,17 @@ async function getPlaidAccountInfo(itemId, accessToken, plaidClient) {
     const base64Logo = institutionResponse.data.institution.logo;
 
     // Save the logo as a blob and get the blob URL
-    let logoUrl = null;
+    let logo_url = null;
     if (base64Logo) {
-      logoUrl = await saveImage(base64Logo, 'institution_logos');
-      console.log('logoUrl:', logoUrl);
+      logo_url = await saveImage(base64Logo, 'institution_logos');
+      console.log('logo_url:', logo_url);
     } else {
       console.log('No logo available for this institution');
       // Use the default logo
       if (plaidInstitutionId === 'ins_56') {
-        logoUrl = 'https://flex-wheat.vercel.app/assets/images/chase_logo.png';
+        logo_url = 'https://flex-wheat.vercel.app/assets/institution_logos/chase_logo.png';
       } else {
-        logoUrl = 'https://flex-wheat.vercel.app/assets/images/default_logo.png';
+        logo_url = 'https://flex-wheat.vercel.app/assets/institution_logos/default_logo.png';
       }
     }
 
@@ -86,7 +86,7 @@ async function getPlaidAccountInfo(itemId, accessToken, plaidClient) {
     institution = await createInstitution({
       plaid_institution_id: plaidInstitutionId,
       institution_name: institutionResponse.data.institution.name,
-      logo_url: logoUrl, // store the URL to the logo blob
+      logo_url: logo_url, // store the URL to the logo blob
     });
     console.log('newly created institution:', institution);
   }

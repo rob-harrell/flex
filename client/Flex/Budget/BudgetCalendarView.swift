@@ -26,6 +26,13 @@ struct BudgetCalendarView: View {
     }
     
     var body: some View {
+
+        // Print statements for debugging
+        let _ = print("Processing index: \(sharedViewModel.dates.indices)")
+        //let _ = print("Processing dates: \(sharedViewModel.dates)")
+        let _ = print("Selected month: \(sharedViewModel.selectedMonth)")
+        let _ = print("Is calculating budget metrics: \(budgetViewModel.isCalculatingMetrics)")
+
         VStack {
             // Weekday headers
             HStack(spacing: 10) {
@@ -51,10 +58,10 @@ struct BudgetCalendarView: View {
                                         .id("\(sharedViewModel.stringForDate(sharedViewModel.selectedMonth, format: "MMMM yyyy"))-\(date)")
                                 }
                             }
-                            .id(index)
                         }
                     }
                 }
+                .padding(.top, -1)
                 .scrollTargetLayout()
             }
             .frame(height: 434)
@@ -62,8 +69,8 @@ struct BudgetCalendarView: View {
             .scrollPosition(id: $scrollPosition, anchor: .top)
             .onAppear {
                 if let index = sharedViewModel.dates.firstIndex(where: { sharedViewModel.calendar.isDate($0.first!, equalTo: sharedViewModel.selectedMonth, toGranularity: .month) }) {
-                        scrollPosition = index
-                    }
+                    scrollPosition = index
+                }
             }
             .onChange(of: sharedViewModel.selectedMonth) { oldValue, newValue in
                 let monthIndex = sharedViewModel.dates.firstIndex(where: {
@@ -87,34 +94,40 @@ struct BudgetCalendarView: View {
         
     @ViewBuilder
     private func calendarDateView(for date: Date) -> some View {
+        let today = sharedViewModel.currentDay
         let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
         let cellDate = calendar.startOfDay(for: date)
         let isPastOrToday = cellDate <= today && calendar.isDate(cellDate, equalTo: today, toGranularity: .month)
         let isFuture = cellDate > today
+        let isInSelectedMonth = calendar.isDate(cellDate, equalTo: sharedViewModel.selectedMonth, toGranularity: .month)
+
 
         Button(action: {
-            selectedDate = date
+            sharedViewModel.selectedDay = cellDate
             hasTapped = true
             showingOverlay = true
         }) {
             VStack {
                 Text(sharedViewModel.stringForDate(date, format: "d")) // Date
                     .font(.caption)
-                    .foregroundColor(cellDate == selectedDate && showingOverlay ? Color.white : (cellDate == today ? Color.black : Color.slate500))
+                    .foregroundColor(cellDate == sharedViewModel.selectedDay && showingOverlay ? Color.white : (cellDate == today ? Color.black : Color.slate500))
                     .fixedSize(horizontal: false, vertical: true) // Prevent stretching
                     .padding(.vertical, 8)
                     .fontWeight(.semibold)
 
-                if !isFuture {
-                    let flexSpend = budgetViewModel.selectedMonthFlexSpendPerDay[date, default: 0]
-                    let fixedSpend = budgetViewModel.selectedMonthFixedSpendPerDay[date, default: 0]
-                    let income = budgetViewModel.selectedMonthIncomePerDay[date, default: 0]
+                if !isFuture && isInSelectedMonth {
+                    let flexSpend = budgetViewModel.selectedMonthFlexSpendPerDay.filter { calendar.isDate($0.key, equalTo: cellDate, toGranularity: .day) }.first?.value ?? 0
+                    let fixedSpend = budgetViewModel.selectedMonthFixedSpendPerDay.filter { calendar.isDate($0.key, equalTo: cellDate, toGranularity: .day) }.first?.value ?? 0
+                    let income = budgetViewModel.selectedMonthIncomePerDay.filter { calendar.isDate($0.key, equalTo: cellDate, toGranularity: .day) }.first?.value ?? 0
+
+                    let _ = print("Flex spend for \(cellDate): \(flexSpend)")
+                    let _ = print("Fixed spend for \(cellDate): \(fixedSpend)")
+                    let _ = print("Income for \(cellDate): \(income)")
 
                     if flexSpend > 0 {
                         Text(formatBudgetNumber(flexSpend)) // Flex spend
                             .font(.caption)
-                            .foregroundColor(cellDate == selectedDate && showingOverlay ? Color.white : Color.black)
+                            .foregroundColor(cellDate == sharedViewModel.selectedDay && showingOverlay ? Color.white : Color.black)
                             .fixedSize(horizontal: false, vertical: true) // Prevent stretching
                             .fontWeight(.semibold)
                     }
@@ -141,13 +154,12 @@ struct BudgetCalendarView: View {
             }
             .frame(minWidth: 0, maxWidth: .infinity)
             .frame(height: 86)
-            .background(cellDate == selectedDate && showingOverlay ? Color.black : (isPastOrToday ? Color(.slate) : Color.clear))
-            .animation(.default, value: selectedDate)
-
+            .background(cellDate == sharedViewModel.selectedDay && showingOverlay ? Color.black : (isPastOrToday ? Color(.slate) : Color.clear))
+            .animation(.default, value: sharedViewModel.selectedDay)
         }
         .sheet(isPresented: $showingOverlay) {
             if hasTapped {
-                TransactionsListOverlay(date: selectedDate)
+                TransactionsListOverlay(date: sharedViewModel.selectedDay)
                     .environmentObject(budgetViewModel)
                     .presentationDetents([.fraction(0.35), .fraction(1.0)])
                     .presentationCornerRadius(24)

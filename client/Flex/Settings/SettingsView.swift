@@ -54,7 +54,7 @@ struct SettingsView: View {
                 Section(header: Text("Bank Connections")) {
                     ForEach(userViewModel.bankAccounts) { connection in
                         HStack {
-                            AsyncImage(url: URL(string: "http://localhost:8000/assets/institution_logos/\(connection.logoPath)")!) { phase in
+                            AsyncImage(url: URL(string: "\(connection.logoURL)")!) { phase in
                                         switch phase {
                                         case .empty:
                                             ProgressView()

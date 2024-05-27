@@ -274,7 +274,7 @@ class BudgetViewModel: ObservableObject {
     
     //Call every time user opens app
     func fetchNewTransactionsFromServer(userId: Int64, completion: @escaping (Bool) -> Void) {
-        print("Fetching new transactions from server")
+        print("fetchNewTransactionsFromServer started")
         let keychain = Keychain(service: "robharrell.Flex")
         let sessionToken = keychain["sessionToken"] ?? ""
 
@@ -287,6 +287,7 @@ class BudgetViewModel: ObservableObject {
             switch result {
             case .success(let transactionsResponse):
                 DispatchQueue.main.async {
+                    print("fetchNewTransactionsFromServer success")
                     if !transactionsResponse.added.isEmpty {
                         self.saveTransactionsToCoreData(transactionsResponse.added, userId: userId)
                     }
@@ -307,6 +308,7 @@ class BudgetViewModel: ObservableObject {
     
     //Call every time user opens app in case user has switched device
     func fetchTransactionHistoryFromServer(userId: Int64, bankAccounts: [UserViewModel.BankAccount], completion: @escaping (Bool) -> Void) {
+        print("fetchTransactionHistoryFromServer started")
         let context = CoreDataStack.shared.persistentContainer.viewContext
         let dispatchGroup = DispatchGroup()
 
@@ -331,6 +333,7 @@ class BudgetViewModel: ObservableObject {
                         switch result {
                         case .success(let transactionsResponse):
                             DispatchQueue.main.async {
+                                print("fetchTransactionHistoryFromServer success for account \(bankAccount.id)")
                                 if !transactionsResponse.isEmpty {
                                     self.saveTransactionsToCoreData(transactionsResponse, userId: userId)
                                 }
@@ -354,6 +357,7 @@ class BudgetViewModel: ObservableObject {
     
     //Mark business logic
     func calculateSelectedMonthBudgetMetrics(for month: Date, monthlyIncome: Double, monthlyFixedSpend: Double) {
+        print("starting calculating budget metrics")
         self.isCalculatingMetrics = true
         
         // Create a date range for the given month
@@ -413,6 +417,11 @@ class BudgetViewModel: ObservableObject {
         self.selectedMonthSavings = selectedMonthIncome - selectedMonthFixedSpend - selectedMonthFlexSpend
        
         self.isCalculatingMetrics = false
+        print("finished calculating budget metrics")
+
+        print("selectedMonthFixedSpendPerDay: \(self.selectedMonthFixedSpendPerDay)")
+        print("selectedMonthFlexSpendPerDay: \(self.selectedMonthFlexSpendPerDay)")
+        print("selectedMonthIncomePerDay: \(self.selectedMonthIncomePerDay)")
     }
     
     func calculateRecentBudgetStats() {

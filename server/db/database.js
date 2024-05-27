@@ -88,7 +88,7 @@ async function getUserAccounts(userId) {
         accounts.type,
         accounts.sub_type,
         institutions.institution_name as bank_name, 
-        institutions.logo_path,
+        institutions.logo_url,
         items.is_active
       FROM items
       INNER JOIN accounts ON items.id = accounts.item_id
@@ -138,10 +138,10 @@ async function getInstitutionByPlaidId(plaidInstitutionId) {
 async function createInstitution(institutionData) {
     try {
       const institution = await db.one(`
-        INSERT INTO institutions(plaid_institution_id, institution_name, logo_path)
+        INSERT INTO institutions(plaid_institution_id, institution_name, logo_url)
         VALUES($1, $2, $3)
         RETURNING *
-      `, [institutionData.plaid_institution_id, institutionData.institution_name, institutionData.logo_path]);
+      `, [institutionData.plaid_institution_id, institutionData.institution_name, institutionData.logo_url]);
            
       return institution;
     } catch (error) {

@@ -67,7 +67,7 @@ struct BankAccountResponse: Codable, Identifiable {
     let friendlyAccountName: String?
     let bankName: String
     let isActive: Bool
-    let logoPath: String
+    let logoURL: String
     let type: String
     let subType: String
 
@@ -77,7 +77,7 @@ struct BankAccountResponse: Codable, Identifiable {
         case friendlyAccountName = "friendly_account_name"
         case bankName = "bank_name"
         case isActive = "is_active"
-        case logoPath = "logo_path"
+        case logoURL = "logo_url"
         case subType = "sub_type"
     }
 }

@@ -84,11 +84,6 @@ struct UserDetailsView: View {
                 .background(Color.black)
                 .cornerRadius(12)
         }
-        .onAppear{
-            print("hasCompletedNotificationSelection: \(userViewModel.hasCompletedNotificationSelection)")
-            print("hasCompletedAccountCreation: \(userViewModel.hasCompletedAccountCreation)")
-            print("hasEnteredUserDetails: \(userViewModel.hasEnteredUserDetails)")
-        }
         .alert(isPresented: $showingAlert) {
             Alert(title: Text("Invalid Date"), message: Text("Please enter a valid date in the format MM/DD/YYYY"), dismissButton: .default(Text("OK")))
         }

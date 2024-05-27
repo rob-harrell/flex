@@ -49,8 +49,10 @@ struct MainTabView: View {
                 UITabBarItem.appearance().setTitleTextAttributes([NSAttributedString.Key.font: UIFont.systemFont(ofSize: 12)], for: .normal)
                 UITabBarItem.appearance().setTitleTextAttributes([NSAttributedString.Key.font: UIFont.systemFont(ofSize: 12)], for: .selected)
                 //userViewModel.hasCompletedBudgetCustomization = false
+                budgetViewModel.isCalculatingMetrics = true
                 budgetViewModel.fetchNewTransactionsFromServer(userId: userViewModel.id) { success in
                     if success {
+                        print("hasFetchFullTransactionHistory \(UserDefaults.standard.bool(forKey: "hasFetchedFullTransactionHistory"))")
                         if !UserDefaults.standard.bool(forKey: "hasFetchedFullTransactionHistory") {
                             budgetViewModel.fetchTransactionHistoryFromServer(userId: userViewModel.id, bankAccounts: userViewModel.bankAccounts) { success in
                                 if success {

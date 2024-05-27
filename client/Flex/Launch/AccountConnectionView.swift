@@ -55,7 +55,7 @@ struct AccountConnectionView: View {
                 .padding()
                 ForEach(userViewModel.bankAccounts.filter { $0.subType == "checking" || $0.subType == "savings"}) { account in
                     HStack {
-                        AsyncImage(url: URL(string: "http://localhost:8000/assets/institution_logos/\(account.logoPath)")!) { phase in
+                        AsyncImage(url: URL(string: "\(account.logoURL)")!) { phase in
                             switch phase {
                             case .empty:
                                 ProgressView()
@@ -108,7 +108,7 @@ struct AccountConnectionView: View {
                 .padding()
                 ForEach(userViewModel.bankAccounts.filter { $0.subType == "credit card" }) { account in
                     HStack {
-                        AsyncImage(url: URL(string: "\(ServerCommunicator.shared.baseURL)assets/institution_logos/\(account.logoPath)")!) { phase in
+                        AsyncImage(url: URL(string: "\(account.logoURL)")!) { phase in
                             switch phase {
                             case .empty:
                                 ProgressView()

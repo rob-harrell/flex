@@ -81,8 +81,8 @@ exports.getNewTransactionsForUser = async (req, res, next) => {
             response.removed = response.removed.filter(transaction => filteredAccountIds.has(transaction.account_id));
         
             // Add internal account ID to each transaction and remove payment meta
-            response.added = processTransactions(response.added, accountIdMapping);
-            response.modified = processTransactions(response.modified, accountIdMapping);
+            response.added = await processTransactions(response.added, accountIdMapping);
+            response.modified = await processTransactions(response.modified, accountIdMapping);
         
             // Save transactions and cursor to the database
             let savedTransactions = await db.saveTransactions(userId, currentItem.id, response.added, response.modified, response.removed);

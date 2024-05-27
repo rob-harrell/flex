@@ -97,11 +97,10 @@ async function syncTransactions(accessToken, initialCursor) {
     try {
       const response = await plaidClient.transactionsSync(options);
       if (response && response.data) {
-        added = added.concat(response.data.added);
-        modified = modified.concat(response.data.modified);
-        removed = removed.concat(response.data.removed);
+        added = added.concat(response.data.added || []);
+        modified = modified.concat(response.data.modified || []);
+        removed = removed.concat(response.data.removed || []);
         cursor = response.data.next_cursor;
-
         if (response.data.has_more) {
           originalCursor = cursor;
         } else {

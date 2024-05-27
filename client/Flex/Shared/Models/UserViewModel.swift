@@ -38,7 +38,7 @@ class UserViewModel: ObservableObject {
         var friendlyAccountName: String?
         var bankName: String
         var isActive: Bool
-        var logoPath: String
+        var logoURL: String
         var type: String
         var subType: String
     }
@@ -259,7 +259,7 @@ class UserViewModel: ObservableObject {
                                 friendlyAccountName: account.friendlyAccountName ?? "",
                                 bankName: account.bankName ?? "",
                                 isActive: account.isActive,
-                                logoPath: account.logoPath ?? "",
+                                logoURL: account.logoURL ?? "",
                                 type: account.type ?? "",
                                 subType: account.subType ?? ""
                             )
@@ -348,7 +348,7 @@ class UserViewModel: ObservableObject {
                     existingAccount.friendlyAccountName = bankAccountResponse.friendlyAccountName
                     existingAccount.bankName = bankAccountResponse.bankName
                     existingAccount.isActive = bankAccountResponse.isActive
-                    existingAccount.logoPath = bankAccountResponse.logoPath
+                    existingAccount.logoURL = bankAccountResponse.logoURL
                     existingAccount.type = bankAccountResponse.type
                     existingAccount.subType = bankAccountResponse.subType
                 } else {
@@ -360,7 +360,7 @@ class UserViewModel: ObservableObject {
                         friendlyAccountName: bankAccountResponse.friendlyAccountName,
                         bankName: bankAccountResponse.bankName,
                         isActive: bankAccountResponse.isActive,
-                        logoPath: bankAccountResponse.logoPath,
+                        logoURL: bankAccountResponse.logoURL,
                         type: bankAccountResponse.type,
                         subType: bankAccountResponse.subType
                     )
@@ -378,7 +378,7 @@ class UserViewModel: ObservableObject {
                     newAccount.friendlyAccountName = bankAccountResponse.friendlyAccountName
                     newAccount.bankName = bankAccountResponse.bankName
                     newAccount.isActive = bankAccountResponse.isActive
-                    newAccount.logoPath = bankAccountResponse.logoPath
+                    newAccount.logoURL = bankAccountResponse.logoURL
                     newAccount.type = bankAccountResponse.type
                     newAccount.subType = bankAccountResponse.subType
 

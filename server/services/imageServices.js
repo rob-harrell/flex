@@ -1,4 +1,5 @@
 const { put } = require('@vercel/blob');
+const { v4: uuidv4 } = require('uuid');
 
 async function saveImage(base64String, type) {
   try {
