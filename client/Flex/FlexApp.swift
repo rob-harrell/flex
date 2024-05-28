@@ -25,5 +25,6 @@ struct FlexApp: App {
                 .environmentObject(budgetViewModel)
                 .environment(\.managedObjectContext, coreDataStack.persistentContainer.viewContext)
         }
+        .environment(\.colorScheme, .light)
     }
 }
