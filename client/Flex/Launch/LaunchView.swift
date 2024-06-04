@@ -14,14 +14,8 @@ struct LaunchView: View {
     @ViewBuilder
     var body: some View {
         if userViewModel.isSignedIn {
-            if userViewModel.hasCompletedNotificationSelection {
+            if userViewModel.hasEnteredUserDetails {
                 MainTabView()
-                    .environmentObject(userViewModel)
-            } else if userViewModel.hasCompletedAccountCreation {
-                NotificationView()
-                    .environmentObject(userViewModel)
-            } else if userViewModel.hasEnteredUserDetails {
-                AccountConnectionView()
                     .environmentObject(userViewModel)
             } else {
                 UserDetailsView()

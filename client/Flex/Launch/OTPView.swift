@@ -9,14 +9,105 @@ import SwiftUI
 
 struct OTPView: View {
     @EnvironmentObject var userViewModel: UserViewModel
-    @State private var otp: [String] = Array(repeating: "", count: 4)
-    @FocusState private var focus0: Bool
-    @FocusState private var focus1: Bool
-    @FocusState private var focus2: Bool
-    @FocusState private var focus3: Bool
-
+    @State private var otp: String = ""
+    //@State private var otp: [String] = Array(repeating: "", count: 4)
+    //@State private var autoFillOTP: String = ""
+    //@FocusState private var focus0: Bool
+    //@FocusState private var focus1: Bool
+    //@FocusState private var focus2: Bool
+    //@FocusState private var focus3: Bool
+    
     var body: some View {
         VStack (alignment: .leading) {
+            Image(.phoneIcon)
+                .resizable()
+                .scaledToFit()
+                .frame(width: 60, height: 60)
+                .padding(.horizontal)
+                .padding(.bottom, 4)
+                .padding(.top, 40)
+            
+            Text("Enter the 4-digit code sent")
+                .font(.title)
+                .bold()
+                .padding(.horizontal)
+            
+            Text("to \(userViewModel.phone)")
+                .font(.title)
+                .bold()
+                .padding(.horizontal)
+            
+            TextField("Enter OTP", text: $otp)
+                .keyboardType(.numberPad)
+                .textContentType(.oneTimeCode)
+                .padding()
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(Color.black, lineWidth: 1)
+                )
+                .onChange(of: otp) {
+                    if otp.count == 4 {
+                        userViewModel.verifyTwilioOTP(code: otp, phone: userViewModel.phone) { result in
+                            switch result {
+                            case .success:
+                                print("successfully verified OTP")
+                            case .failure(let error):
+                                // OTP is incorrect or an error occurred, show an error message
+                                print("Failed to verify OTP: \(error)")
+                                // Reset the OTP field
+                                otp = ""
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal)
+                .padding(.top)
+                .padding(.bottom, 80)
+            
+            HStack {
+                Text("Didn't receive a code?")
+                    .font(.body)
+                    .foregroundColor(.slate500)
+                
+                Button(action: {
+                    userViewModel.triggerTwilioOTP(phone: userViewModel.phone)
+                }) {
+                    Text("Resend code")
+                        .font(.body)
+                        .foregroundColor(.black)
+                        .underline()
+                }
+            }
+            .padding(.horizontal)
+            
+            Spacer()
+            
+        }
+    }
+}
+
+#Preview {
+    OTPView()
+        .environmentObject(UserViewModel())
+}
+
+
+    /*
+    var body: some View {
+        VStack (alignment: .leading) {
+            TextField("", text: $autoFillOTP)
+                .keyboardType(.numberPad)
+                .textContentType(.oneTimeCode)
+                .hidden()
+                .onChange(of: autoFillOTP) {
+                    if autoFillOTP.count == 4 {
+                        otp = Array(autoFillOTP).map { String($0) }
+                        DispatchQueue.main.async {
+                            focus3 = true
+                        }
+                    }
+                }
+            
             Image(.phoneIcon)
                 .resizable()
                 .scaledToFit()
@@ -88,6 +179,11 @@ struct OTPView: View {
             }
             .padding(.horizontal)
             .padding(.bottom, 80)
+            .onAppear {
+                DispatchQueue.main.async {
+                    focus0 = true
+                }
+            }
             
             HStack {
                 Text("Didn't receive a code?")
@@ -114,9 +210,7 @@ struct OTPView: View {
         Binding(
             get: { self.otp[index] },
             set: { newValue in
-                if newValue.count <= 1 {
                     self.otp[index] = newValue
-                }
             }
         )
     }
@@ -131,8 +225,5 @@ struct OTPView: View {
         }
     }
 }
-
-#Preview {
-    OTPView()
-        .environmentObject(UserViewModel())
-}
+*/
+     

@@ -50,19 +50,22 @@ struct FixedSpendConfirmationView: View {
             ("Nursing Costs", budgetViewModel.recentNursingCosts, "Housing")
         ]
 
+        HStack {
+            Button(action: {
+                self.backAction()
+            }) {
+                Image(systemName: "chevron.left")
+                    .resizable()
+                    .frame(width: 12, height: 21)
+                    .fontWeight(.semibold)
+            }
+            .padding(.vertical, 4)
+            .padding(.bottom, 4)
+            Spacer()
+        }
+        
         ScrollView {
-            VStack (alignment: .leading) {
-                Button(action: {
-                    self.backAction()
-                }) {
-                    Image(systemName: "chevron.left")
-                        .resizable()
-                        .frame(width: 12, height: 21)
-                        .fontWeight(.semibold)
-                }
-                .padding(.vertical, 4)
-                .padding(.bottom, 4)
-                
+            VStack (alignment: .leading) {                
                 Text("Next, set a fixed budget for monthly essentials")
                     .font(.system(size: 26))
                     .fontWeight(.semibold)
@@ -176,7 +179,7 @@ struct FixedSpendConfirmationView: View {
                     .padding(.bottom, 12)
                 }
                 
-                Text("Sources")
+                Text("Spending Sources")
                     .font(.title3)
                     .fontWeight(.semibold)
                 
@@ -226,7 +229,7 @@ struct FixedSpendConfirmationView: View {
                 }
                 
                 HStack {
-                    Image(.addFixedButton)
+                    Image(.pen)
                         .resizable()
                         .frame(width: 64, height: 64)
                     VStack (alignment: .leading, spacing: 0) {
@@ -277,29 +280,11 @@ struct FixedSpendConfirmationView: View {
                 Divider()
                     .foregroundColor(.slate)
                     .padding(.vertical)
-                
-                Text("Other Sources")
-                    .font(.title3)
-                    .fontWeight(.semibold)
-                    .padding(.bottom, 12)
-                                
-                HStack {
-                    Image(.taxes)
-                        .resizable()
-                        .frame(width: 64, height: 64)
-                    VStack (alignment: .leading, spacing: 0) {
-                        Text("Tax payments & fees are included")
-                            .font(.system(size: 16))
-                            .fontWeight(.semibold)
-                            .padding(.bottom, 4)
-                        Text("Add a manual expense to plan ahead for\ntax refunds and other government fees.")
-                            .font(.system(size: 14))
-                            .foregroundColor(Color.slate500)
-                            .lineSpacing(4.0)
-                        
-                    }
-                }
-                
+
+                Text("Taxes and government fees will appear in the month. Add a Manual expense to plan ahead for these if desired.")
+                    .font(.system(size: 14))
+                    .foregroundColor(Color.slate500)
+                    .lineSpacing(4.0)
             }
         }
         Button(action: {

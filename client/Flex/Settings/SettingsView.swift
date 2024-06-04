@@ -105,7 +105,13 @@ struct SettingsView: View {
                         isPresented: $isPresentingLink,
                         onDismiss: {
                             isPresentingLink = false
-                            userViewModel.fetchBankAccountsFromServer()
+                            userViewModel.fetchBankAccountsFromServer { success in
+                                if success {
+                                    print("Successfully fetched bank accounts for user \(userViewModel.id)")
+                                } else {
+                                    print("Failed to fetch bank accounts for user \(userViewModel.id)")
+                                }
+                            }
                         },
                         content: {
                             let createResult = createHandler()
@@ -146,7 +152,13 @@ struct SettingsView: View {
         .onAppear {
             print("got to th")
             //userViewModel.fetchUserInfoFromCoreData()
-            userViewModel.fetchBankAccountsFromServer()
+            userViewModel.fetchBankAccountsFromServer { success in
+                if success {
+                    print("Successfully fetched bank accounts for user \(userViewModel.id)")
+                } else {
+                    print("Failed to fetch bank accounts for user \(userViewModel.id)")
+                }
+            }
             print("got here")
         }
     }
@@ -157,7 +169,13 @@ struct SettingsView: View {
             return .failure(error)
         }
         let configuration = plaidLinkViewModel.createLinkConfiguration(linkToken: linkToken, userId: userViewModel.id, sessionToken: userViewModel.sessionToken) {
-                self.userViewModel.fetchBankAccountsFromServer()
+            userViewModel.fetchBankAccountsFromServer { success in
+                if success {
+                    print("Successfully fetched bank accounts for user \(userViewModel.id)")
+                } else {
+                    print("Failed to fetch bank accounts for user \(userViewModel.id)")
+                }
+            }
         }
 
         // This only results in an error if the token is malformed.

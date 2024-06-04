@@ -272,7 +272,7 @@ class BudgetViewModel: ObservableObject {
     
     //MARK server
     
-    //Call every time user opens app
+    //Call every time user opens app or adds a new account
     func fetchNewTransactionsFromServer(userId: Int64, completion: @escaping (Bool) -> Void) {
         print("fetchNewTransactionsFromServer started")
         let keychain = Keychain(service: "robharrell.Flex")
@@ -346,7 +346,7 @@ class BudgetViewModel: ObservableObject {
                     }
                 }
             } catch {
-                print("Failed to fetch transactions from Core Data: \(error)")
+                print("Failed to fetch accounts from Core Data: \(error)")
             }
         }
         dispatchGroup.notify(queue: .main) {
@@ -419,9 +419,9 @@ class BudgetViewModel: ObservableObject {
         self.isCalculatingMetrics = false
         print("finished calculating budget metrics")
 
-        print("selectedMonthFixedSpendPerDay: \(self.selectedMonthFixedSpendPerDay)")
-        print("selectedMonthFlexSpendPerDay: \(self.selectedMonthFlexSpendPerDay)")
-        print("selectedMonthIncomePerDay: \(self.selectedMonthIncomePerDay)")
+        //print("selectedMonthFixedSpendPerDay: \(self.selectedMonthFixedSpendPerDay)")
+        //print("selectedMonthFlexSpendPerDay: \(self.selectedMonthFlexSpendPerDay)")
+        //print("selectedMonthIncomePerDay: \(self.selectedMonthIncomePerDay)")
     }
     
     func calculateRecentBudgetStats() {

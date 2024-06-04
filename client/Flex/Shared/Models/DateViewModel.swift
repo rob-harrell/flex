@@ -57,6 +57,15 @@ class DateViewModel: ObservableObject {
             firstTransactionDate = getFirstTransactionDateFromTransactionHistory()
         }
 
+        // Fetch the first transaction date from the newly added account
+        let newFirstTransactionDate = getFirstTransactionDateFromTransactionHistory()
+
+        // If the new first transaction date is older than the current first transaction date, update it
+        if newFirstTransactionDate < firstTransactionDate {
+            firstTransactionDate = newFirstTransactionDate
+            UserDefaults.standard.set(firstTransactionDate, forKey: "FirstTransactionDate")
+        }
+
         // Calculate the number of months between the first transaction date and the current date
         let firstTransactionComponents = calendar.dateComponents([.year, .month], from: firstTransactionDate)
         let currentComponents = calendar.dateComponents([.year, .month], from: Date())

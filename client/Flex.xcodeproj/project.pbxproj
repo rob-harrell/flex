@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		D4005A7E2B65F69D00652FCA /* FlexApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4005A7D2B65F69D00652FCA /* FlexApp.swift */; };
-		D4005A822B65F69E00652FCA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D4005A812B65F69E00652FCA /* Assets.xcassets */; };
 		D4005A852B65F69E00652FCA /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D4005A842B65F69E00652FCA /* Preview Assets.xcassets */; };
 		D4005A8F2B65F69E00652FCA /* FlexTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4005A8E2B65F69E00652FCA /* FlexTests.swift */; };
 		D4005A992B65F69F00652FCA /* FlexUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4005A982B65F69F00652FCA /* FlexUITests.swift */; };
@@ -53,6 +52,7 @@
 		D48EF48E2B95759000117E8B /* UserViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D48EF48D2B95759000117E8B /* UserViewModel.swift */; };
 		D49D59CF2B7815E4001C0D0A /* DateViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49D59CE2B7815E4001C0D0A /* DateViewModel.swift */; };
 		D49D59D12B785501001C0D0A /* MonthSelectorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D49D59D02B785501001C0D0A /* MonthSelectorView.swift */; };
+		D49FF1102C07D76C0033149B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D49FF10F2C07D76C0033149B /* Assets.xcassets */; };
 		D4DD3F112B7C701500D6E987 /* BudgetBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4DD3F102B7C701500D6E987 /* BudgetBarView.swift */; };
 /* End PBXBuildFile section */
 
@@ -76,7 +76,6 @@
 /* Begin PBXFileReference section */
 		D4005A7A2B65F69D00652FCA /* Flex.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Flex.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D4005A7D2B65F69D00652FCA /* FlexApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlexApp.swift; sourceTree = "<group>"; };
-		D4005A812B65F69E00652FCA /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		D4005A842B65F69E00652FCA /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		D4005A8A2B65F69E00652FCA /* FlexTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlexTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		D4005A8E2B65F69E00652FCA /* FlexTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlexTests.swift; sourceTree = "<group>"; };
@@ -120,6 +119,7 @@
 		D48EF48D2B95759000117E8B /* UserViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserViewModel.swift; sourceTree = "<group>"; };
 		D49D59CE2B7815E4001C0D0A /* DateViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateViewModel.swift; sourceTree = "<group>"; };
 		D49D59D02B785501001C0D0A /* MonthSelectorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthSelectorView.swift; sourceTree = "<group>"; };
+		D49FF10F2C07D76C0033149B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = Flex/Assets.xcassets; sourceTree = "<group>"; };
 		D4DD3F102B7C701500D6E987 /* BudgetBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetBarView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -154,6 +154,7 @@
 		D4005A712B65F69D00652FCA = {
 			isa = PBXGroup;
 			children = (
+				D49FF10F2C07D76C0033149B /* Assets.xcassets */,
 				D4005A7C2B65F69D00652FCA /* Flex */,
 				D4005A8D2B65F69E00652FCA /* FlexTests */,
 				D4005A972B65F69F00652FCA /* FlexUITests */,
@@ -182,7 +183,6 @@
 				D4005AAC2B661D7600652FCA /* Trends */,
 				D4005AAB2B661D6700652FCA /* Budget */,
 				D4005AB82B671B8600652FCA /* Settings */,
-				D4005A812B65F69E00652FCA /* Assets.xcassets */,
 				D4005AC12B67240900652FCA /* Shared */,
 				D4005A832B65F69E00652FCA /* Preview Content */,
 				D46EDED72BA51721002FF9BE /* FlexClientDataModel.xcdatamodeld */,
@@ -299,6 +299,8 @@
 		D462342A2BDD870100818169 /* Budget Customization */ = {
 			isa = PBXGroup;
 			children = (
+				D47B9D502BBF51460020228F /* NotificationView.swift */,
+				D46B237C2BB10B5F0091C54D /* AccountConnectionView.swift */,
 				D462342B2BDD872400818169 /* IncomeConfirmationView.swift */,
 				D462342D2BDD873100818169 /* FixedSpendConfirmationView.swift */,
 				D462342F2BDD873D00818169 /* FinalConfirmationView.swift */,
@@ -318,8 +320,6 @@
 				D46B23732BAE1EAB0091C54D /* LoginSignupView.swift */,
 				D46B23762BAE1F140091C54D /* OTPView.swift */,
 				D46B23782BAE1F330091C54D /* UserDetailsView.swift */,
-				D46B237C2BB10B5F0091C54D /* AccountConnectionView.swift */,
-				D47B9D502BBF51460020228F /* NotificationView.swift */,
 			);
 			path = Launch;
 			sourceTree = "<group>";
@@ -439,8 +439,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				D4005A852B65F69E00652FCA /* Preview Assets.xcassets in Resources */,
+				D49FF1102C07D76C0033149B /* Assets.xcassets in Resources */,
 				D47B9D5A2BC37D480020228F /* DefaultBudgetPreferences.json in Resources */,
-				D4005A822B65F69E00652FCA /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -591,6 +591,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
@@ -648,6 +649,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
@@ -664,7 +666,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_ASSET_PATHS = "\"Flex/Preview Content\"";
 				DEVELOPMENT_TEAM = 95AH3A89D8;
 				ENABLE_PREVIEWS = YES;
@@ -693,7 +695,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 3;
 				DEVELOPMENT_ASSET_PATHS = "\"Flex/Preview Content\"";
 				DEVELOPMENT_TEAM = 95AH3A89D8;
 				ENABLE_PREVIEWS = YES;

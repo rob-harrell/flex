@@ -20,7 +20,8 @@ class UserViewModel: ObservableObject {
     @Published var sessionToken: String = ""
     @Published var bankAccounts: [BankAccount] = []
     @Published var hasEnteredUserDetails: Bool = false
-    @Published var canCompleteAccountCreation: Bool = false
+    @Published var hasCheckingOrSavings: Bool = false
+    @Published var hasCreditCard: Bool = false
     @Published var hasCompletedAccountCreation: Bool = false
     @Published var hasCompletedNotificationSelection: Bool = false
     @Published var pushNotificationsEnabled: Bool = false
@@ -31,7 +32,7 @@ class UserViewModel: ObservableObject {
         UserDefaults.standard.object(forKey: "currentUserId") != nil
     }
 
-    struct BankAccount: Identifiable, Codable {
+    struct BankAccount: Identifiable, Codable, Equatable {
         var id: Int64
         var name: String
         var maskedAccountNumber: String
@@ -101,8 +102,19 @@ class UserViewModel: ObservableObject {
                         //And the user exists on the server too
                         if data.isExistingUser {
                             // If the user exists on the server but not in Core Data on this device, fetch user's data from server
-                            self.fetchUserInfoFromServer(userId: data.userId)
-                            self.fetchBankAccountsFromServer()
+                            self.fetchUserInfoFromServer(userId: data.userId) { success in
+                                if success {
+                                    self.fetchBankAccountsFromServer { success in
+                                        if success {
+                                            print("Successfully fetched bank accounts for user \(self.id)")
+                                        } else {
+                                            print("Failed to fetch bank accounts for user \(self.id)")
+                                        }
+                                    }
+                                } else {
+                                    print("Failed to fetch user info from server for user \(self.id)")
+                                }
+                            }
                         } else {
                             //Entirely new user
                             self.createUserInCoreData()
@@ -125,7 +137,7 @@ class UserViewModel: ObservableObject {
     }
 
     // MARK: - Server
-    func fetchUserInfoFromServer(userId: Int64) {
+    func fetchUserInfoFromServer(userId: Int64, completion: @escaping (Bool) -> Void) {
         // Fetch user info
         ServerCommunicator.shared.callMyServer(
             path: "/user/get_user_data",
@@ -139,8 +151,8 @@ class UserViewModel: ObservableObject {
                     self.firstName = data.firstName
                     self.lastName = data.lastName
                     self.phone = data.phone
-                    self.monthlyIncome = 10000.0
-                    self.monthlyFixedSpend = 5000.0
+                    self.monthlyIncome = data.monthlyIncome
+                    self.monthlyFixedSpend = data.monthlyFixedSpend
                     self.birthDate = data.birthDate
                     self.hasEnteredUserDetails = data.hasEnteredUserDetails
                     self.hasCompletedAccountCreation = data.hasCompletedAccountCreation
@@ -158,9 +170,11 @@ class UserViewModel: ObservableObject {
                     } else {
                         self.createUserInCoreData()
                     }
+                    completion(true)
                 }
             case .failure(let error):
                 print("Failed to fetch user data from server: \(error)")
+                completion(false)
             }
         }
     }
@@ -184,7 +198,7 @@ class UserViewModel: ObservableObject {
         }
     }
 
-    func fetchBankAccountsFromServer() {
+    func fetchBankAccountsFromServer(completion: @escaping (Bool) -> Void) {
         // Fetch bank connections
         print("fetchBankAccountsFromServer called with id: \(self.id)")
         ServerCommunicator.shared.callMyServer(
@@ -199,9 +213,11 @@ class UserViewModel: ObservableObject {
                 DispatchQueue.main.async {
                     let accountsToSave = data.filter { $0.subType == "checking" || $0.subType == "credit card" || $0.subType == "savings" }
                     self.upsertFetchedAccountsInCoreData(data: accountsToSave)
+                    completion(true)
                 }
             case .failure(let error):
                 print("Failed to fetch bank connections from server: \(error)")
+                completion(false)
             }
         }
     }
@@ -265,9 +281,8 @@ class UserViewModel: ObservableObject {
                             )
                         }
                         
-                        let hasCheckingOrSavings = self.bankAccounts.contains { $0.subType == "checking" || $0.subType == "savings" }
-                        let hasCreditCard = self.bankAccounts.contains { $0.subType == "credit card" }
-                        self.canCompleteAccountCreation = hasCheckingOrSavings || hasCreditCard
+                        self.hasCheckingOrSavings = self.bankAccounts.contains { $0.subType == "checking" || $0.subType == "savings" }
+                        self.hasCreditCard = self.bankAccounts.contains { $0.subType == "credit card" }
                     }
                 }
             } else {
@@ -366,10 +381,8 @@ class UserViewModel: ObservableObject {
                     )
                     self.bankAccounts.append(newAccountViewModel)
 
-                    let hasCheckingOrSavings = self.bankAccounts.contains { $0.subType == "checking" || $0.subType == "savings" }
-                    let hasCreditCard = self.bankAccounts.contains { $0.subType == "credit card" }
-
-                    self.canCompleteAccountCreation = hasCheckingOrSavings || hasCreditCard
+                    self.hasCheckingOrSavings = self.bankAccounts.contains { $0.subType == "checking" || $0.subType == "savings" }
+                    self.hasCreditCard = self.bankAccounts.contains { $0.subType == "credit card" }
 
                     let newAccount = Account(context: context)
                     newAccount.id = Int64(bankAccountResponse.id)

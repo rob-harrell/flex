@@ -48,22 +48,25 @@ struct MainTabView: View {
             .onAppear {
                 UITabBarItem.appearance().setTitleTextAttributes([NSAttributedString.Key.font: UIFont.systemFont(ofSize: 12)], for: .normal)
                 UITabBarItem.appearance().setTitleTextAttributes([NSAttributedString.Key.font: UIFont.systemFont(ofSize: 12)], for: .selected)
-                //userViewModel.hasCompletedBudgetCustomization = false
                 budgetViewModel.isCalculatingMetrics = true
                 budgetViewModel.fetchNewTransactionsFromServer(userId: userViewModel.id) { success in
                     if success {
                         print("hasFetchFullTransactionHistory \(UserDefaults.standard.bool(forKey: "hasFetchedFullTransactionHistory"))")
                         if !UserDefaults.standard.bool(forKey: "hasFetchedFullTransactionHistory") {
-                            budgetViewModel.fetchTransactionHistoryFromServer(userId: userViewModel.id, bankAccounts: userViewModel.bankAccounts) { success in
-                                if success {
-                                    self.updateAndCalculateBudgetMetrics()
-                                }
+                            budgetViewModel.fetchTransactionHistoryFromServer(userId: userViewModel.id, bankAccounts: userViewModel.bankAccounts) { _ in
+                                self.updateAndCalculateBudgetMetrics()
                             }
                         } else {
                             self.updateAndCalculateBudgetMetrics()
                         }
+                    } else {
+                        // Display warning to user that they're disconnected
+                        self.updateAndCalculateBudgetMetrics()
                     }
                 }
+            }
+            .onChange(of: userViewModel.bankAccounts) {
+                self.updateAndCalculateBudgetMetrics()
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -90,7 +93,7 @@ struct MainTabView: View {
                         
                         //Income button
                         Button(action: {
-                            showingBudgetConfigSheet.toggle()
+                            //showingBudgetConfigSheet.toggle()
                         }) {
                             HStack{
                                 Image("Money")
@@ -100,7 +103,6 @@ struct MainTabView: View {
                         .padding(.horizontal, 4)
                         .background(RoundedRectangle(cornerRadius: 24).stroke(Color.slate200, lineWidth: 1))
                         .sheet(isPresented: $showingBudgetConfigSheet, onDismiss: {
-                            self.showingBudgetConfigSheet = false
                         }) {
                             BudgetConfigTabView(selectedTab: $selectedBudgetConfigTab)
                         }
@@ -118,22 +120,21 @@ struct MainTabView: View {
         }
         .padding(.top, 4)
         .sheet(isPresented: Binding<Bool>(
-            get: { !self.userViewModel.hasCompletedBudgetCustomization },
+            get: { !self.userViewModel.hasCompletedNotificationSelection },
             set: { _ in }
         )) {
             VStack {
                 switch budgetCustomizationStep {
                 case .income:
-                    IncomeConfirmationView(nextAction: { budgetCustomizationStep = .fixedSpend })
-                        .environmentObject(budgetViewModel)
+                    IncomeConfirmationView(nextAction: { budgetCustomizationStep = .connectAccounts })
+                case .connectAccounts:
+                    AccountConnectionView(nextAction: { budgetCustomizationStep = .fixedSpend }, backAction: {budgetCustomizationStep = .income })
                 case .fixedSpend:
-                    FixedSpendConfirmationView(nextAction: { budgetCustomizationStep = .final }, backAction: { budgetCustomizationStep = .income })
-                        .environmentObject(budgetViewModel)
-                case .final:
-                    FinalConfirmationView(nextAction: {budgetCustomizationStep = .confirm}, doneAction: { userViewModel.hasCompletedBudgetCustomization = true }, backAction: { budgetCustomizationStep = .fixedSpend }, editIncome: { budgetCustomizationStep = .income})
-                        .environmentObject(budgetViewModel)
-                case .confirm:
-                    ConfirmBudgetView(doneAction: { userViewModel.hasCompletedBudgetCustomization = true}, backAction: { budgetCustomizationStep = .final})
+                    FixedSpendConfirmationView(nextAction: { budgetCustomizationStep = .confirmBudget }, backAction: { budgetCustomizationStep = .connectAccounts })
+                case .confirmBudget:
+                    FinalConfirmationView(nextAction: {budgetCustomizationStep = .notifications}, backAction: { budgetCustomizationStep = .fixedSpend }, editIncome: { budgetCustomizationStep = .income})
+                case .notifications:
+                    NotificationView(doneAction: { userViewModel.hasCompletedNotificationSelection = true}, backAction: { budgetCustomizationStep = .confirmBudget})
                 }
                 
             }
@@ -155,9 +156,10 @@ struct MainTabView: View {
     
     enum BudgetCustomizationStep {
         case income
+        case connectAccounts
         case fixedSpend
-        case final
-        case confirm
+        case confirmBudget
+        case notifications
     }
     
     private func updateAndCalculateBudgetMetrics() {

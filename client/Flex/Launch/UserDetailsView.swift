@@ -13,23 +13,26 @@ struct UserDetailsView: View {
     @State private var lastName: String = ""
     @State private var birthday: String = ""
     @State private var showingAlert = false
+    @State private var isTextFieldFocused: Bool = false
     
     var body: some View {
         VStack(alignment: .leading) {
             // Profile picture placeholder
-            Image(.userIcon)
-                .resizable()
-                .scaledToFit()
-                .frame(width: 60, height: 60)
-                .padding(.horizontal)
-                .padding(.bottom, 4)
-                .padding(.top, 40)
+            if !isTextFieldFocused {
+                Image(.userIcon)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 60, height: 60)
+                    .padding(.horizontal)
+                    .padding(.bottom, 4)
+            }
 
-            Text("Welcome! Let's create your account")
+            Text("Welcome! Let's create\nyour account")
                 .font(.title)
                 .fontWeight(.bold)
                 .padding(.horizontal)
                 .padding(.bottom)
+                .transition(.identity)
 
             // Name Input Fields
             Text("Name")
@@ -38,12 +41,16 @@ struct UserDetailsView: View {
                 .padding(.horizontal)
             
             VStack {
-                TextField("First name", text: $firstName)
+                TextField("First name", text: $firstName, onEditingChanged: { isEditing in
+                    isTextFieldFocused = isEditing
+                })
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .padding(.horizontal)
                     .foregroundColor(.black)
 
-                TextField("Last name", text: $lastName)
+                TextField("Last name", text: $lastName, onEditingChanged: {isEditing in
+                    isTextFieldFocused = isEditing
+                })
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .padding([.horizontal, .bottom])
                     .foregroundColor(.black)
@@ -55,29 +62,35 @@ struct UserDetailsView: View {
                 .fontWeight(.medium)
                 .padding(.horizontal)
             
-            TextField("MM/DD/YYYY", text: $birthday)
+            TextField("MM/DD/YYYY", text: $birthday, onEditingChanged: {isEditing in
+                isTextFieldFocused = isEditing
+            })
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .padding([.horizontal, .bottom])
                 .foregroundColor(.black)
             
             
         }
+        .padding(.top, 40)
         
         Spacer()
         
         Button(action: {
             if isValidDate(dateString: birthday) {
-                userViewModel.firstName = firstName
-                userViewModel.lastName = lastName
-                userViewModel.birthDate = birthday
-                userViewModel.hasEnteredUserDetails = true
-                print("updated hasEnteredUserDetails: \(userViewModel.hasEnteredUserDetails)")
-                userViewModel.updateUserOnServer()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    userViewModel.firstName = firstName
+                    userViewModel.lastName = lastName
+                    userViewModel.birthDate = birthday
+                    userViewModel.hasEnteredUserDetails = true
+                    print("updated hasEnteredUserDetails: \(userViewModel.hasEnteredUserDetails)")
+                    userViewModel.updateUserOnServer()
+                }
             } else {
                 showingAlert = true
             }
         }) {
             Text("Create Account")
+                .font(.headline)
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
                 .padding()

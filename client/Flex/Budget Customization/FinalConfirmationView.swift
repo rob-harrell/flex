@@ -13,7 +13,6 @@ struct FinalConfirmationView: View {
     @EnvironmentObject var userViewModel: UserViewModel
     
     let nextAction: () -> Void
-    let doneAction: () -> Void
     let backAction: () -> Void
     let editIncome: () -> Void
     
@@ -202,10 +201,11 @@ struct FinalConfirmationView: View {
                         .cornerRadius(12)
                 }
                 Button(action: {
-                    doneAction()
+                    userViewModel.hasCompletedBudgetCustomization = true
+                    nextAction()
                     userViewModel.updateUserOnServer()
                 }) {
-                    Text("Continue to calendar")
+                    Text("Continue with current budget")
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding()
@@ -215,7 +215,9 @@ struct FinalConfirmationView: View {
             }
             else {
                 Button(action: {
+                    userViewModel.hasCompletedBudgetCustomization = true
                     nextAction()
+                    userViewModel.updateUserOnServer()
                 }) {
                     Text("Next")
                         .font(.headline)
@@ -231,6 +233,6 @@ struct FinalConfirmationView: View {
 }
 
 #Preview {
-    FinalConfirmationView(nextAction: {}, doneAction: {}, backAction: {}, editIncome: {})
+    FinalConfirmationView(nextAction: {}, backAction: {}, editIncome: {})
         .environmentObject(BudgetViewModel())
 }

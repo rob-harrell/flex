@@ -12,50 +12,43 @@ struct NotificationView: View {
     @EnvironmentObject var userViewModel: UserViewModel
     @State private var isCheckboxChecked = true
     @State private var isRequestingAuthorization = false
-
+    
+    let doneAction: () -> Void
+    let backAction: () -> Void
 
     var body: some View {
         VStack (alignment: .leading) {
-            
-            HStack {
-                Spacer()
-                Button(action: {
-                    userViewModel.smsNotificationsEnabled = false
-                    userViewModel.pushNotificationsEnabled = false
-                    userViewModel.hasCompletedNotificationSelection = true
-                    userViewModel.updateUserOnServer()
-                }) {
-                    Text("Skip")
-                        .font(.body)
-                        .foregroundColor(.slate500)
-                       
-                }
-                .padding()
-            }
+            Image(.notifications)
+                .padding(.bottom, 8)
             
             Text("Turn on\nnotifications?")
                 .font(.title)
-                .fontWeight(.bold)
-                .padding(.horizontal)
-                .padding(.top)
+                .fontWeight(.semibold)
             
-            Text("We promise, we'll only notify you about important things, like issues with your bank connections")
-                .font(.body)
-                .padding(.horizontal)
-                .padding(.top, 4)
+            Text("We promise, we'll only notify you about things that need attention.")
+                .font(.system(size: 16))
                 .foregroundColor(.slate500)
-
-            Spacer()
+                .padding(.top, 4)
+                .padding(.bottom, 8)
+                .lineSpacing(4.0)
             
             HStack {
-                Text("Allow us to send you offers and important\ninfo via SMS")
-                    .font(.body)
+                Text("Allow us to send you offers and\nimportant info via SMS")
+                    .font(.system(size: 16))
                     .foregroundColor(.slate500)
+                    .lineSpacing(4.0)
                 Spacer()
                 CheckboxView(isChecked: $isCheckboxChecked)
             }
-            .padding(.horizontal)
+            .padding(.bottom, 20)
 
+            
+            Image(.notificationExamples)
+                .resizable()
+                .scaledToFit()
+            
+            Spacer()
+            
             Button(action: {
                 isRequestingAuthorization = true
                 userViewModel.smsNotificationsEnabled = isCheckboxChecked
@@ -70,20 +63,33 @@ struct NotificationView: View {
                             print("Notifications permission denied because: \(error?.localizedDescription ?? "User denied permission.")")
                             userViewModel.pushNotificationsEnabled = false
                         }
-                        userViewModel.hasCompletedNotificationSelection = true
                         userViewModel.updateUserOnServer()
+                        doneAction()
                     }
                 }
             }) {
                 Text("Yes, notify me")
+                    .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding()
                     .foregroundColor(.white)
                     .background(Color.black)
                     .cornerRadius(12)
             }
-            .padding()
-            .disabled(isRequestingAuthorization) // Disable the button while the authorization request is in progress
+            .padding(.top)
+            .disabled(isRequestingAuthorization)
+            
+            Button(action: {
+                doneAction()
+                userViewModel.updateUserOnServer()
+            }) {
+                Text("Not right now")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.slate200)
+                    .cornerRadius(12)
+            }
         }
     }
 }
@@ -97,14 +103,15 @@ struct CheckboxView: View {
         }) {
             Image(systemName: isChecked ? "checkmark.square.fill" : "square")
                 .resizable()
-                .frame(width: 24, height: 24) // Adjust size as needed
-                .background(isChecked ? Color.white : Color.black)
-                .cornerRadius(4) // Adjust as needed
+                .frame(width: 24, height: 24)
+                .foregroundColor(isChecked ? .black : .black)
+                .background(isChecked ? Color.white : Color.white)
+                .cornerRadius(4)
         }
     }
 }
 
 #Preview {
-    NotificationView()
+    NotificationView(doneAction: {}, backAction: {})
         .environmentObject(UserViewModel())
 }

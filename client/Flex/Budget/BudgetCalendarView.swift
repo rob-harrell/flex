@@ -15,23 +15,18 @@ struct BudgetCalendarView: View {
     @State private var hasTapped: Bool = false
     @State private var scrollPosition: Int?
     @State private var showingOverlay = false
+    @State private var spacerCounts: [Int] = []
     
+    let calendar = Calendar.current
     let columns: [GridItem] = Array(repeating: .init(.flexible(), spacing: 0), count: 7)
-    
-    let numberOfRows = 5
-    let cellHeight = 86.0
-    let spacing = 0.0
-    var scrollViewHeight: Double {
-        Double(numberOfRows) * cellHeight + Double(numberOfRows - 1) * spacing
-    }
-    
+
     var body: some View {
 
         // Print statements for debugging
-        let _ = print("Processing index: \(sharedViewModel.dates.indices)")
+        //let _ = print("Processing index: \(sharedViewModel.dates.indices)")
         //let _ = print("Processing dates: \(sharedViewModel.dates)")
-        let _ = print("Selected month: \(sharedViewModel.selectedMonth)")
-        let _ = print("Is calculating budget metrics: \(budgetViewModel.isCalculatingMetrics)")
+        //let _ = print("Selected month: \(sharedViewModel.selectedMonth)")
+        //let _ = print("Is calculating budget metrics: \(budgetViewModel.isCalculatingMetrics)")
 
         VStack {
             // Weekday headers
@@ -47,28 +42,46 @@ struct BudgetCalendarView: View {
 
             // Vertical paging ScrollView for the month
             ScrollView {
-                LazyVStack (spacing: -1) {
+                VStack (spacing: -1) {
                     ForEach(sharedViewModel.dates.indices, id: \.self) { index in
-                        VStack{
-                            Spacer()
-                                .frame(height: 2)
-                            LazyVGrid(columns: columns, spacing: 0) {
-                                ForEach(sharedViewModel.dates[index], id: \.self) { date in
-                                    calendarDateView(for: date)
-                                        .id("\(sharedViewModel.stringForDate(sharedViewModel.selectedMonth, format: "MMMM yyyy"))-\(date)")
+                        LazyVGrid(columns: columns, spacing: 0) {
+                            // Use an Int range to create the necessary number of spacers
+                            if !spacerCounts.isEmpty && index < spacerCounts.count {
+                                ForEach(0..<spacerCounts[index], id: \.self) { _ in
+                                    Spacer().frame(height: 86)
                                 }
                             }
+                            // Display the dates for the month
+                            ForEach(sharedViewModel.dates[index], id: \.self) { date in
+                                calendarDateView(for: date)
+                                    .id("\(sharedViewModel.stringForDate(sharedViewModel.selectedMonth, format: "MMMM yyyy"))-\(date)")
+                            }
                         }
-                    }
+                        .containerRelativeFrame(.vertical, alignment: .top)
+                        .onAppear {
+                            print("Month view id: \(index)") // Print the id of each month view
+                            print("Rendering \(spacerCounts[index]) spacers for month \(index)") // New print statement
+                            print("Rendering \(sharedViewModel.dates[index].count) dates for month \(index)") // New print statement
+                        }   
+                    }     
                 }
-                .padding(.top, -1)
-                .scrollTargetLayout()
+                .padding(.top, 2)
+                .onAppear {
+                    // Pre-calculate the number of spacers for each month
+                    spacerCounts = sharedViewModel.dates.map { date in
+                        let firstDayOfWeekday = calendar.component(.weekday, from: date.first!) - 1
+                        return firstDayOfWeekday
+                    }
+                    print("Spacer counts: \(spacerCounts)")
+                }
             }
             .frame(height: 434)
+            .scrollTargetLayout()
             .scrollTargetBehavior(.paging)
-            .scrollPosition(id: $scrollPosition, anchor: .top)
+            .scrollPosition(id: $scrollPosition)
             .onAppear {
                 if let index = sharedViewModel.dates.firstIndex(where: { sharedViewModel.calendar.isDate($0.first!, equalTo: sharedViewModel.selectedMonth, toGranularity: .month) }) {
+                    print("Initial scroll position: \(index)") // Print the initial scroll position
                     scrollPosition = index
                 }
             }
@@ -79,12 +92,14 @@ struct BudgetCalendarView: View {
                 })
                 if let index = monthIndex {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        print("Updated scroll position: \(index)") // Print the updated scroll position
                         scrollPosition = index
                     }
                 }
             }
             .onChange(of: scrollPosition) { oldValue, newValue in
                 if let index = newValue {
+                    print("Scroll position changed: \(index)") // Print when the scroll position changes
                     sharedViewModel.selectedMonth = sharedViewModel.dates[index].first!
                 }
             }
@@ -95,7 +110,6 @@ struct BudgetCalendarView: View {
     @ViewBuilder
     private func calendarDateView(for date: Date) -> some View {
         let today = sharedViewModel.currentDay
-        let calendar = Calendar.current
         let cellDate = calendar.startOfDay(for: date)
         let isPastOrToday = cellDate <= today && calendar.isDate(cellDate, equalTo: today, toGranularity: .month)
         let isFuture = cellDate > today
@@ -114,15 +128,16 @@ struct BudgetCalendarView: View {
                     .fixedSize(horizontal: false, vertical: true) // Prevent stretching
                     .padding(.vertical, 8)
                     .fontWeight(.semibold)
+                    .transition(.identity)
 
                 if !isFuture && isInSelectedMonth {
                     let flexSpend = budgetViewModel.selectedMonthFlexSpendPerDay.filter { calendar.isDate($0.key, equalTo: cellDate, toGranularity: .day) }.first?.value ?? 0
                     let fixedSpend = budgetViewModel.selectedMonthFixedSpendPerDay.filter { calendar.isDate($0.key, equalTo: cellDate, toGranularity: .day) }.first?.value ?? 0
                     let income = budgetViewModel.selectedMonthIncomePerDay.filter { calendar.isDate($0.key, equalTo: cellDate, toGranularity: .day) }.first?.value ?? 0
 
-                    let _ = print("Flex spend for \(cellDate): \(flexSpend)")
-                    let _ = print("Fixed spend for \(cellDate): \(fixedSpend)")
-                    let _ = print("Income for \(cellDate): \(income)")
+                    //let _ = print("Flex spend for \(cellDate): \(flexSpend)")
+                    //let _ = print("Fixed spend for \(cellDate): \(fixedSpend)")
+                    //let _ = print("Income for \(cellDate): \(income)")
 
                     if flexSpend > 0 {
                         Text(formatBudgetNumber(flexSpend)) // Flex spend
@@ -130,6 +145,7 @@ struct BudgetCalendarView: View {
                             .foregroundColor(cellDate == sharedViewModel.selectedDay && showingOverlay ? Color.white : Color.black)
                             .fixedSize(horizontal: false, vertical: true) // Prevent stretching
                             .fontWeight(.semibold)
+                            .transition(.identity)
                     }
 
                     if fixedSpend > 0 {
@@ -138,6 +154,7 @@ struct BudgetCalendarView: View {
                             .foregroundColor(Color.slate500)
                             .fixedSize(horizontal: false, vertical: true) // Prevent stretching
                             .fontWeight(.semibold)
+                            .transition(.identity)
                     }
                     
                     if abs(income) > 0 {
@@ -146,6 +163,7 @@ struct BudgetCalendarView: View {
                             .foregroundColor(Color.emerald600)
                             .fixedSize(horizontal: false, vertical: true) // Prevent stretching
                             .fontWeight(.semibold)
+                            .transition(.identity)
                     }
                     
                 }
@@ -186,3 +204,6 @@ struct BudgetCalendarView: View {
         .environmentObject(DateViewModel())
         .environmentObject(BudgetViewModel())
 }
+
+
+//bug

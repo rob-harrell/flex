@@ -64,6 +64,7 @@ struct LoginSignupView: View {
                         self.showOTPView = true
                     }) {
                         Text("Continue")
+                            .font(.headline)
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
                             .padding()

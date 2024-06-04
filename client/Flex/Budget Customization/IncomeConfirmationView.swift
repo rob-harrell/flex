@@ -6,13 +6,17 @@
 //
 
 import SwiftUI
+import LinkKit
 
 struct IncomeConfirmationView: View {
     @EnvironmentObject var budgetViewModel: BudgetViewModel
     @EnvironmentObject var sharedViewModel: DateViewModel
     @EnvironmentObject var userViewModel: UserViewModel
+    @EnvironmentObject var plaidLinkViewModel: PlaidLinkViewModel
     @State private var manualIncomeString: String = ""
     @State private var removedIncomes: [String: Bool] = ["work": false, "accruals": false, "benefits": false, "pension": false]
+    @State private var isPresentingLink = false
+    @State private var linkController: LinkController?
     @FocusState private var isFocused: Bool
     let nextAction: () -> Void
 
@@ -25,8 +29,8 @@ struct IncomeConfirmationView: View {
         ]
         ScrollView {
             VStack (alignment: .leading) {
-                Text("First, set your average monthly income")
-                    .font(.system(size: 26))
+                Text("Let's build your budget! Set\nyour monthly income to start")
+                    .font(.system(size: 24))
                     .fontWeight(.semibold)
                     .padding(.bottom, 4)
                 
@@ -36,72 +40,117 @@ struct IncomeConfirmationView: View {
                     .padding(.bottom, 16)
                     .lineSpacing(4.0)
                 
-                
-                ZStack (alignment: .leading) {
-                    Rectangle()
-                        .fill(Color.emerald200)
-                        .frame(height: 54)
-                        .cornerRadius(16)
-                    
-                    Text("+ \(formatBudgetNumber(userViewModel.monthlyIncome))")
-                        .font(.title3)
-                        .fontWeight(.semibold)
-                        .padding(.leading, 12)
+                if userViewModel.monthlyIncome > 0.0 {
+                    ZStack (alignment: .leading) {
+                        Rectangle()
+                            .fill(Color.emerald200)
+                            .frame(height: 54)
+                            .cornerRadius(16)
+                        
+                        Text("+ \(formatBudgetNumber(userViewModel.monthlyIncome))")
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                            .padding(.leading, 12)
+                    }
+                    .padding(.bottom, 16)
                 }
-                .padding(.bottom, 16)
                 
-                Text("Monthly sources")
-                    .font(.title3)
-                    .fontWeight(.semibold)
-                
-                ForEach(incomeSources, id: \.name) { source in
-                    if source.income > 0 {
-                        HStack {
-                            Image(source.imageName)
-                                .resizable()
-                                .frame(width: 64, height: 64)
-                            VStack (alignment: .leading) {
-                                Text(source.name.capitalized)
+                if userViewModel.hasCheckingOrSavings {
+                    HStack {
+                        VStack (alignment: .leading) {
+                            Text("Income sources")
+                                .font(.title3)
+                                .fontWeight(.semibold)
+                                .padding(.bottom, 4)
+                            let filteredAccounts = userViewModel.bankAccounts.filter { $0.subType == "checking" || $0.subType == "savings" }
+                            ForEach(Array(filteredAccounts.enumerated()), id: \.element.id) { index, account in
+                                Text("\(account.bankName) \(account.maskedAccountNumber)\(index < filteredAccounts.count - 1 ? "," : "")")
                                     .font(.system(size: 14))
-                                    .fontWeight(.medium)
                                     .foregroundColor(Color.slate500)
-                                Text("\(formatBudgetNumber(source.income))")
-                                    .fontWeight(.medium)
-                            }
-                            Spacer()
-                            if removedIncomes[source.name] ?? false {
-                                Button(action: {
-                                    userViewModel.monthlyIncome += source.income
-                                    removedIncomes[source.name] = false
-                                }) {
-                                    Text("+ Add")
-                                        .font(.system(size: 14))
-                                        .fontWeight(.medium)
-                                        .padding(8)
-                                        .background(Color.black)
-                                        .foregroundColor(.white)
-                                        .cornerRadius(16)
-                                }
-                            } else {
-                                Button(action: {
-                                    userViewModel.monthlyIncome -= source.income
-                                    removedIncomes[source.name] = true
-                                }) {
-                                    Text("Remove")
-                                        .font(.system(size: 14))
-                                        .fontWeight(.medium)
-                                        .padding(8)
-                                        .background(Color.slate100)
-                                        .cornerRadius(16)
-                                }
                             }
                         }
-                        .padding(.bottom, 12)
+                        Spacer()
+                        Button(action: {
+                            plaidLinkViewModel.fetchLinkToken (userId: userViewModel.id, sessionToken: userViewModel.sessionToken) {
+                                isPresentingLink = true
+                            }
+                        }) {
+                            Image(.addButton)
+                        }
                     }
+                    .padding(.bottom, 12)
+                    ForEach(incomeSources, id: \.name) { source in
+                        if source.income > 0 {
+                            HStack {
+                                Image(source.imageName)
+                                    .resizable()
+                                    .frame(width: 64, height: 64)
+                                VStack (alignment: .leading) {
+                                    Text(source.name.capitalized)
+                                        .font(.system(size: 14))
+                                        .fontWeight(.medium)
+                                        .foregroundColor(Color.slate500)
+                                    Text("\(formatBudgetNumber(source.income))")
+                                        .fontWeight(.medium)
+                                }
+                                Spacer()
+                                if removedIncomes[source.name] ?? false {
+                                    Button(action: {
+                                        userViewModel.monthlyIncome += source.income
+                                        removedIncomes[source.name] = false
+                                    }) {
+                                        Text("+ Add")
+                                            .font(.system(size: 14))
+                                            .fontWeight(.medium)
+                                            .padding(8)
+                                            .background(Color.black)
+                                            .foregroundColor(.white)
+                                            .cornerRadius(16)
+                                    }
+                                } else {
+                                    Button(action: {
+                                        userViewModel.monthlyIncome -= source.income
+                                        removedIncomes[source.name] = true
+                                    }) {
+                                        Text("Remove")
+                                            .font(.system(size: 14))
+                                            .fontWeight(.medium)
+                                            .padding(8)
+                                            .background(Color.slate100)
+                                            .cornerRadius(16)
+                                    }
+                                }
+                            }
+                            .padding(.bottom, 12)
+                        }
+                    }
+                }
+                else {
+                    Text("Add income sources")
+                        .font(.title3)
+                        .fontWeight(.semibold)
+                        .padding(.bottom, 12)
+                    Button(action: {
+                        plaidLinkViewModel.fetchLinkToken (userId: userViewModel.id, sessionToken: userViewModel.sessionToken) {
+                            isPresentingLink = true
+                        }
+                    }) {
+                        HStack {
+                            Image(.bankAccount)
+                                .resizable()
+                                .frame(width: 64, height: 64)
+                            Text("Connect a bank account")
+                                .font(.system(size: 16))
+                                .fontWeight(.medium)
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                        }
+                    }
+                    .padding(.bottom, 4)
                 }
                 
                 HStack {
-                    Image(.addIncomeButton)
+                    Image(.pen)
                         .resizable()
                         .frame(width: 64, height: 64)
                     VStack (alignment: .leading, spacing: 0) {
@@ -153,46 +202,29 @@ struct IncomeConfirmationView: View {
                     .foregroundColor(.slate)
                     .padding(.vertical)
                 
-                Text("Other sources")
-                    .font(.title3)
-                    .fontWeight(.semibold)
-                    .padding(.bottom, 12)
-                
-                HStack {
-                    Image(.paymentApps)
-                        .resizable()
-                        .frame(width: 64, height: 64)
-                    VStack (alignment: .leading, spacing: 0) {
-                        Text("Payment apps will be included")
-                            .font(.system(size: 16))
-                            .fontWeight(.semibold)
-                            .padding(.bottom, 4)
-                        Text("Cash-outs will appear in your actual income to offset reimbursements")
-                            .font(.system(size: 14))
-                            .foregroundColor(Color.slate500)
-                            .lineSpacing(4.0)
-                    }
-                }
-                .padding(.bottom, 12)
-                
-                HStack {
-                    Image(.bankPhoto)
-                        .resizable()
-                        .frame(width: 64, height: 64)
-                    VStack (alignment: .leading, spacing: 0) {
-                        Text("Bank transfers are excluded")
-                            .font(.system(size: 16))
-                            .fontWeight(.semibold)
-                            .padding(.bottom, 4)
-                        Text("Transfers tend to skew income. Add manual income to plan for this.")
-                            .font(.system(size: 14))
-                            .foregroundColor(Color.slate500)
-                            .lineSpacing(4.0)
-                        
-                    }
-                }
+                Text("Cash-outs from Zelle, Venmo, Cash App, and other payment apps will appear in your actual income to offset reimbursements. Bank transfers will not be included.")
+                    .font(.system(size: 14))
+                    .foregroundColor(Color.slate500)
+                    .padding(.bottom, 16)
+                    .lineSpacing(4.0)
             }
         }
+        .sheet(
+            isPresented: $isPresentingLink,
+            onDismiss: {
+                isPresentingLink = false
+            },
+            content: {
+                let createResult = createHandler()
+                switch createResult {
+                case .failure(let createError):
+                    Text("Link Creation Error: \(createError.localizedDescription)")
+                        .font(.title2)
+                case .success(let handler):
+                    LinkController(handler: handler)
+                }
+            }
+        )
         Button(action: {
             nextAction()
         }) {
@@ -205,6 +237,33 @@ struct IncomeConfirmationView: View {
                 .cornerRadius(12)
         }
         .padding(.top)
+    }
+    
+    private func createHandler() -> Result<Handler, Error> {
+        guard let linkToken = plaidLinkViewModel.linkToken else {
+            let error = NSError(domain: "", code: 0, userInfo: [NSLocalizedDescriptionKey : "Link token is not set"])
+            return .failure(error)
+        }
+        let configuration = plaidLinkViewModel.createLinkConfiguration(linkToken: linkToken, userId: userViewModel.id, sessionToken: userViewModel.sessionToken) {
+            self.userViewModel.fetchBankAccountsFromServer() { success in
+                if success {
+                    print("Successfully fetched bank accounts for user \(self.userViewModel.id)")
+                    self.budgetViewModel.fetchNewTransactionsFromServer(userId: self.userViewModel.id) { success in
+                        if success {
+                            sharedViewModel.updateDates()
+                            print("Successfully fetched new transactions for user \(self.userViewModel.id)")
+                        } else {
+                            print("Failed to fetch new transactions for user \(self.userViewModel.id)")
+                        }
+                    }
+                } else {
+                    print("Failed to fetch bank accounts for user \(self.userViewModel.id)")
+                }
+            }
+        }
+
+        // This only results in an error if the token is malformed.
+        return Plaid.create(configuration).mapError { $0 as Error }
     }
 }
 
