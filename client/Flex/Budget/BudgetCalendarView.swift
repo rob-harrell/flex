@@ -58,12 +58,7 @@ struct BudgetCalendarView: View {
                             }
                         }
                         .containerRelativeFrame(.vertical, alignment: .top)
-                        .onAppear {
-                            print("Month view id: \(index)") // Print the id of each month view
-                            print("Rendering \(spacerCounts[index]) spacers for month \(index)") // New print statement
-                            print("Rendering \(sharedViewModel.dates[index].count) dates for month \(index)") // New print statement
-                        }   
-                    }     
+                    }
                 }
                 .padding(.top, 2)
                 .onAppear {
@@ -72,7 +67,6 @@ struct BudgetCalendarView: View {
                         let firstDayOfWeekday = calendar.component(.weekday, from: date.first!) - 1
                         return firstDayOfWeekday
                     }
-                    print("Spacer counts: \(spacerCounts)")
                 }
             }
             .frame(height: 434)

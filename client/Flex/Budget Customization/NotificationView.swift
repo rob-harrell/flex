@@ -63,8 +63,8 @@ struct NotificationView: View {
                             print("Notifications permission denied because: \(error?.localizedDescription ?? "User denied permission.")")
                             userViewModel.pushNotificationsEnabled = false
                         }
-                        userViewModel.updateUserOnServer()
                         doneAction()
+                        userViewModel.updateUserOnServer()
                     }
                 }
             }) {

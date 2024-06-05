@@ -48,6 +48,7 @@ struct MainTabView: View {
             .onAppear {
                 UITabBarItem.appearance().setTitleTextAttributes([NSAttributedString.Key.font: UIFont.systemFont(ofSize: 12)], for: .normal)
                 UITabBarItem.appearance().setTitleTextAttributes([NSAttributedString.Key.font: UIFont.systemFont(ofSize: 12)], for: .selected)
+                print("Has completed notification selection: \(userViewModel.hasCompletedNotificationSelection)")
                 budgetViewModel.isCalculatingMetrics = true
                 budgetViewModel.fetchNewTransactionsFromServer(userId: userViewModel.id) { success in
                     if success {
