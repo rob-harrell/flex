@@ -177,7 +177,6 @@ struct MainTabView: View {
             }
         }
     }
-    
 }
 
 #Preview {

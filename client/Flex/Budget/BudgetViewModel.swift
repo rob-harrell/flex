@@ -48,6 +48,8 @@ class BudgetViewModel: ObservableObject {
     @Published var recentNursingCosts: Double = 0
     @Published var avgTotalRecentFixedSpend: Double = 0
     
+    //Bezier arrays
+    @Published var dataPointsPerDay: [Date: [CGFloat]] = [:]
     
     struct TransactionViewModel {
         var id: Int64
@@ -83,14 +85,14 @@ class BudgetViewModel: ObservableObject {
         do {
             let fetchedTransactions = try context.fetch(fetchRequest)
             let transactionViewModels = fetchedTransactions.map { transaction in
-                TransactionViewModel(
+                return TransactionViewModel(
                     id: transaction.id,
                     amount: transaction.amount,
                     budgetCategory: transaction.budgetCategory ?? "", // provide a default value
                     category: transaction.category ?? "", // provide a default value
                     subCategory: transaction.subCategory ?? "", // provide a default value
                     currencyCode: transaction.currencyCode ?? "", // provide a default value
-                    date: transaction.date ?? Date(), // provide a default value
+                    date: transaction.date ?? Date(), // use the date in GMT
                     isRemoved: transaction.isRemoved,
                     name: transaction.name ?? "", // provide a default value
                     pending: transaction.pending,
@@ -110,7 +112,7 @@ class BudgetViewModel: ObservableObject {
     func saveTransactionsToCoreData(_ transactions: [TransactionResponse], userId: Int64) {
         let context = CoreDataStack.shared.persistentContainer.viewContext
         let dateFormatter = ISO8601DateFormatter()
-        dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        dateFormatter.formatOptions = [.withFullDate]
         dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
         
         for transactionResponse in transactions {
@@ -358,23 +360,43 @@ class BudgetViewModel: ObservableObject {
     //Mark business logic
     func calculateSelectedMonthBudgetMetrics(for month: Date, monthlyIncome: Double, monthlyFixedSpend: Double) {
         print("starting calculating budget metrics")
-        self.isCalculatingMetrics = true
-        
         // Create a date range for the given month
         let calendar = Calendar.current
-        let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: month))!
-        let endOfMonth = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: startOfMonth)!
-        
+        var startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: month))!
+        var endOfMonth = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: startOfMonth)!
+
+        // Adjust the start of the month to start from the beginning of the day in GMT
+        startOfMonth = calendar.startOfDay(for: startOfMonth)
+
         // Fetch transactions from Core Data for the given month
         self.selectedMonthTransactions = self.fetchTransactionsFromCoreData(from: startOfMonth, to: endOfMonth)
 
         // Group transactions by date
-        let groupedTransactionsByDay = Dictionary(grouping: self.selectedMonthTransactions, by: { $0.date })
+        let groupedTransactionsByDay = Dictionary(grouping: self.selectedMonthTransactions, by: { 
+            // Convert the date of the transaction to the user's local timezone
+            let userLocalDate = Calendar.current.startOfDay(for: $0.date)
+            return userLocalDate
+        })
 
         // Calculate total fixed and flexible spending and income per day
         self.selectedMonthFixedSpendPerDay = [:]
         self.selectedMonthFlexSpendPerDay = [:]
         self.selectedMonthIncomePerDay = [:]
+
+        // Get the number of days in the month
+        let range = calendar.range(of: .day, in: .month, for: month)!
+        let numDays = range.count
+
+        // Initialize the dictionary with zeros for all days of the month
+        for day in 1...numDays {
+            let dateComponents = DateComponents(year: calendar.component(.year, from: month), month: calendar.component(.month, from: month), day: day)
+            if let date = calendar.date(from: dateComponents) {
+                let userLocalDate = calendar.startOfDay(for: date)
+                if self.selectedMonthFlexSpendPerDay[userLocalDate] == nil {
+                    self.selectedMonthFlexSpendPerDay[userLocalDate] = 0.0
+                }
+            }
+        }
 
         for (date, transactions) in groupedTransactionsByDay {
             var totalFixedSpend = 0.0
@@ -415,13 +437,31 @@ class BudgetViewModel: ObservableObject {
 
         // Calculate savings for the month
         self.selectedMonthSavings = selectedMonthIncome - selectedMonthFixedSpend - selectedMonthFlexSpend
+        
+        for (date, amount) in self.selectedMonthFlexSpendPerDay {
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateFormat = "yyyy-MM-dd"
+            let dateString = dateFormatter.string(from: date)
+            print("MonthFlexSpendPerDay - Date: \(dateString), Amount: \(amount)")
+        }
+                
+        // Call prepareBezierPathInputs after flexSpendPerDay is populated
+        print("calculating bezier inputs")
+        let spendPerDay = self.selectedMonthFlexSpendPerDay.mapValues { CGFloat($0) }
+        self.dataPointsPerDay = prepareBezierPathInputs(spendPerDay: spendPerDay)
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "M/d"
+        
+        for date in self.dataPointsPerDay.keys.sorted() {
+            let dataPoints = self.dataPointsPerDay[date]!
+            let formattedDate = dateFormatter.string(from: date)
+            print("Date: \(formattedDate), Points: \(dataPoints.map { String(format: "%.2f", $0) }.joined(separator: ", "))")
+        }
        
         self.isCalculatingMetrics = false
         print("finished calculating budget metrics")
 
-        //print("selectedMonthFixedSpendPerDay: \(self.selectedMonthFixedSpendPerDay)")
-        //print("selectedMonthFlexSpendPerDay: \(self.selectedMonthFlexSpendPerDay)")
-        //print("selectedMonthIncomePerDay: \(self.selectedMonthIncomePerDay)")
     }
     
     func calculateRecentBudgetStats() {
@@ -520,4 +560,40 @@ class BudgetViewModel: ObservableObject {
 
     }
     
+    func prepareBezierPathInputs(spendPerDay: [Date: CGFloat]) -> [Date: [CGFloat]] {
+        // Normalize the spend amounts
+        guard let maxSpend = spendPerDay.values.max(), maxSpend > 0 else {
+            return spendPerDay.mapValues { _ in [CGFloat(0), CGFloat(0), CGFloat(0)] }
+        }
+
+        let normalizedData = spendPerDay.mapValues { $0 / maxSpend }
+
+        // Prepare the data points for each day
+        var dataPointsPerDay: [Date: [CGFloat]] = [:]
+
+        let sortedDates = spendPerDay.keys.sorted()
+
+        for i in 0..<sortedDates.count {
+            let date = sortedDates[i]
+            var firstPoint: CGFloat
+            var secondPoint = normalizedData[date]!
+            var thirdPoint: CGFloat
+
+            if i == 0 {
+                firstPoint = secondPoint
+            } else {
+                firstPoint = (normalizedData[sortedDates[i - 1]]! + secondPoint) / 2
+            }
+
+            if i == sortedDates.count - 1 {
+                thirdPoint = secondPoint
+            } else {
+                thirdPoint = (secondPoint + normalizedData[sortedDates[i + 1]]!) / 2
+            }
+
+            dataPointsPerDay[date] = [firstPoint, secondPoint, thirdPoint]
+        }
+
+        return dataPointsPerDay
+    }
 }

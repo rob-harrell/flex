@@ -16,6 +16,7 @@ struct BudgetCalendarView: View {
     @State private var scrollPosition: Int?
     @State private var showingOverlay = false
     @State private var spacerCounts: [Int] = []
+
     
     let calendar = Calendar.current
     let columns: [GridItem] = Array(repeating: .init(.flexible(), spacing: 0), count: 7)
@@ -62,10 +63,12 @@ struct BudgetCalendarView: View {
                 }
                 .padding(.top, 2)
                 .onAppear {
-                    // Pre-calculate the number of spacers for each month
                     spacerCounts = sharedViewModel.dates.map { date in
                         let firstDayOfWeekday = calendar.component(.weekday, from: date.first!) - 1
                         return firstDayOfWeekday
+                    }
+                    if let index = sharedViewModel.dates.firstIndex(where: { sharedViewModel.calendar.isDate($0.first!, equalTo: sharedViewModel.selectedMonth, toGranularity: .month) }) {
+                        scrollPosition = index
                     }
                 }
             }
@@ -73,12 +76,6 @@ struct BudgetCalendarView: View {
             .scrollTargetLayout()
             .scrollTargetBehavior(.paging)
             .scrollPosition(id: $scrollPosition)
-            .onAppear {
-                if let index = sharedViewModel.dates.firstIndex(where: { sharedViewModel.calendar.isDate($0.first!, equalTo: sharedViewModel.selectedMonth, toGranularity: .month) }) {
-                    print("Initial scroll position: \(index)") // Print the initial scroll position
-                    scrollPosition = index
-                }
-            }
             .onChange(of: sharedViewModel.selectedMonth) { oldValue, newValue in
                 let monthIndex = sharedViewModel.dates.firstIndex(where: {
                     let dateString = sharedViewModel.stringForDate($0.first!, format: "MMMM yyyy")
@@ -100,14 +97,14 @@ struct BudgetCalendarView: View {
         }
     }
         
-        
     @ViewBuilder
     private func calendarDateView(for date: Date) -> some View {
         let today = sharedViewModel.currentDay
         let cellDate = calendar.startOfDay(for: date)
-        let isPastOrToday = cellDate <= today && calendar.isDate(cellDate, equalTo: today, toGranularity: .month)
+        let isPastOrToday = cellDate <= today
         let isFuture = cellDate > today
         let isInSelectedMonth = calendar.isDate(cellDate, equalTo: sharedViewModel.selectedMonth, toGranularity: .month)
+        let curveDataPoints = budgetViewModel.dataPointsPerDay.filter { calendar.isDate($0.key, equalTo: cellDate, toGranularity: .day) }.first?.value ?? [0, 0, 0]
 
 
         Button(action: {
@@ -160,13 +157,24 @@ struct BudgetCalendarView: View {
                             .transition(.identity)
                     }
                     
+                    /*
+                    if curveDataPoints != [0, 0, 0] {
+                        Text("\(String(format: "%.2f", curveDataPoints[1]))")
+                            .font(.caption)
+                            .foregroundColor(Color.red)
+                            .fixedSize(horizontal: false, vertical: true) // Prevent stretching
+                            .fontWeight(.semibold)
+                            .transition(.identity)
+                    }
+                     */
+                    
                 }
 
                 Spacer()
             }
             .frame(minWidth: 0, maxWidth: .infinity)
             .frame(height: 86)
-            .background(cellDate == sharedViewModel.selectedDay && showingOverlay ? Color.black : (isPastOrToday ? Color(.slate) : Color.clear))
+            .background(cellDate == sharedViewModel.selectedDay && showingOverlay ? Color.black : Color.clear)
             .animation(.default, value: sharedViewModel.selectedDay)
         }
         .sheet(isPresented: $showingOverlay) {
@@ -180,15 +188,19 @@ struct BudgetCalendarView: View {
         .overlay(
             ZStack {
                 RoundedRectangle(cornerRadius: 0)
-                    .stroke(Color.slate200, lineWidth: 0.75)
-                if cellDate == today {
-                    RoundedRectangle(cornerRadius: 0)
-                        .stroke(Color.black, lineWidth: 1.0)
+                    .stroke(Color.slate100, lineWidth: 0.75)
+                if isPastOrToday {
+                    BudgetCurveView(dataPoints: curveDataPoints)
+                        .opacity(0.3)
                 }
             }
         )
         .padding(0.25) // Add padding equal to half the border width
         .offset(x: -0.25, y: -0.25)
+        .onAppear {
+            let formattedDate = DateFormatter.localizedString(from: cellDate, dateStyle: .short, timeStyle: .none)
+            print("Cell.onappear Date: \(formattedDate), Bezier points: \(curveDataPoints)")
+        }
     }
 }
 
@@ -198,6 +210,3 @@ struct BudgetCalendarView: View {
         .environmentObject(DateViewModel())
         .environmentObject(BudgetViewModel())
 }
-
-
-//bug
