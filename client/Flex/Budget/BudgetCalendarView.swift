@@ -11,6 +11,7 @@ struct BudgetCalendarView: View {
     @EnvironmentObject var userViewModel: UserViewModel
     @EnvironmentObject var sharedViewModel: DateViewModel
     @EnvironmentObject var budgetViewModel: BudgetViewModel
+    @Binding var selectedSpendFilter: SpendFilter
     @State private var selectedDate: Date = Calendar.current.startOfDay(for: Date())
     @State private var hasTapped: Bool = false
     @State private var scrollPosition: Int?
@@ -108,9 +109,11 @@ struct BudgetCalendarView: View {
 
 
         Button(action: {
-            sharedViewModel.selectedDay = cellDate
-            hasTapped = true
-            showingOverlay = true
+            if !isFuture {
+                sharedViewModel.selectedDay = cellDate
+                hasTapped = true
+                showingOverlay = true
+            }
         }) {
             VStack {
                 Text(sharedViewModel.stringForDate(date, format: "d")) // Date
@@ -177,9 +180,10 @@ struct BudgetCalendarView: View {
             .background(cellDate == sharedViewModel.selectedDay && showingOverlay ? Color.black : Color.clear)
             .animation(.default, value: sharedViewModel.selectedDay)
         }
+        .disabled(isFuture)
         .sheet(isPresented: $showingOverlay) {
             if hasTapped {
-                TransactionsListOverlay(date: sharedViewModel.selectedDay)
+                TransactionsListOverlay(selectedSpendFilter: $selectedSpendFilter, date: sharedViewModel.selectedDay)
                     .environmentObject(budgetViewModel)
                     .presentationDetents([.fraction(0.35), .fraction(1.0)])
                     .presentationCornerRadius(24)
@@ -205,7 +209,7 @@ struct BudgetCalendarView: View {
 }
 
 #Preview {
-    BudgetCalendarView()
+    BudgetCalendarView(selectedSpendFilter: .constant(.discretionary))
         .environmentObject(UserViewModel())
         .environmentObject(DateViewModel())
         .environmentObject(BudgetViewModel())

@@ -45,30 +45,6 @@ struct MainTabView: View {
                     }
                     .tag(Tab.settings)
             }
-            .onAppear {
-                UITabBarItem.appearance().setTitleTextAttributes([NSAttributedString.Key.font: UIFont.systemFont(ofSize: 12)], for: .normal)
-                UITabBarItem.appearance().setTitleTextAttributes([NSAttributedString.Key.font: UIFont.systemFont(ofSize: 12)], for: .selected)
-                print("Has completed notification selection: \(userViewModel.hasCompletedNotificationSelection)")
-                budgetViewModel.isCalculatingMetrics = true
-                budgetViewModel.fetchNewTransactionsFromServer(userId: userViewModel.id) { success in
-                    if success {
-                        print("hasFetchFullTransactionHistory \(UserDefaults.standard.bool(forKey: "hasFetchedFullTransactionHistory"))")
-                        if !UserDefaults.standard.bool(forKey: "hasFetchedFullTransactionHistory") {
-                            budgetViewModel.fetchTransactionHistoryFromServer(userId: userViewModel.id, bankAccounts: userViewModel.bankAccounts) { _ in
-                                self.updateAndCalculateBudgetMetrics()
-                            }
-                        } else {
-                            self.updateAndCalculateBudgetMetrics()
-                        }
-                    } else {
-                        // Display warning to user that they're disconnected
-                        self.updateAndCalculateBudgetMetrics()
-                    }
-                }
-            }
-            .onChange(of: userViewModel.bankAccounts) {
-                self.updateAndCalculateBudgetMetrics()
-            }
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     HStack {
@@ -90,6 +66,7 @@ struct MainTabView: View {
                         .background(RoundedRectangle(cornerRadius: 24).stroke(Color.slate200, lineWidth: 1))
                         .sheet(isPresented: $showingMonthSelection) {
                             MonthSelectorView(showingMonthSelection: $showingMonthSelection)
+                                .presentationContentInteraction(.scrolls)
                         }
                         
                         //Income button
@@ -116,6 +93,30 @@ struct MainTabView: View {
                         Image("Bell")
                     }
                 }
+            }
+            .onAppear {
+                UITabBarItem.appearance().setTitleTextAttributes([NSAttributedString.Key.font: UIFont.systemFont(ofSize: 12)], for: .normal)
+                UITabBarItem.appearance().setTitleTextAttributes([NSAttributedString.Key.font: UIFont.systemFont(ofSize: 12)], for: .selected)
+                print("Has completed notification selection: \(userViewModel.hasCompletedNotificationSelection)")
+                budgetViewModel.isCalculatingMetrics = true
+                budgetViewModel.fetchNewTransactionsFromServer(userId: userViewModel.id) { success in
+                    if success {
+                        print("hasFetchFullTransactionHistory \(UserDefaults.standard.bool(forKey: "hasFetchedFullTransactionHistory"))")
+                        if !UserDefaults.standard.bool(forKey: "hasFetchedFullTransactionHistory") {
+                            budgetViewModel.fetchTransactionHistoryFromServer(userId: userViewModel.id, bankAccounts: userViewModel.bankAccounts) { _ in
+                                self.updateAndCalculateBudgetMetrics()
+                            }
+                        } else {
+                            self.updateAndCalculateBudgetMetrics()
+                        }
+                    } else {
+                        // Display warning to user that they're disconnected
+                        self.updateAndCalculateBudgetMetrics()
+                    }
+                }
+            }
+            .onChange(of: userViewModel.bankAccounts) {
+                self.updateAndCalculateBudgetMetrics()
             }
             
         }

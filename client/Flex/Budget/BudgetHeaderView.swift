@@ -11,26 +11,75 @@ struct BudgetHeaderView: View {
     @EnvironmentObject var userViewModel: UserViewModel
     @EnvironmentObject var sharedViewModel: DateViewModel
     @EnvironmentObject var budgetViewModel: BudgetViewModel
+    @Binding var selectedSpendFilter: SpendFilter
 
     var body: some View {
-        let savings = budgetViewModel.selectedMonthSavings
-        
         VStack(alignment: .leading) {
-            HStack{
-                Text("$\(abs(Int(savings)))")
-                    .foregroundColor(savings < 0 ? Color(.red500) : Color(.emerald500))
-                Text(savings < 0 ? "over budget" : (sharedViewModel.currentMonth == sharedViewModel.selectedMonth ? "remaining" : "saved"))
+            switch selectedSpendFilter {
+            case .income:
+                HStack {
+                    Text("You've made")
+                    Text("+$\(Int(budgetViewModel.selectedMonthIncome))")
+                        .foregroundColor(Color(.emerald500))
+                }
+                Text("in income this month") 
+            case .allSpend:
+                let savings = budgetViewModel.selectedMonthSavings
+                HStack{
+                    Text("You've spent")
+                    Text("$\(abs(Int(budgetViewModel.selectedMonthFixedSpend + budgetViewModel.selectedMonthFlexSpend)))")
+                        .foregroundStyle(LinearGradient(
+                            gradient: Gradient(stops: [
+                                .init(color: Color(.navy), location: 0.0),
+                                .init(color: Color(.darknavy), location: 0.6),
+                                .init(color: Color(.lightblue), location: 0.8),
+                                .init(color: Color(.pink), location: 0.9),
+                                .init(color: Color(.peach), location: 1.0)
+                            ]),
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        ))
+                }
+                Text("on all expenses")
+            case .bills:
+                HStack {
+                    Text("You've spent")
+                    Text("$\(abs(Int(budgetViewModel.selectedMonthFixedSpend)))")
+                        .foregroundStyle(LinearGradient(
+                            gradient: Gradient(stops: [
+                                .init(color: Color(.navy), location: 0.0),
+                                .init(color: Color(.darknavy), location: 0.8),
+                            ]),
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        ))
+                }
+                Text("on bills")
+            case .discretionary:
+                HStack {
+                    Text("You've spent")
+                    Text("$\(abs(Int(budgetViewModel.selectedMonthFlexSpend)))")
+                        .foregroundStyle(LinearGradient(
+                            gradient: Gradient(stops: [
+                                .init(color: Color(.lightblue), location: 0.0),
+                                .init(color: Color(.pink), location: 0.75),
+                                .init(color: Color(.peach), location: 1.0)
+                            ]),
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        ))
+                }
+                Text("on discretionary expenses") 
             }
-            Text("after all spending")
         }
-        .font(.largeTitle)
+        .font(.title)
         .fontWeight(.semibold)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
 #Preview {
-    BudgetHeaderView()
+    BudgetHeaderView(selectedSpendFilter: .constant(.discretionary))
         .environmentObject(UserViewModel())
         .environmentObject(DateViewModel())
         .environmentObject(BudgetViewModel())

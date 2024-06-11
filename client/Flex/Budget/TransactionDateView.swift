@@ -10,7 +10,7 @@ import SwiftUI
 struct TransactionDateView: View {
     var date: Date
     var transactions: [BudgetViewModel.TransactionViewModel]
-    var selectedFilter: BudgetFilter
+    @Binding var selectedSpendFilter: SpendFilter
     var dateFormatter: DateFormatter {
         let formatter = DateFormatter()
         formatter.dateFormat = "E, MMM d"
@@ -19,32 +19,36 @@ struct TransactionDateView: View {
 
     var body: some View {
         // Filter transactions based on selected filter
+        /*
         let filteredTransactions = transactions.filter { transaction in
-            switch selectedFilter {
-            case .all:
-                return transaction.budgetCategory == "Flex" || transaction.budgetCategory == "Fixed" || transaction.budgetCategory == "Income"
-            case .flex:
-                return transaction.budgetCategory == "Flex"
-            case .fixed:
+            switch selectedSpendFilter {
+            case .income:
+                return transaction.budgetCategory == "Income"
+            case .totalSpend:
+                return transaction.budgetCategory == "Fixed" || transaction.budgetCategory == "Flex"
+            case .bills:
                 return transaction.budgetCategory == "Fixed"
+            case .discretionary:
+                return transaction.budgetCategory == "Flex"
             }
         }
+         */
 
-        if !filteredTransactions.isEmpty {
+        if !transactions.isEmpty {
             VStack(alignment: .leading) {
                 HStack {
                     Text(dateFormatter.string(from: date))
                         .font(.title3)
                         .fontWeight(.semibold)
                     Spacer()
-                    let totalAmount = filteredTransactions.reduce(0) { $0 + $1.amount }
+                    let totalAmount = transactions.reduce(0) { $0 + $1.amount }
                     Text(totalAmount < 0 ? "+$\(Int(round(abs(totalAmount))))" : "$\(Int(round(totalAmount)))")
                         .foregroundColor(totalAmount < 0 ? Color.emerald600 : Color.black)
                         .font(.title3)
                         .fontWeight(.semibold)
                 }
 
-                ForEach(filteredTransactions, id: \.id) { transaction in
+                ForEach(transactions, id: \.id) { transaction in
                     HStack {
                         AsyncImage(url: URL(string: transaction.logoURL)) { image in
                             image
