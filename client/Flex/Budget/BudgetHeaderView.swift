@@ -14,19 +14,20 @@ struct BudgetHeaderView: View {
     @Binding var selectedSpendFilter: SpendFilter
 
     var body: some View {
+        let isPastMonth = (sharedViewModel.selectedMonth != sharedViewModel.currentMonth)
+        
         VStack(alignment: .leading) {
             switch selectedSpendFilter {
             case .income:
                 HStack {
-                    Text("You've made")
+                    Text(isPastMonth ? "You made" : "You've made")
                     Text("+$\(Int(budgetViewModel.selectedMonthIncome))")
                         .foregroundColor(Color(.emerald500))
                 }
-                Text("in income this month") 
+                Text("in income")
             case .allSpend:
-                let savings = budgetViewModel.selectedMonthSavings
                 HStack{
-                    Text("You've spent")
+                    Text(isPastMonth ? "You spent" : "You've spent")
                     Text("$\(abs(Int(budgetViewModel.selectedMonthFixedSpend + budgetViewModel.selectedMonthFlexSpend)))")
                         .foregroundStyle(LinearGradient(
                             gradient: Gradient(stops: [
@@ -43,33 +44,16 @@ struct BudgetHeaderView: View {
                 Text("on all expenses")
             case .bills:
                 HStack {
-                    Text("You've spent")
+                    Text(isPastMonth ? "You spent" : "You've spent")
                     Text("$\(abs(Int(budgetViewModel.selectedMonthFixedSpend)))")
-                        .foregroundStyle(LinearGradient(
-                            gradient: Gradient(stops: [
-                                .init(color: Color(.navy), location: 0.0),
-                                .init(color: Color(.darknavy), location: 0.8),
-                            ]),
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        ))
-                }
+                                        }
                 Text("on bills")
             case .discretionary:
                 HStack {
-                    Text("You've spent")
+                    Text(isPastMonth ? "You spent" : "You've spent")
                     Text("$\(abs(Int(budgetViewModel.selectedMonthFlexSpend)))")
-                        .foregroundStyle(LinearGradient(
-                            gradient: Gradient(stops: [
-                                .init(color: Color(.lightblue), location: 0.0),
-                                .init(color: Color(.pink), location: 0.75),
-                                .init(color: Color(.peach), location: 1.0)
-                            ]),
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        ))
                 }
-                Text("on discretionary expenses") 
+                Text("on discretionary") 
             }
         }
         .font(.title)

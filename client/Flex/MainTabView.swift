@@ -53,17 +53,17 @@ struct MainTabView: View {
                             showingMonthSelection.toggle()
                         }) {
                             HStack {
-                                Image("Calendar")
+                                Image("calendaricon")
+                                    .padding(.leading, 4)
+                                    .padding(.trailing, -2)
                                 Text(sharedViewModel.stringForDate(sharedViewModel.selectedMonth, format: "MMM"))
                                     .font(.headline)
                                     .fontWeight(.semibold)
-                                Image(systemName: "chevron.down")
-                                    .font(.caption)
-                                    .fontWeight(.semibold)
                             }
                         }
-                        .padding(.horizontal, 4)
-                        .background(RoundedRectangle(cornerRadius: 24).stroke(Color.slate200, lineWidth: 1))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 6)
+                        .background(RoundedRectangle(cornerRadius: 24).stroke(Color.slate200, lineWidth: 0.5))
                         .sheet(isPresented: $showingMonthSelection) {
                             MonthSelectorView(showingMonthSelection: $showingMonthSelection)
                                 .presentationContentInteraction(.scrolls)
@@ -74,12 +74,17 @@ struct MainTabView: View {
                             //showingBudgetConfigSheet.toggle()
                         }) {
                             HStack{
-                                Image("Money")
-                                Text("\(sharedViewModel.selectedMonth == sharedViewModel.currentMonth ? formatBudgetNumber(userViewModel.monthlyIncome) : formatBudgetNumber(budgetViewModel.selectedMonthIncome)) \(sharedViewModel.selectedMonth == sharedViewModel.currentMonth ? "est. " : "")income")
+                                Text("Edit Budget")
+                                    .font(.headline)
+                                    .fontWeight(.semibold)
+                                    .padding(.leading, 6)
+                                Image("editicon")
+                                    .padding(.trailing, -2)
                             }
                         }
-                        .padding(.horizontal, 4)
-                        .background(RoundedRectangle(cornerRadius: 24).stroke(Color.slate200, lineWidth: 1))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 6)
+                        .background(RoundedRectangle(cornerRadius: 24).stroke(Color.slate200, lineWidth: 0.5))
                         .sheet(isPresented: $showingBudgetConfigSheet, onDismiss: {
                         }) {
                             BudgetConfigTabView(selectedTab: $selectedBudgetConfigTab)
@@ -97,13 +102,13 @@ struct MainTabView: View {
             .onAppear {
                 UITabBarItem.appearance().setTitleTextAttributes([NSAttributedString.Key.font: UIFont.systemFont(ofSize: 12)], for: .normal)
                 UITabBarItem.appearance().setTitleTextAttributes([NSAttributedString.Key.font: UIFont.systemFont(ofSize: 12)], for: .selected)
-                print("Has completed notification selection: \(userViewModel.hasCompletedNotificationSelection)")
                 budgetViewModel.isCalculatingMetrics = true
                 budgetViewModel.fetchNewTransactionsFromServer(userId: userViewModel.id) { success in
                     if success {
-                        print("hasFetchFullTransactionHistory \(UserDefaults.standard.bool(forKey: "hasFetchedFullTransactionHistory"))")
+                        print("hasFetchedFullTransactionHistory \(UserDefaults.standard.bool(forKey: "hasFetchedFullTransactionHistory"))")
                         if !UserDefaults.standard.bool(forKey: "hasFetchedFullTransactionHistory") {
                             budgetViewModel.fetchTransactionHistoryFromServer(userId: userViewModel.id, bankAccounts: userViewModel.bankAccounts) { _ in
+                                print("fetching full transaction history")
                                 self.updateAndCalculateBudgetMetrics()
                             }
                         } else {

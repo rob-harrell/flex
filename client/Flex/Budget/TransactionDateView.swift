@@ -18,22 +18,6 @@ struct TransactionDateView: View {
     }
 
     var body: some View {
-        // Filter transactions based on selected filter
-        /*
-        let filteredTransactions = transactions.filter { transaction in
-            switch selectedSpendFilter {
-            case .income:
-                return transaction.budgetCategory == "Income"
-            case .totalSpend:
-                return transaction.budgetCategory == "Fixed" || transaction.budgetCategory == "Flex"
-            case .bills:
-                return transaction.budgetCategory == "Fixed"
-            case .discretionary:
-                return transaction.budgetCategory == "Flex"
-            }
-        }
-         */
-
         if !transactions.isEmpty {
             VStack(alignment: .leading) {
                 HStack {

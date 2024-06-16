@@ -14,14 +14,13 @@ import KeychainAccess
 
 class BudgetViewModel: ObservableObject {
     //Monthly budget metrics
-    @Published var selectedMonthTransactions: [TransactionViewModel] = []
+    @Published var selectedMonthTransactions: [Date: [TransactionViewModel]] = [:]
     @Published var selectedMonthFixedSpendPerDay: [Date: Double] = [:]
     @Published var selectedMonthFlexSpendPerDay: [Date: Double] = [:]
     @Published var selectedMonthIncomePerDay: [Date: Double] = [:]
     @Published var selectedMonthFixedSpend: Double = 0.0
     @Published var selectedMonthFlexSpend: Double = 0.0
     @Published var selectedMonthIncome: Double = 0.0
-    @Published var selectedMonthSavings: Double = 0.0
 
     //Income breakdown metrics
     @Published var avgRecentWorkIncome: Double = 0
@@ -369,14 +368,17 @@ class BudgetViewModel: ObservableObject {
         startOfMonth = calendar.startOfDay(for: startOfMonth)
 
         // Fetch transactions from Core Data for the given month
-        self.selectedMonthTransactions = self.fetchTransactionsFromCoreData(from: startOfMonth, to: endOfMonth)
+        let selectedMonthTransactionsList = self.fetchTransactionsFromCoreData(from: startOfMonth, to: endOfMonth)
 
         // Group transactions by date
-        let groupedTransactionsByDay = Dictionary(grouping: self.selectedMonthTransactions, by: { 
+        self.selectedMonthTransactions = Dictionary(grouping: selectedMonthTransactionsList, by: {
             // Convert the date of the transaction to the user's local timezone
             let userLocalDate = Calendar.current.startOfDay(for: $0.date)
             return userLocalDate
-        })
+        }).mapValues { transactions in
+            // Sort transactions by date and time in ascending order
+            transactions.sorted { $0.date < $1.date }
+        }
 
         // Calculate total fixed and flexible spending and income per day
         self.selectedMonthFixedSpendPerDay = [:]
@@ -398,7 +400,7 @@ class BudgetViewModel: ObservableObject {
             }
         }
 
-        for (date, transactions) in groupedTransactionsByDay {
+        for (date, transactions) in selectedMonthTransactions {
             var totalFixedSpend = 0.0
             var totalFlexSpend = 0.0
             var totalIncome = 0.0
@@ -423,41 +425,13 @@ class BudgetViewModel: ObservableObject {
 
         // Calculate total fixed and flexible spending and income for the month
         self.selectedMonthFlexSpend = self.selectedMonthFlexSpendPerDay.values.reduce(0, +)
-        
-        let currentMonth = Calendar.current.date(from: Calendar.current.dateComponents([.year, .month], from: Date()))!
-
-        //Calculate fixed and income based on arguments if current month
-        if Calendar.current.isDate(month, equalTo: currentMonth, toGranularity: .month) {
-            self.selectedMonthFixedSpend = monthlyFixedSpend
-            self.selectedMonthIncome = monthlyIncome
-        } else {
-            self.selectedMonthFixedSpend = self.selectedMonthFixedSpendPerDay.values.reduce(0, +)
-            self.selectedMonthIncome = self.selectedMonthIncomePerDay.values.reduce(0, +)
-        }
-
-        // Calculate savings for the month
-        self.selectedMonthSavings = selectedMonthIncome - selectedMonthFixedSpend - selectedMonthFlexSpend
-        
-        for (date, amount) in self.selectedMonthFlexSpendPerDay {
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateFormat = "yyyy-MM-dd"
-            let dateString = dateFormatter.string(from: date)
-            print("MonthFlexSpendPerDay - Date: \(dateString), Amount: \(amount)")
-        }
-                
+        self.selectedMonthFixedSpend = self.selectedMonthFixedSpendPerDay.values.reduce(0, +)
+        self.selectedMonthIncome = self.selectedMonthIncomePerDay.values.reduce(0, +)
+                        
         // Call prepareBezierPathInputs after flexSpendPerDay is populated
         print("calculating bezier inputs")
         let spendPerDay = self.selectedMonthFlexSpendPerDay.mapValues { CGFloat($0) }
         self.dataPointsPerDay = prepareBezierPathInputs(spendPerDay: spendPerDay)
-        
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "M/d"
-        
-        for date in self.dataPointsPerDay.keys.sorted() {
-            let dataPoints = self.dataPointsPerDay[date]!
-            let formattedDate = dateFormatter.string(from: date)
-            print("Date: \(formattedDate), Points: \(dataPoints.map { String(format: "%.2f", $0) }.joined(separator: ", "))")
-        }
        
         self.isCalculatingMetrics = false
         print("finished calculating budget metrics")

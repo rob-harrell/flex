@@ -18,18 +18,10 @@ struct BudgetCalendarView: View {
     @State private var showingOverlay = false
     @State private var spacerCounts: [Int] = []
 
-    
     let calendar = Calendar.current
     let columns: [GridItem] = Array(repeating: .init(.flexible(), spacing: 0), count: 7)
 
     var body: some View {
-
-        // Print statements for debugging
-        //let _ = print("Processing index: \(sharedViewModel.dates.indices)")
-        //let _ = print("Processing dates: \(sharedViewModel.dates)")
-        //let _ = print("Selected month: \(sharedViewModel.selectedMonth)")
-        //let _ = print("Is calculating budget metrics: \(budgetViewModel.isCalculatingMetrics)")
-
         VStack {
             // Weekday headers
             HStack(spacing: 10) {
@@ -118,59 +110,50 @@ struct BudgetCalendarView: View {
             VStack {
                 Text(sharedViewModel.stringForDate(date, format: "d")) // Date
                     .font(.caption)
-                    .foregroundColor(cellDate == sharedViewModel.selectedDay && showingOverlay ? Color.white : (cellDate == today ? Color.black : Color.slate500))
+                    .foregroundColor(cellDate == sharedViewModel.selectedDay && showingOverlay ? Color.white : (calendar.isDate(cellDate, inSameDayAs: today) ? Color.black : Color.slate400))
                     .fixedSize(horizontal: false, vertical: true) // Prevent stretching
                     .padding(.vertical, 8)
-                    .fontWeight(.semibold)
+                    .fontWeight(.medium)
                     .transition(.identity)
 
                 if !isFuture && isInSelectedMonth {
                     let flexSpend = budgetViewModel.selectedMonthFlexSpendPerDay.filter { calendar.isDate($0.key, equalTo: cellDate, toGranularity: .day) }.first?.value ?? 0
                     let fixedSpend = budgetViewModel.selectedMonthFixedSpendPerDay.filter { calendar.isDate($0.key, equalTo: cellDate, toGranularity: .day) }.first?.value ?? 0
                     let income = budgetViewModel.selectedMonthIncomePerDay.filter { calendar.isDate($0.key, equalTo: cellDate, toGranularity: .day) }.first?.value ?? 0
-
-                    //let _ = print("Flex spend for \(cellDate): \(flexSpend)")
-                    //let _ = print("Fixed spend for \(cellDate): \(fixedSpend)")
-                    //let _ = print("Income for \(cellDate): \(income)")
-
-                    if flexSpend > 0 {
-                        Text(formatBudgetNumber(flexSpend)) // Flex spend
-                            .font(.caption)
-                            .foregroundColor(cellDate == sharedViewModel.selectedDay && showingOverlay ? Color.white : Color.black)
-                            .fixedSize(horizontal: false, vertical: true) // Prevent stretching
-                            .fontWeight(.semibold)
-                            .transition(.identity)
-                    }
-
-                    if fixedSpend > 0 {
-                        Text(formatBudgetNumber(fixedSpend)) // Fixed spend
-                            .font(.caption)
-                            .foregroundColor(Color.slate500)
-                            .fixedSize(horizontal: false, vertical: true) // Prevent stretching
-                            .fontWeight(.semibold)
-                            .transition(.identity)
-                    }
                     
-                    if abs(income) > 0 {
-                        Text(formatBudgetNumber(abs(income)))
-                            .font(.caption)
-                            .foregroundColor(Color.emerald600)
-                            .fixedSize(horizontal: false, vertical: true) // Prevent stretching
-                            .fontWeight(.semibold)
-                            .transition(.identity)
+                    Group {
+                        switch selectedSpendFilter {
+                        case .discretionary where flexSpend > 0:
+                            Text(formatBudgetNumber(flexSpend))
+                                .font(.caption)
+                                .foregroundColor(cellDate == sharedViewModel.selectedDay && showingOverlay ? Color.white : Color.black)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .fontWeight(.semibold)
+                                .transition(.identity)
+                        case .bills where fixedSpend > 0:
+                            Text(formatBudgetNumber(fixedSpend))
+                                .font(.caption)
+                                .foregroundColor(Color.slate500)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .fontWeight(.semibold)
+                                .transition(.identity)
+                        case .income where abs(income) > 0:
+                            Text(formatBudgetNumber(abs(income)))
+                                .font(.caption)
+                                .foregroundColor(Color.emerald600)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .fontWeight(.semibold)
+                                .transition(.identity)
+                        case .allSpend where fixedSpend + flexSpend > 0:
+                            Text(formatBudgetNumber(abs(flexSpend + fixedSpend)))
+                                .font(.caption)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .fontWeight(.semibold)
+                                .transition(.identity)
+                        default:
+                            EmptyView()
+                        }
                     }
-                    
-                    /*
-                    if curveDataPoints != [0, 0, 0] {
-                        Text("\(String(format: "%.2f", curveDataPoints[1]))")
-                            .font(.caption)
-                            .foregroundColor(Color.red)
-                            .fixedSize(horizontal: false, vertical: true) // Prevent stretching
-                            .fontWeight(.semibold)
-                            .transition(.identity)
-                    }
-                     */
-                    
                 }
 
                 Spacer()
@@ -192,18 +175,18 @@ struct BudgetCalendarView: View {
         .overlay(
             ZStack {
                 RoundedRectangle(cornerRadius: 0)
-                    .stroke(Color.slate100, lineWidth: 0.75)
-                if isPastOrToday {
+                    .stroke(calendar.isDate(cellDate, inSameDayAs: today) ? Color.black : Color.slate100, lineWidth: calendar.isDate(cellDate, inSameDayAs: today) ? 1 : 0.75)
+                if isPastOrToday && (selectedSpendFilter == .discretionary || selectedSpendFilter == .allSpend)  {
                     BudgetCurveView(dataPoints: curveDataPoints)
-                        .opacity(0.3)
+                        .opacity(0.4)
                 }
             }
         )
-        .padding(0.25) // Add padding equal to half the border width
+        .padding(0.25)
         .offset(x: -0.25, y: -0.25)
         .onAppear {
             let formattedDate = DateFormatter.localizedString(from: cellDate, dateStyle: .short, timeStyle: .none)
-            print("Cell.onappear Date: \(formattedDate), Bezier points: \(curveDataPoints)")
+            //print("Cell.onappear Date: \(formattedDate), Bezier points: \(curveDataPoints)")
         }
     }
 }
