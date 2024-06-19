@@ -20,7 +20,7 @@ class BudgetViewModel: ObservableObject {
     @Published var selectedMonthIncomePerDay: [Date: Double] = [:]
     @Published var selectedMonthFixedSpend: Double = 0.0
     @Published var selectedMonthFlexSpend: Double = 0.0
-    @Published var selectedMonthIncome: Double = 0.0
+    @Published var selectedMonthIncome: Double = 1
 
     //Income breakdown metrics
     @Published var avgRecentWorkIncome: Double = 0
@@ -47,8 +47,9 @@ class BudgetViewModel: ObservableObject {
     @Published var recentNursingCosts: Double = 0
     @Published var avgTotalRecentFixedSpend: Double = 0
     
-    //Bezier arrays
-    @Published var dataPointsPerDay: [Date: [CGFloat]] = [:]
+    //Day cell visual arrays
+    @Published var budgetCurvePoints: [Date: [CGFloat]] = [:]
+    @Published var maxDayFlexSpend: Double = 1
     
     struct TransactionViewModel {
         var id: Int64
@@ -112,8 +113,27 @@ class BudgetViewModel: ObservableObject {
         let context = CoreDataStack.shared.persistentContainer.viewContext
         let dateFormatter = ISO8601DateFormatter()
         dateFormatter.formatOptions = [.withFullDate]
-        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+
+        if let timeZone = TimeZone(secondsFromGMT: 0) {
+            dateFormatter.timeZone = timeZone
+        } else {
+            print("Failed to create GMT timezone")
+        }
         
+        // Create a DateComponents object with the desired time of day
+        var dateComponents = DateComponents()
+        dateComponents.hour = 20 // 8 PM GMT
+        dateComponents.minute = 0
+        dateComponents.second = 0
+        
+        // Create a Calendar object
+        var calendar = Calendar.current
+        if let timeZone = TimeZone(secondsFromGMT: 0) {
+            calendar.timeZone = timeZone
+        } else {
+            print("Failed to create GMT timezone")
+        }
+            
         for transactionResponse in transactions {
             if transactionResponse.name == "Returned Payment" {
                 print("Skipped transaction with name: \(transactionResponse.name)")
@@ -138,13 +158,27 @@ class BudgetViewModel: ObservableObject {
                     print("Invalid authorized date: \(authorizedDateString)")
                     continue
                 }
-                transaction.date = authDateAsDate
+                // Get the date components of the authorized date
+                var authDateComponents = calendar.dateComponents([.year, .month, .day], from: authDateAsDate)
+                // Set the time of the transaction date to 8 PM GMT
+                authDateComponents.hour = dateComponents.hour
+                authDateComponents.minute = dateComponents.minute
+                authDateComponents.second = dateComponents.second
+                // Create the transaction date from the date components
+                transaction.date = calendar.date(from: authDateComponents)
             } else {
                 guard let dateAsDate = dateFormatter.date(from: transactionResponse.date) else {
                     print("Invalid date: \(transactionResponse.date)")
                     continue
                 }
-                transaction.date = dateAsDate
+                // Get the date components of the transaction date
+                var dateComponents = calendar.dateComponents([.year, .month, .day], from: dateAsDate)
+                // Set the time of the transaction date to 8 PM GMT
+                dateComponents.hour = dateComponents.hour
+                dateComponents.minute = dateComponents.minute
+                dateComponents.second = dateComponents.second
+                // Create the transaction date from the date components
+                transaction.date = calendar.date(from: dateComponents)
                 print("authorizedDate is nil, using transaction date instead")
             }
 
@@ -187,7 +221,26 @@ class BudgetViewModel: ObservableObject {
         let context = CoreDataStack.shared.persistentContainer.viewContext
         let dateFormatter = ISO8601DateFormatter()
         dateFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+
+        if let timeZone = TimeZone(secondsFromGMT: 0) {
+            dateFormatter.timeZone = timeZone
+        } else {
+            print("Failed to create GMT timezone")
+        }
+
+        // Create a DateComponents object with the desired time of day
+        var dateComponents = DateComponents()
+        dateComponents.hour = 20 // 8 PM GMT
+        dateComponents.minute = 0
+        dateComponents.second = 0
+
+        // Create a Calendar object
+        var calendar = Calendar.current
+        if let timeZone = TimeZone(secondsFromGMT: 0) {
+            calendar.timeZone = timeZone
+        } else {
+            print("Failed to create GMT timezone")
+        }
 
         for transactionResponse in transactions {
             let fetchRequest: NSFetchRequest<Transaction> = Transaction.fetchRequest()
@@ -198,12 +251,9 @@ class BudgetViewModel: ObservableObject {
                 guard let transaction = fetchedTransactions.first else {
                     throw CoreDataError.transactionNotFound
                 }
-                
+
                 // Update the properties of the transaction
                 transaction.amount = transactionResponse.amount
-                if transactionResponse.category == "INCOME" {
-                    transaction.amount = -transaction.amount
-                }
                 transaction.category = transactionResponse.category
                 transaction.subCategory = transactionResponse.subCategory
                 transaction.currencyCode = transactionResponse.currencyCode
@@ -214,19 +264,33 @@ class BudgetViewModel: ObservableObject {
                 transaction.logoURL = transactionResponse.logoURL
                 transaction.productCategory = transactionResponse.productCategory
                 transaction.budgetCategory = transactionResponse.budgetCategory
-                
+
                 if let authorizedDateString = transactionResponse.authorizedDate {
                     guard let authDateAsDate = dateFormatter.date(from: authorizedDateString) else {
                         print("Invalid authorized date: \(authorizedDateString)")
                         continue
                     }
-                    transaction.date = authDateAsDate
+                    // Get the date components of the authorized date
+                    var authDateComponents = calendar.dateComponents([.year, .month, .day], from: authDateAsDate)
+                    // Set the time of the transaction date to 8 PM GMT
+                    authDateComponents.hour = dateComponents.hour
+                    authDateComponents.minute = dateComponents.minute
+                    authDateComponents.second = dateComponents.second
+                    // Create the transaction date from the date components
+                    transaction.date = calendar.date(from: authDateComponents)
                 } else {
                     guard let dateAsDate = dateFormatter.date(from: transactionResponse.date) else {
                         print("Invalid date: \(transactionResponse.date)")
                         continue
                     }
-                    transaction.date = dateAsDate
+                    // Get the date components of the transaction date
+                    var dateComponents = calendar.dateComponents([.year, .month, .day], from: dateAsDate)
+                    // Set the time of the transaction date to 8 PM GMT
+                    dateComponents.hour = dateComponents.hour
+                    dateComponents.minute = dateComponents.minute
+                    dateComponents.second = dateComponents.second
+                    // Create the transaction date from the date components
+                    transaction.date = calendar.date(from: dateComponents)
                     print("authorizedDate is nil, using transaction date instead")
                 }
             } catch {
@@ -362,7 +426,7 @@ class BudgetViewModel: ObservableObject {
         // Create a date range for the given month
         let calendar = Calendar.current
         var startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: month))!
-        var endOfMonth = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: startOfMonth)!
+        let endOfMonth = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: startOfMonth)!
 
         // Adjust the start of the month to start from the beginning of the day in GMT
         startOfMonth = calendar.startOfDay(for: startOfMonth)
@@ -388,7 +452,7 @@ class BudgetViewModel: ObservableObject {
         // Get the number of days in the month
         let range = calendar.range(of: .day, in: .month, for: month)!
         let numDays = range.count
-
+        
         // Initialize the dictionary with zeros for all days of the month
         for day in 1...numDays {
             let dateComponents = DateComponents(year: calendar.component(.year, from: month), month: calendar.component(.month, from: month), day: day)
@@ -429,9 +493,10 @@ class BudgetViewModel: ObservableObject {
         self.selectedMonthIncome = self.selectedMonthIncomePerDay.values.reduce(0, +)
                         
         // Call prepareBezierPathInputs after flexSpendPerDay is populated
-        print("calculating bezier inputs")
+        print("calculating budget curve inputs")
         let spendPerDay = self.selectedMonthFlexSpendPerDay.mapValues { CGFloat($0) }
-        self.dataPointsPerDay = prepareBezierPathInputs(spendPerDay: spendPerDay)
+        self.budgetCurvePoints = prepareBudgetCurveInputs(spendPerDay: spendPerDay)
+        self.maxDayFlexSpend = spendPerDay.values.max() ?? 1.0
        
         self.isCalculatingMetrics = false
         print("finished calculating budget metrics")
@@ -534,7 +599,7 @@ class BudgetViewModel: ObservableObject {
 
     }
     
-    func prepareBezierPathInputs(spendPerDay: [Date: CGFloat]) -> [Date: [CGFloat]] {
+    func prepareBudgetCurveInputs(spendPerDay: [Date: CGFloat]) -> [Date: [CGFloat]] {
         // Normalize the spend amounts
         guard let maxSpend = spendPerDay.values.max(), maxSpend > 0 else {
             return spendPerDay.mapValues { _ in [CGFloat(0), CGFloat(0), CGFloat(0)] }
@@ -550,7 +615,7 @@ class BudgetViewModel: ObservableObject {
         for i in 0..<sortedDates.count {
             let date = sortedDates[i]
             var firstPoint: CGFloat
-            var secondPoint = normalizedData[date]!
+            let secondPoint = normalizedData[date]!
             var thirdPoint: CGFloat
 
             if i == 0 {

@@ -12,6 +12,7 @@ func formatBudgetNumber(_ n: Double) -> String {
     let suffix: String
     var divisor: Double = 1
     var format: String = "%.0f"
+    let sign = n < 0 ? "-" : ""
 
     switch absN {
     case 10_000_000...:
@@ -35,14 +36,14 @@ func formatBudgetNumber(_ n: Double) -> String {
         divisor = pow(10, 3)
         format = "%.1f"
     case 0...999:
-        return String(format: "$%.0f", n)
+        return "\(sign)$\(String(format: "%.0f", absN))"
     default:
-        return String(format: "$%.0f", n)
+        return "\(sign)$\(String(format: "%.0f", absN))"
     }
 
-    let number = n / divisor
+    let number = absN / divisor
     let formattedNumber = String(format: format, number)
     let finalNumber = formattedNumber.hasSuffix(".0") ? String(formattedNumber.dropLast(2)) : formattedNumber
 
-    return "$\(finalNumber)\(suffix)"
+    return "\(sign)$\(finalNumber)\(suffix)"
 }

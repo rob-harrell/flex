@@ -21,7 +21,22 @@ struct BudgetCalendarView: View {
     let calendar = Calendar.current
     let columns: [GridItem] = Array(repeating: .init(.flexible(), spacing: 0), count: 7)
 
+    var remainingDaysInMonth: Int {
+        let date = Date()
+        let range = calendar.range(of: .day, in: .month, for: date)!
+        let currentDay = calendar.component(.day, from: date)
+        return range.count - currentDay
+    }
+
+    var remainingDailyFlex: Double {
+        let remainingFlex = userViewModel.monthlyIncome - max(userViewModel.monthlyFixedSpend, budgetViewModel.selectedMonthFixedSpend) - budgetViewModel.selectedMonthFlexSpend
+        return remainingFlex / Double(remainingDaysInMonth)
+    }
+
     var body: some View {
+        //Calculate remaining discretionary budget for visualization on calendar
+        let remainingBudgetHeight = max (remainingDailyFlex / budgetViewModel.maxDayFlexSpend, 0)
+        
         VStack {
             // Weekday headers
             HStack(spacing: 10) {
@@ -47,7 +62,7 @@ struct BudgetCalendarView: View {
                             }
                             // Display the dates for the month
                             ForEach(sharedViewModel.dates[index], id: \.self) { date in
-                                calendarDateView(for: date)
+                                calendarDateView(for: date, remainingDailyFlex: remainingDailyFlex, remainingBudgetHeight: remainingBudgetHeight)
                                     .id("\(sharedViewModel.stringForDate(sharedViewModel.selectedMonth, format: "MMMM yyyy"))-\(date)")
                             }
                         }
@@ -80,6 +95,7 @@ struct BudgetCalendarView: View {
                         scrollPosition = index
                     }
                 }
+                print("Remainingbudgetheight: \(remainingBudgetHeight)")
             }
             .onChange(of: scrollPosition) { oldValue, newValue in
                 if let index = newValue {
@@ -91,14 +107,12 @@ struct BudgetCalendarView: View {
     }
         
     @ViewBuilder
-    private func calendarDateView(for date: Date) -> some View {
+    private func calendarDateView(for date: Date, remainingDailyFlex: Double, remainingBudgetHeight: Double) -> some View {
         let today = sharedViewModel.currentDay
         let cellDate = calendar.startOfDay(for: date)
-        let isPastOrToday = cellDate <= today
         let isFuture = cellDate > today
         let isInSelectedMonth = calendar.isDate(cellDate, equalTo: sharedViewModel.selectedMonth, toGranularity: .month)
-        let curveDataPoints = budgetViewModel.dataPointsPerDay.filter { calendar.isDate($0.key, equalTo: cellDate, toGranularity: .day) }.first?.value ?? [0, 0, 0]
-
+        let curveDataPoints = budgetViewModel.budgetCurvePoints.filter { calendar.isDate($0.key, equalTo: cellDate, toGranularity: .day) }.first?.value ?? [0, 0, 0]
 
         Button(action: {
             if !isFuture {
@@ -176,18 +190,35 @@ struct BudgetCalendarView: View {
             ZStack {
                 RoundedRectangle(cornerRadius: 0)
                     .stroke(calendar.isDate(cellDate, inSameDayAs: today) ? Color.black : Color.slate100, lineWidth: calendar.isDate(cellDate, inSameDayAs: today) ? 1 : 0.75)
-                if isPastOrToday && (selectedSpendFilter == .discretionary || selectedSpendFilter == .allSpend)  {
+                if !isFuture && (selectedSpendFilter == .discretionary || selectedSpendFilter == .allSpend)  {
                     BudgetCurveView(dataPoints: curveDataPoints)
                         .opacity(0.4)
+                } else if isFuture && (selectedSpendFilter == .discretionary || selectedSpendFilter == .allSpend) && remainingDailyFlex >= 0.0 {
+                    GeometryReader { geometry in
+                        VStack {
+                            Spacer()
+                            Rectangle()
+                                .fill(Color("emerald50"))
+                                .frame(height: max(geometry.size.height * CGFloat(remainingBudgetHeight), geometry.size.height * 0.08))
+                                .overlay(Divider().background(Color("emerald500")), alignment: .top)
+                        }
+                        if calendar.isDate(cellDate, inSameDayAs: Calendar.current.date(byAdding: .day, value: 1, to: today)!) {
+                            Text(formatBudgetNumber(remainingDailyFlex))
+                                .font(.caption)
+                                .foregroundColor(Color.emerald600)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .fontWeight(.semibold)
+                                .transition(.identity)
+                                .background(Color.white)
+                                .frame(maxWidth: .infinity, alignment: .center)
+                                .offset(y: geometry.size.height - 7 - max(geometry.size.height * CGFloat(remainingBudgetHeight), geometry.size.height * 0.08))
+                        }
+                    }
                 }
             }
         )
         .padding(0.25)
         .offset(x: -0.25, y: -0.25)
-        .onAppear {
-            let formattedDate = DateFormatter.localizedString(from: cellDate, dateStyle: .short, timeStyle: .none)
-            //print("Cell.onappear Date: \(formattedDate), Bezier points: \(curveDataPoints)")
-        }
     }
 }
 
