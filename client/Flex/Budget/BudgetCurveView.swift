@@ -11,15 +11,16 @@ import UIKit
 
 struct BudgetCurveView: View {
     var dataPoints: [CGFloat]
+    var isOverBudget: Bool
 
     var body: some View {
         GeometryReader { geometry in
             let curveShape = CurveShape(dataPoints: dataPoints, rect: geometry.frame(in: .local))
             curveShape
-                .fill(Color(.slate200).opacity(0.4))
+                .fill(isOverBudget ? Color(.red300).opacity(0.6) : Color(.slate200).opacity(0.4))
                 .overlay(
                     TopLineShape(curveShape: curveShape)
-                        .stroke(Color(.slate500).opacity(1), style: StrokeStyle(lineWidth: 0.5, lineCap: .round, lineJoin: .round))
+                        .stroke(isOverBudget ? Color(.red600) : Color(.slate500), style: StrokeStyle(lineWidth: 0.5, lineCap: .round, lineJoin: .round))
                 )
         }
     }

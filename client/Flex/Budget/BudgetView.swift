@@ -9,7 +9,7 @@ import SwiftUI
 
 struct BudgetView: View {
     @EnvironmentObject var userViewModel: UserViewModel
-    @EnvironmentObject var sharedViewModel: DateViewModel
+    @EnvironmentObject var dateViewModel: DateViewModel
     @EnvironmentObject var budgetViewModel: BudgetViewModel
     @Binding var selectedBudgetConfigTab: BudgetConfigTab
     @Binding var showingBudgetConfigSheet: Bool
@@ -94,8 +94,8 @@ struct BudgetView: View {
         }
         .padding(.top, 20)
         .padding(.bottom, 2)
-        .onChange(of: sharedViewModel.selectedMonth) {
-            budgetViewModel.calculateSelectedMonthBudgetMetrics(for: sharedViewModel.selectedMonth, monthlyIncome: userViewModel.monthlyIncome, monthlyFixedSpend: userViewModel.monthlyFixedSpend)
+        .onChange(of: dateViewModel.selectedMonth) {
+            budgetViewModel.calculateSelectedMonthBudgetMetrics(for: dateViewModel.selectedMonth, monthlyIncome: userViewModel.monthlyIncome, monthlyFixedSpend: userViewModel.monthlyFixedSpend)
         }
         .sheet(isPresented: $showingSpendFilter) {
             BudgetFilterView(selectedSpendFilter: $selectedSpendFilter, showingSpendFilter: $showingSpendFilter)

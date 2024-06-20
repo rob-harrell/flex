@@ -49,7 +49,9 @@ class BudgetViewModel: ObservableObject {
     
     //Day cell visual arrays
     @Published var budgetCurvePoints: [Date: [CGFloat]] = [:]
-    @Published var maxDayFlexSpend: Double = 1
+    @Published var isDayOverBudget: [Date: Bool] = [:]
+    @Published var remainingDailyFlex: Double = 0.0
+    @Published var remainingBudgetHeight: Double = 0.0
     
     struct TransactionViewModel {
         var id: Int64
@@ -423,14 +425,26 @@ class BudgetViewModel: ObservableObject {
     //Mark business logic
     func calculateSelectedMonthBudgetMetrics(for month: Date, monthlyIncome: Double, monthlyFixedSpend: Double) {
         print("starting calculating budget metrics")
+        // Reset selectedMonthFlexSpend, selectedMonthIncome, and selectedMonthFixedSpend to zero
+        self.selectedMonthFlexSpend = 0.0
+        self.selectedMonthIncome = 0.0
+        self.selectedMonthFixedSpend = 0.0
+        self.selectedMonthFlexSpendPerDay = [:]
+        self.selectedMonthIncomePerDay = [:]
+        self.selectedMonthFixedSpendPerDay = [:]
+
         // Create a date range for the given month
         let calendar = Calendar.current
         var startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: month))!
         let endOfMonth = calendar.date(byAdding: DateComponents(month: 1, day: -1), to: startOfMonth)!
+        
+        // Get the number of days in the month
+        let range = calendar.range(of: .day, in: .month, for: month)!
+        let numDays = range.count
 
         // Adjust the start of the month to start from the beginning of the day in GMT
         startOfMonth = calendar.startOfDay(for: startOfMonth)
-
+        
         // Fetch transactions from Core Data for the given month
         let selectedMonthTransactionsList = self.fetchTransactionsFromCoreData(from: startOfMonth, to: endOfMonth)
 
@@ -443,60 +457,68 @@ class BudgetViewModel: ObservableObject {
             // Sort transactions by date and time in ascending order
             transactions.sorted { $0.date < $1.date }
         }
-
-        // Calculate total fixed and flexible spending and income per day
-        self.selectedMonthFixedSpendPerDay = [:]
-        self.selectedMonthFlexSpendPerDay = [:]
-        self.selectedMonthIncomePerDay = [:]
-
-        // Get the number of days in the month
-        let range = calendar.range(of: .day, in: .month, for: month)!
-        let numDays = range.count
         
-        // Initialize the dictionary with zeros for all days of the month
+        // Calculate total fixed spending for the month
+        self.selectedMonthFixedSpend = selectedMonthTransactions.values
+            .flatMap { $0 }
+            .filter { $0.budgetCategory == "Fixed" }
+            .map { $0.amount }
+            .reduce(0, +)
+        
+        // Calculate total budget for the month
+        let flexBudget = monthlyIncome - max(monthlyFixedSpend, selectedMonthFixedSpend)
+        
+        // Initialize cumulative spend
+        var cumulativeSpend = 0.0
+       
         for day in 1...numDays {
             let dateComponents = DateComponents(year: calendar.component(.year, from: month), month: calendar.component(.month, from: month), day: day)
             if let date = calendar.date(from: dateComponents) {
                 let userLocalDate = calendar.startOfDay(for: date)
-                if self.selectedMonthFlexSpendPerDay[userLocalDate] == nil {
-                    self.selectedMonthFlexSpendPerDay[userLocalDate] = 0.0
+                var totalFixedSpend = 0.0
+                var totalFlexSpend = 0.0
+                var totalIncome = 0.0
+
+                if let transactions = selectedMonthTransactions[userLocalDate] {
+                    for transaction in transactions {
+                        switch transaction.budgetCategory {
+                        case "Fixed":
+                            totalFixedSpend += transaction.amount
+                        case "Flex":
+                            totalFlexSpend += transaction.amount
+                        case "Income":
+                            totalIncome += abs(transaction.amount)
+                        default:
+                            break
+                        }
+                    }
+                    // Add total spend to cumulative spend
+                    cumulativeSpend += totalFlexSpend
                 }
+
+                self.selectedMonthFixedSpendPerDay[userLocalDate] = totalFixedSpend
+                self.selectedMonthFlexSpendPerDay[userLocalDate] = totalFlexSpend
+                self.selectedMonthIncomePerDay[userLocalDate] = totalIncome
+                // Check if cumulative spend exceeds total budget
+                self.isDayOverBudget[userLocalDate] = cumulativeSpend > flexBudget
             }
-        }
-
-        for (date, transactions) in selectedMonthTransactions {
-            var totalFixedSpend = 0.0
-            var totalFlexSpend = 0.0
-            var totalIncome = 0.0
-
-            for transaction in transactions {
-                switch transaction.budgetCategory {
-                case "Fixed":
-                    totalFixedSpend += transaction.amount
-                case "Flex":
-                    totalFlexSpend += transaction.amount
-                case "Income":
-                    totalIncome += abs(transaction.amount)
-                default:
-                    break
-                }
-            }
-
-            self.selectedMonthFixedSpendPerDay[date] = totalFixedSpend
-            self.selectedMonthFlexSpendPerDay[date] = totalFlexSpend
-            self.selectedMonthIncomePerDay[date] = totalIncome
         }
 
         // Calculate total fixed and flexible spending and income for the month
         self.selectedMonthFlexSpend = self.selectedMonthFlexSpendPerDay.values.reduce(0, +)
-        self.selectedMonthFixedSpend = self.selectedMonthFixedSpendPerDay.values.reduce(0, +)
         self.selectedMonthIncome = self.selectedMonthIncomePerDay.values.reduce(0, +)
                         
         // Call prepareBezierPathInputs after flexSpendPerDay is populated
-        print("calculating budget curve inputs")
         let spendPerDay = self.selectedMonthFlexSpendPerDay.mapValues { CGFloat($0) }
         self.budgetCurvePoints = prepareBudgetCurveInputs(spendPerDay: spendPerDay)
-        self.maxDayFlexSpend = spendPerDay.values.max() ?? 1.0
+        
+        // Use for remaining budget curve height
+        let maxDayFlexSpend = spendPerDay.values.max() ?? 1.0
+        let currentDayOfMonth = calendar.component(.day, from: Date())
+        let remainingDaysInMonth = range.count - currentDayOfMonth
+        let remainingFlex = monthlyIncome - max(monthlyFixedSpend, selectedMonthFixedSpend) - self.selectedMonthFlexSpend
+        self.remainingDailyFlex = remainingFlex / Double(remainingDaysInMonth)
+        self.remainingBudgetHeight = max(remainingDailyFlex / Double(maxDayFlexSpend), 0)
        
         self.isCalculatingMetrics = false
         print("finished calculating budget metrics")

@@ -9,7 +9,7 @@ import SwiftUI
 
 struct FixedSpendConfirmationView: View {
     @EnvironmentObject var budgetViewModel: BudgetViewModel
-    @EnvironmentObject var sharedViewModel: DateViewModel
+    @EnvironmentObject var dateViewModel: DateViewModel
     @EnvironmentObject var userViewModel: UserViewModel
     @State private var removedFixedExpenses: [String: Bool] = [
         "Housing": false,

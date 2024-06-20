@@ -9,7 +9,7 @@ import SwiftUI
 
 struct FinalConfirmationView: View {
     @EnvironmentObject var budgetViewModel: BudgetViewModel
-    @EnvironmentObject var sharedViewModel: DateViewModel
+    @EnvironmentObject var dateViewModel: DateViewModel
     @EnvironmentObject var userViewModel: UserViewModel
     
     let nextAction: () -> Void

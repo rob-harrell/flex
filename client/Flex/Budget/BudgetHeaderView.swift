@@ -9,12 +9,12 @@ import SwiftUI
 
 struct BudgetHeaderView: View {
     @EnvironmentObject var userViewModel: UserViewModel
-    @EnvironmentObject var sharedViewModel: DateViewModel
+    @EnvironmentObject var dateViewModel: DateViewModel
     @EnvironmentObject var budgetViewModel: BudgetViewModel
     @Binding var selectedSpendFilter: SpendFilter
 
     var body: some View {
-        let isCurrentMonth = (sharedViewModel.selectedMonth == sharedViewModel.currentMonth)
+        let isCurrentMonth = (dateViewModel.selectedMonth == dateViewModel.currentMonth)
         let allSpend = isCurrentMonth ? max(userViewModel.monthlyFixedSpend + budgetViewModel.selectedMonthFlexSpend, budgetViewModel.selectedMonthFlexSpend + budgetViewModel.selectedMonthFixedSpend) : budgetViewModel.selectedMonthFlexSpend + budgetViewModel.selectedMonthFixedSpend
         let income = isCurrentMonth ? userViewModel.monthlyIncome : budgetViewModel.selectedMonthIncome
         

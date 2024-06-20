@@ -12,7 +12,7 @@ struct AccountConnectionView: View {
     @EnvironmentObject var userViewModel: UserViewModel
     @EnvironmentObject var plaidLinkViewModel: PlaidLinkViewModel
     @EnvironmentObject var budgetViewModel: BudgetViewModel
-    @EnvironmentObject var sharedViewModel: DateViewModel
+    @EnvironmentObject var dateViewModel: DateViewModel
     @State private var isPresentingLink = false
     @State private var linkController: LinkController?
     
@@ -208,7 +208,7 @@ struct AccountConnectionView: View {
                     print("Successfully fetched bank accounts for user \(self.userViewModel.id)")
                     self.budgetViewModel.fetchNewTransactionsFromServer(userId: self.userViewModel.id) { success in
                         if success {
-                            sharedViewModel.updateDates()
+                            dateViewModel.updateAllTransactionDates()
                             print("Successfully fetched new transactions for user \(self.userViewModel.id)")
                         } else {
                             print("Failed to fetch new transactions for user \(self.userViewModel.id)")

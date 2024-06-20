@@ -10,7 +10,7 @@ import CoreData
 
 struct MainTabView: View {
     @EnvironmentObject var userViewModel: UserViewModel
-    @EnvironmentObject var sharedViewModel: DateViewModel
+    @EnvironmentObject var dateViewModel: DateViewModel
     @EnvironmentObject var budgetViewModel: BudgetViewModel
     @State private var selectedTab: Tab = .budget
     @State private var showingMonthSelection = false
@@ -56,7 +56,7 @@ struct MainTabView: View {
                                 Image("calendaricon")
                                     .padding(.leading, 4)
                                     .padding(.trailing, -2)
-                                Text(sharedViewModel.stringForDate(sharedViewModel.selectedMonth, format: "MMM"))
+                                Text(dateViewModel.stringForDate(dateViewModel.selectedMonth, format: "MMM"))
                                     .font(.headline)
                                     .fontWeight(.semibold)
                             }
@@ -173,9 +173,9 @@ struct MainTabView: View {
         DispatchQueue.main.async {
             if UserDefaults.standard.object(forKey: "FirstTransactionDate") == nil {
                 print("First transaction date not found in user defaults; checking transactions history to store it")
-                sharedViewModel.updateDates()
+                dateViewModel.updateAllTransactionDates()
             }
-            budgetViewModel.calculateSelectedMonthBudgetMetrics(for: sharedViewModel.selectedMonth, monthlyIncome: userViewModel.monthlyIncome, monthlyFixedSpend: userViewModel.monthlyFixedSpend)
+            budgetViewModel.calculateSelectedMonthBudgetMetrics(for: dateViewModel.selectedMonth, monthlyIncome: userViewModel.monthlyIncome, monthlyFixedSpend: userViewModel.monthlyFixedSpend)
             budgetViewModel.calculateRecentBudgetStats()
             if !userViewModel.hasCompletedBudgetCustomization {
                 userViewModel.monthlyIncome = budgetViewModel.avgTotalRecentIncome

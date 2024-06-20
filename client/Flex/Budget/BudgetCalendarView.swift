@@ -9,7 +9,7 @@ import SwiftUI
 
 struct BudgetCalendarView: View {
     @EnvironmentObject var userViewModel: UserViewModel
-    @EnvironmentObject var sharedViewModel: DateViewModel
+    @EnvironmentObject var dateViewModel: DateViewModel
     @EnvironmentObject var budgetViewModel: BudgetViewModel
     @Binding var selectedSpendFilter: SpendFilter
     @State private var selectedDate: Date = Calendar.current.startOfDay(for: Date())
@@ -21,22 +21,7 @@ struct BudgetCalendarView: View {
     let calendar = Calendar.current
     let columns: [GridItem] = Array(repeating: .init(.flexible(), spacing: 0), count: 7)
 
-    var remainingDaysInMonth: Int {
-        let date = Date()
-        let range = calendar.range(of: .day, in: .month, for: date)!
-        let currentDay = calendar.component(.day, from: date)
-        return range.count - currentDay
-    }
-
-    var remainingDailyFlex: Double {
-        let remainingFlex = userViewModel.monthlyIncome - max(userViewModel.monthlyFixedSpend, budgetViewModel.selectedMonthFixedSpend) - budgetViewModel.selectedMonthFlexSpend
-        return remainingFlex / Double(remainingDaysInMonth)
-    }
-
     var body: some View {
-        //Calculate remaining discretionary budget for visualization on calendar
-        let remainingBudgetHeight = max (remainingDailyFlex / budgetViewModel.maxDayFlexSpend, 0)
-        
         VStack {
             // Weekday headers
             HStack(spacing: 10) {
@@ -52,7 +37,7 @@ struct BudgetCalendarView: View {
             // Vertical paging ScrollView for the month
             ScrollView {
                 VStack (spacing: -1) {
-                    ForEach(sharedViewModel.dates.indices, id: \.self) { index in
+                    ForEach(dateViewModel.allTransactionDates.indices, id: \.self) { index in
                         LazyVGrid(columns: columns, spacing: 0) {
                             // Use an Int range to create the necessary number of spacers
                             if !spacerCounts.isEmpty && index < spacerCounts.count {
@@ -61,9 +46,9 @@ struct BudgetCalendarView: View {
                                 }
                             }
                             // Display the dates for the month
-                            ForEach(sharedViewModel.dates[index], id: \.self) { date in
-                                calendarDateView(for: date, remainingDailyFlex: remainingDailyFlex, remainingBudgetHeight: remainingBudgetHeight)
-                                    .id("\(sharedViewModel.stringForDate(sharedViewModel.selectedMonth, format: "MMMM yyyy"))-\(date)")
+                            ForEach(dateViewModel.allTransactionDates[index], id: \.self) { date in
+                                calendarDateView(for: date, remainingDailyFlex: budgetViewModel.remainingDailyFlex, remainingBudgetHeight: budgetViewModel.remainingBudgetHeight, isDayOverBudget: budgetViewModel.isDayOverBudget[date] ?? false)
+                                    .id("\(dateViewModel.stringForDate(dateViewModel.selectedMonth, format: "MMMM yyyy"))-\(date)")
                             }
                         }
                         .containerRelativeFrame(.vertical, alignment: .top)
@@ -71,11 +56,11 @@ struct BudgetCalendarView: View {
                 }
                 .padding(.top, 2)
                 .onAppear {
-                    spacerCounts = sharedViewModel.dates.map { date in
+                    spacerCounts = dateViewModel.allTransactionDates.map { date in
                         let firstDayOfWeekday = calendar.component(.weekday, from: date.first!) - 1
                         return firstDayOfWeekday
                     }
-                    if let index = sharedViewModel.dates.firstIndex(where: { sharedViewModel.calendar.isDate($0.first!, equalTo: sharedViewModel.selectedMonth, toGranularity: .month) }) {
+                    if let index = dateViewModel.allTransactionDates.firstIndex(where: { dateViewModel.calendar.isDate($0.first!, equalTo: dateViewModel.selectedMonth, toGranularity: .month) }) {
                         scrollPosition = index
                     }
                 }
@@ -84,10 +69,10 @@ struct BudgetCalendarView: View {
             .scrollTargetLayout()
             .scrollTargetBehavior(.paging)
             .scrollPosition(id: $scrollPosition)
-            .onChange(of: sharedViewModel.selectedMonth) { oldValue, newValue in
-                let monthIndex = sharedViewModel.dates.firstIndex(where: {
-                    let dateString = sharedViewModel.stringForDate($0.first!, format: "MMMM yyyy")
-                    return dateString == sharedViewModel.stringForDate(newValue, format: "MMMM yyyy")
+            .onChange(of: dateViewModel.selectedMonth) { oldValue, newValue in
+                let monthIndex = dateViewModel.allTransactionDates.firstIndex(where: {
+                    let dateString = dateViewModel.stringForDate($0.first!, format: "MMMM yyyy")
+                    return dateString == dateViewModel.stringForDate(newValue, format: "MMMM yyyy")
                 })
                 if let index = monthIndex {
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
@@ -95,36 +80,35 @@ struct BudgetCalendarView: View {
                         scrollPosition = index
                     }
                 }
-                print("Remainingbudgetheight: \(remainingBudgetHeight)")
             }
             .onChange(of: scrollPosition) { oldValue, newValue in
                 if let index = newValue {
                     print("Scroll position changed: \(index)") // Print when the scroll position changes
-                    sharedViewModel.selectedMonth = sharedViewModel.dates[index].first!
+                    dateViewModel.selectedMonth = dateViewModel.allTransactionDates[index].first!
                 }
             }
         }
     }
         
     @ViewBuilder
-    private func calendarDateView(for date: Date, remainingDailyFlex: Double, remainingBudgetHeight: Double) -> some View {
-        let today = sharedViewModel.currentDay
+    private func calendarDateView(for date: Date, remainingDailyFlex: Double, remainingBudgetHeight: Double, isDayOverBudget: Bool) -> some View {
+        let today = dateViewModel.currentDay
         let cellDate = calendar.startOfDay(for: date)
         let isFuture = cellDate > today
-        let isInSelectedMonth = calendar.isDate(cellDate, equalTo: sharedViewModel.selectedMonth, toGranularity: .month)
+        let isInSelectedMonth = calendar.isDate(cellDate, equalTo: dateViewModel.selectedMonth, toGranularity: .month)
         let curveDataPoints = budgetViewModel.budgetCurvePoints.filter { calendar.isDate($0.key, equalTo: cellDate, toGranularity: .day) }.first?.value ?? [0, 0, 0]
 
         Button(action: {
             if !isFuture {
-                sharedViewModel.selectedDay = cellDate
+                dateViewModel.selectedDay = cellDate
                 hasTapped = true
                 showingOverlay = true
             }
         }) {
             VStack {
-                Text(sharedViewModel.stringForDate(date, format: "d")) // Date
+                Text(dateViewModel.stringForDate(date, format: "d")) // Date
                     .font(.caption)
-                    .foregroundColor(cellDate == sharedViewModel.selectedDay && showingOverlay ? Color.white : (calendar.isDate(cellDate, inSameDayAs: today) ? Color.black : Color.slate400))
+                    .foregroundColor(cellDate == dateViewModel.selectedDay && showingOverlay ? Color.white : (calendar.isDate(cellDate, inSameDayAs: today) ? Color.black : Color.slate400))
                     .fixedSize(horizontal: false, vertical: true) // Prevent stretching
                     .padding(.vertical, 8)
                     .fontWeight(.medium)
@@ -140,7 +124,7 @@ struct BudgetCalendarView: View {
                         case .discretionary where flexSpend > 0:
                             Text(formatBudgetNumber(flexSpend))
                                 .font(.caption)
-                                .foregroundColor(cellDate == sharedViewModel.selectedDay && showingOverlay ? Color.white : Color.black)
+                                .foregroundColor(cellDate == dateViewModel.selectedDay && showingOverlay ? Color.white : isDayOverBudget ? Color.red600 : Color.black)
                                 .fixedSize(horizontal: false, vertical: true)
                                 .fontWeight(.semibold)
                                 .transition(.identity)
@@ -174,13 +158,13 @@ struct BudgetCalendarView: View {
             }
             .frame(minWidth: 0, maxWidth: .infinity)
             .frame(height: 86)
-            .background(cellDate == sharedViewModel.selectedDay && showingOverlay ? Color.black : Color.clear)
-            .animation(.default, value: sharedViewModel.selectedDay)
+            .background(cellDate == dateViewModel.selectedDay && showingOverlay ? Color.black : Color.clear)
+            .animation(.default, value: dateViewModel.selectedDay)
         }
         .disabled(isFuture)
         .sheet(isPresented: $showingOverlay) {
             if hasTapped {
-                TransactionsListOverlay(selectedSpendFilter: $selectedSpendFilter, date: sharedViewModel.selectedDay)
+                TransactionsListOverlay(selectedSpendFilter: $selectedSpendFilter, date: dateViewModel.selectedDay)
                     .environmentObject(budgetViewModel)
                     .presentationDetents([.fraction(0.35), .fraction(1.0)])
                     .presentationCornerRadius(24)
@@ -191,7 +175,7 @@ struct BudgetCalendarView: View {
                 RoundedRectangle(cornerRadius: 0)
                     .stroke(calendar.isDate(cellDate, inSameDayAs: today) ? Color.black : Color.slate100, lineWidth: calendar.isDate(cellDate, inSameDayAs: today) ? 1 : 0.75)
                 if !isFuture && (selectedSpendFilter == .discretionary || selectedSpendFilter == .allSpend)  {
-                    BudgetCurveView(dataPoints: curveDataPoints)
+                    BudgetCurveView(dataPoints: curveDataPoints, isOverBudget: isDayOverBudget)
                         .opacity(0.4)
                 } else if isFuture && (selectedSpendFilter == .discretionary || selectedSpendFilter == .allSpend) && remainingDailyFlex >= 0.0 {
                     GeometryReader { geometry in

@@ -10,7 +10,7 @@ import CoreData
 
 @main
 struct FlexApp: App {
-    @StateObject var sharedViewModel = DateViewModel()
+    @StateObject var dateViewModel = DateViewModel()
     @StateObject var userViewModel = UserViewModel()
     @StateObject var plaidLinkViewModel = PlaidLinkViewModel()
     @StateObject var budgetViewModel = BudgetViewModel()
@@ -20,7 +20,7 @@ struct FlexApp: App {
         WindowGroup {
             LaunchView()
                 .environmentObject(userViewModel)
-                .environmentObject(sharedViewModel)
+                .environmentObject(dateViewModel)
                 .environmentObject(plaidLinkViewModel)
                 .environmentObject(budgetViewModel)
                 .environment(\.managedObjectContext, coreDataStack.persistentContainer.viewContext)

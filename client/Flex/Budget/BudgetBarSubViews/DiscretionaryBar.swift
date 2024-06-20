@@ -9,11 +9,11 @@ import SwiftUI
 
 struct DiscretionaryBar: View {
     @EnvironmentObject var userViewModel: UserViewModel
-    @EnvironmentObject var sharedViewModel: DateViewModel
+    @EnvironmentObject var dateViewModel: DateViewModel
     @EnvironmentObject var budgetViewModel: BudgetViewModel
     
     var body: some View {
-        let isCurrentMonth = (sharedViewModel.selectedMonth == sharedViewModel.currentMonth)
+        let isCurrentMonth = (dateViewModel.selectedMonth == dateViewModel.currentMonth)
         let selectedMonthFixed = budgetViewModel.selectedMonthFixedSpend
         let selectedMonthFlex = budgetViewModel.selectedMonthFlexSpend
         let selectedMonthIncome = budgetViewModel.selectedMonthIncome

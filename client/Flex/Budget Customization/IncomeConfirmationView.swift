@@ -10,7 +10,7 @@ import LinkKit
 
 struct IncomeConfirmationView: View {
     @EnvironmentObject var budgetViewModel: BudgetViewModel
-    @EnvironmentObject var sharedViewModel: DateViewModel
+    @EnvironmentObject var dateViewModel: DateViewModel
     @EnvironmentObject var userViewModel: UserViewModel
     @EnvironmentObject var plaidLinkViewModel: PlaidLinkViewModel
     @State private var manualIncomeString: String = ""
@@ -250,7 +250,7 @@ struct IncomeConfirmationView: View {
                     print("Successfully fetched bank accounts for user \(self.userViewModel.id)")
                     self.budgetViewModel.fetchNewTransactionsFromServer(userId: self.userViewModel.id) { success in
                         if success {
-                            sharedViewModel.updateDates()
+                            dateViewModel.updateAllTransactionDates()
                             print("Successfully fetched new transactions for user \(self.userViewModel.id)")
                         } else {
                             print("Failed to fetch new transactions for user \(self.userViewModel.id)")

@@ -1,5 +1,5 @@
 //
-//  SharedViewModel.swift
+//  dateViewModel.swift
 //  Flex
 //
 //  Created by Rob Harrell on 2/10/24.
@@ -9,11 +9,16 @@ import Foundation
 import CoreData
 
 class DateViewModel: ObservableObject {
-    @Published var selectedMonth: Date
+    @Published var selectedMonth: Date {
+        didSet {
+            updateSelectedMonthDates()
+        }
+    }
     @Published var selectedDay: Date
     @Published var currentMonth: Date
     @Published var currentDay: Date
-    @Published var dates: [[Date]] = []
+    @Published var allTransactionDates: [[Date]] = []
+    @Published var selectedMonthDates: [Date] = []
 
     let monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
     let calendar = Calendar.current
@@ -24,29 +29,15 @@ class DateViewModel: ObservableObject {
         let currentMonthDate = calendar.date(from: calendar.dateComponents([.year, .month], from: currentDate))!
         currentMonth = currentMonthDate
         selectedMonth = currentMonthDate
-        let currentDayDate = currentDate
-        currentDay = currentDayDate
-        selectedDay = currentDayDate
+        currentDay = currentDate
+        selectedDay = currentDate
 
-        // Call updateDates() to populate the dates array
-        updateDates()
-    }
-
-    func generateDatesForCurrentMonth() {
-        var datesForCurrentMonth: [Date] = []
-        let range = calendar.range(of: .day, in: .month, for: currentMonth)!
-        let daysCount = range.count
-        var components = calendar.dateComponents([.year, .month], from: currentMonth)
-        for day in 1...daysCount {
-            components.day = day
-            if let date = calendar.date(from: components) {
-                datesForCurrentMonth.append(date)
-            }
-        }
-        dates = [datesForCurrentMonth]
+        // Populate dates arrays
+        updateAllTransactionDates()
+        updateSelectedMonthDates()
     }
     
-    func updateDates() {
+    func updateAllTransactionDates() {
         var firstTransactionDate: Date
         if let date = UserDefaults.standard.object(forKey: "FirstTransactionDate") as? Date {
             // First transaction date is available in UserDefaults
@@ -91,7 +82,14 @@ class DateViewModel: ObservableObject {
             }
             allDates.insert(datesForMonth, at: 0)
         }
-        dates = allDates
+        allTransactionDates = allDates
+    }
+
+    func updateSelectedMonthDates() {
+        selectedMonthDates = allTransactionDates
+            .flatMap { $0 }
+            .filter { calendar.isDate($0, equalTo: selectedMonth, toGranularity: .month) }
+            .sorted { $0 < $1 }
     }
     
     func getFirstTransactionDateFromTransactionHistory() -> Date {
@@ -119,13 +117,6 @@ class DateViewModel: ObservableObject {
         // If no transactions were found, return the current date
         print("No transactions found, returning current date")
         return Date()
-    }
-    
-    func datesForSelectedMonth() -> [Date] {
-        guard let monthIndex = dates.firstIndex(where: { calendar.isDate($0.first!, equalTo: selectedMonth, toGranularity: .month) }) else {
-            return []
-        }
-        return dates[monthIndex]
     }
 
     func stringForDate(_ date: Date, format: String) -> String {

@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct MonthSelectorView: View {
-    @EnvironmentObject var sharedViewModel: DateViewModel
+    @EnvironmentObject var dateViewModel: DateViewModel
     @Binding var showingMonthSelection: Bool
 
     var body: some View {
@@ -20,12 +20,12 @@ struct MonthSelectorView: View {
                 .padding(.top, 24)
             ScrollViewReader { scrollView in
                 ScrollView(.vertical, showsIndicators: false) {
-                    ForEach(sharedViewModel.dates, id: \.self) { dates in
+                    ForEach(dateViewModel.allTransactionDates, id: \.self) { dates in
                         monthButton(dates: dates)
                     }
                 }
                 .onAppear {
-                    let month = sharedViewModel.stringForDate(sharedViewModel.selectedMonth, format: "MMMM")
+                    let month = dateViewModel.stringForDate(dateViewModel.selectedMonth, format: "MMMM")
                     scrollView.scrollTo(month, anchor: .center)
                 }
             }
@@ -39,10 +39,10 @@ struct MonthSelectorView: View {
     
     @ViewBuilder
     private func monthButton(dates: [Date]) -> some View {
-        let month = sharedViewModel.stringForDate(dates.first!, format: "MMMM")
-        let isSelected = sharedViewModel.calendar.isDate(dates.first!, equalTo: sharedViewModel.selectedMonth, toGranularity: .month)
+        let month = dateViewModel.stringForDate(dates.first!, format: "MMMM")
+        let isSelected = dateViewModel.calendar.isDate(dates.first!, equalTo: dateViewModel.selectedMonth, toGranularity: .month)
         Button(action: {
-            sharedViewModel.selectedMonth = dates.first!
+            dateViewModel.selectedMonth = dates.first!
             showingMonthSelection = false
         }) {
             ZStack(alignment: .trailing) {
