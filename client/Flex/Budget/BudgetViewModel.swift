@@ -52,6 +52,8 @@ class BudgetViewModel: ObservableObject {
     @Published var isDayOverBudget: [Date: Bool] = [:]
     @Published var remainingDailyFlex: Double = 0.0
     @Published var remainingBudgetHeight: Double = 0.0
+    @Published var selectedMonthAvgFlexSpend: Double = 0.0
+    @Published var avgFlexSpendHeight: Double = 0.0
     
     struct TransactionViewModel {
         var id: Int64
@@ -510,13 +512,19 @@ class BudgetViewModel: ObservableObject {
                         
         // Call prepareBezierPathInputs after flexSpendPerDay is populated
         let spendPerDay = self.selectedMonthFlexSpendPerDay.mapValues { CGFloat($0) }
-        self.budgetCurvePoints = prepareBudgetCurveInputs(spendPerDay: spendPerDay)
+        self.budgetCurvePoints = prepareBudgetCurveInputs(spendPerDay: spendPerDay, exponent: 0.5)
+        print("bezier inputs")
+        print(self.budgetCurvePoints)
         
         // Use for remaining budget curve height
         let maxDayFlexSpend = spendPerDay.values.max() ?? 1.0
         let currentDayOfMonth = calendar.component(.day, from: Date())
         let remainingDaysInMonth = range.count - currentDayOfMonth
         let remainingFlex = monthlyIncome - max(monthlyFixedSpend, selectedMonthFixedSpend) - self.selectedMonthFlexSpend
+        self.selectedMonthAvgFlexSpend = self.selectedMonthFlexSpend / Double(currentDayOfMonth)
+        print("Average daily flex spend: \(self.selectedMonthAvgFlexSpend)")
+        self.avgFlexSpendHeight = self.selectedMonthAvgFlexSpend / maxDayFlexSpend
+        print("Average remaining spend height multiplier: \(self.avgFlexSpendHeight)")
         self.remainingDailyFlex = remainingFlex / Double(remainingDaysInMonth)
         self.remainingBudgetHeight = max(remainingDailyFlex / Double(maxDayFlexSpend), 0)
        
@@ -542,6 +550,7 @@ class BudgetViewModel: ObservableObject {
         var recentAccrualsIncome = 0.0
         var recentPensionIncome = 0.0
         var recentHousingCosts = 0.0
+        var recentInsuranceCosts = 0.0
         var recentStudentLoans = 0.0
         var recentOtherLoans = 0.0
         var recentCarPayment = 0.0
@@ -621,13 +630,16 @@ class BudgetViewModel: ObservableObject {
 
     }
     
-    func prepareBudgetCurveInputs(spendPerDay: [Date: CGFloat]) -> [Date: [CGFloat]] {
-        // Normalize the spend amounts
+    func prepareBudgetCurveInputs(spendPerDay: [Date: CGFloat], exponent: CGFloat) -> [Date: [CGFloat]] {
+        // Normalize the spend amounts with power transformation
         guard let maxSpend = spendPerDay.values.max(), maxSpend > 0 else {
             return spendPerDay.mapValues { _ in [CGFloat(0), CGFloat(0), CGFloat(0)] }
         }
 
-        let normalizedData = spendPerDay.mapValues { $0 / maxSpend }
+        let normalizedData = spendPerDay.mapValues { value in
+            let nonNegativeValue = max(value, 0)
+            return pow(nonNegativeValue / maxSpend, exponent)
+        }
 
         // Prepare the data points for each day
         var dataPointsPerDay: [Date: [CGFloat]] = [:]
@@ -654,7 +666,6 @@ class BudgetViewModel: ObservableObject {
 
             dataPointsPerDay[date] = [firstPoint, secondPoint, thirdPoint]
         }
-
         return dataPointsPerDay
     }
 }

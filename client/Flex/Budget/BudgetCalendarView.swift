@@ -94,9 +94,15 @@ struct BudgetCalendarView: View {
     private func calendarDateView(for date: Date, remainingDailyFlex: Double, remainingBudgetHeight: Double, isDayOverBudget: Bool) -> some View {
         let today = dateViewModel.currentDay
         let cellDate = calendar.startOfDay(for: date)
+        let isToday = calendar.isDate(cellDate, inSameDayAs: today)
+        let isFirstDayOfPreviousMonth = calendar.component(.day, from: cellDate) == 1 && 
+            ((calendar.component(.year, from: cellDate) < calendar.component(.year, from: today)) || 
+            (calendar.component(.year, from: cellDate) == calendar.component(.year, from: today) && 
+            calendar.component(.month, from: cellDate) < calendar.component(.month, from: today)))
         let isFuture = cellDate > today
         let isInSelectedMonth = calendar.isDate(cellDate, equalTo: dateViewModel.selectedMonth, toGranularity: .month)
         let curveDataPoints = budgetViewModel.budgetCurvePoints.filter { calendar.isDate($0.key, equalTo: cellDate, toGranularity: .day) }.first?.value ?? [0, 0, 0]
+        let todayBills = budgetViewModel.selectedMonthTransactions[cellDate]?.filter { $0.budgetCategory == "Fixed" } ?? []
 
         Button(action: {
             if !isFuture {
@@ -110,7 +116,8 @@ struct BudgetCalendarView: View {
                     .font(.caption)
                     .foregroundColor(cellDate == dateViewModel.selectedDay && showingOverlay ? Color.white : (calendar.isDate(cellDate, inSameDayAs: today) ? Color.black : Color.slate400))
                     .fixedSize(horizontal: false, vertical: true) // Prevent stretching
-                    .padding(.vertical, 8)
+                    .padding(.top, 8)
+                    .padding(.bottom, 4)
                     .fontWeight(.medium)
                     .transition(.identity)
 
@@ -121,6 +128,7 @@ struct BudgetCalendarView: View {
                     
                     Group {
                         switch selectedSpendFilter {
+                            /*
                         case .discretionary where flexSpend > 0:
                             Text(formatBudgetNumber(flexSpend))
                                 .font(.caption)
@@ -128,10 +136,10 @@ struct BudgetCalendarView: View {
                                 .fixedSize(horizontal: false, vertical: true)
                                 .fontWeight(.semibold)
                                 .transition(.identity)
+                             */
                         case .bills where fixedSpend > 0:
                             Text(formatBudgetNumber(fixedSpend))
                                 .font(.caption)
-                                .foregroundColor(Color.slate500)
                                 .fixedSize(horizontal: false, vertical: true)
                                 .fontWeight(.semibold)
                                 .transition(.identity)
@@ -142,12 +150,14 @@ struct BudgetCalendarView: View {
                                 .fixedSize(horizontal: false, vertical: true)
                                 .fontWeight(.semibold)
                                 .transition(.identity)
+                            /*
                         case .allSpend where fixedSpend + flexSpend > 0:
                             Text(formatBudgetNumber(abs(flexSpend + fixedSpend)))
                                 .font(.caption)
                                 .fixedSize(horizontal: false, vertical: true)
                                 .fontWeight(.semibold)
                                 .transition(.identity)
+                             */
                         default:
                             EmptyView()
                         }
@@ -173,10 +183,18 @@ struct BudgetCalendarView: View {
         .overlay(
             ZStack {
                 RoundedRectangle(cornerRadius: 0)
-                    .stroke(calendar.isDate(cellDate, inSameDayAs: today) ? Color.black : Color.slate100, lineWidth: calendar.isDate(cellDate, inSameDayAs: today) ? 1 : 0.75)
+                    .stroke(isToday ? Color.black : Color.slate100, lineWidth: isToday ? 1 : 0.75)
                 if !isFuture && (selectedSpendFilter == .discretionary || selectedSpendFilter == .allSpend)  {
                     BudgetCurveView(dataPoints: curveDataPoints, isOverBudget: isDayOverBudget)
                         .opacity(0.4)
+                    if !isToday && isInSelectedMonth {
+                        GeometryReader { geometry in
+                            Rectangle()
+                                .fill(isDayOverBudget ? Color.red500 : Color.slate500)
+                                .frame(height: 0.75)
+                                .offset(y: geometry.size.height * CGFloat(1 - budgetViewModel.avgFlexSpendHeight))
+                        }
+                    }
                 } else if isFuture && (selectedSpendFilter == .discretionary || selectedSpendFilter == .allSpend) && remainingDailyFlex >= 0.0 {
                     GeometryReader { geometry in
                         VStack {
@@ -188,15 +206,54 @@ struct BudgetCalendarView: View {
                         }
                         if calendar.isDate(cellDate, inSameDayAs: Calendar.current.date(byAdding: .day, value: 1, to: today)!) {
                             Text(formatBudgetNumber(remainingDailyFlex))
-                                .font(.caption)
+                                .font(.system(size: 14))
                                 .foregroundColor(Color.emerald600)
                                 .fixedSize(horizontal: false, vertical: true)
                                 .fontWeight(.semibold)
                                 .transition(.identity)
+                                .padding(.horizontal, 2)
                                 .background(Color.white)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
                                 .frame(maxWidth: .infinity, alignment: .center)
-                                .offset(y: geometry.size.height - 7 - max(geometry.size.height * CGFloat(remainingBudgetHeight), geometry.size.height * 0.08))
+                                .offset(y: geometry.size.height - 9 - max(geometry.size.height * CGFloat(remainingBudgetHeight), geometry.size.height * 0.08))
                         }
+                    }
+                }
+                if !isFuture && (selectedSpendFilter == .bills || selectedSpendFilter == .allSpend) && !todayBills.isEmpty {
+                    VStack {
+                        ForEach(todayBills, id: \.id) { bill in
+                            ZStack (alignment: .leading) {
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(Color.slate100) 
+                                    .frame(width: 54, height: 14) 
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 4)
+                                            .stroke(Color.slate400, lineWidth: 0.5)
+                                    )
+                                    .padding(.bottom, 1)
+                                Text(bill.productCategory)
+                                    .font(.system(size: 10))
+                                    .fontWeight(.medium)
+                                    .lineLimit(1)
+                                    .truncationMode(.tail)
+                                    .padding(.leading, 4)
+                                    .padding(.bottom, 1)
+                            }
+                        }
+                    }
+                    .padding(.top, 24)
+                }
+                if (isToday || isFirstDayOfPreviousMonth) && (selectedSpendFilter == .discretionary || selectedSpendFilter == .allSpend) {
+                    GeometryReader { geometry in
+                        Text(formatBudgetNumber(budgetViewModel.selectedMonthAvgFlexSpend))
+                            .font(.system(size: 14))
+                            .fontWeight(.semibold)
+                            .padding(.horizontal, 2)
+                            .background(Color.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .offset(y: geometry.size.height * CGFloat(1 - budgetViewModel.avgFlexSpendHeight) - 9)
+                            
                     }
                 }
             }

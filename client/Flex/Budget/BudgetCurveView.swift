@@ -17,11 +17,13 @@ struct BudgetCurveView: View {
         GeometryReader { geometry in
             let curveShape = CurveShape(dataPoints: dataPoints, rect: geometry.frame(in: .local))
             curveShape
-                .fill(isOverBudget ? Color(.red300).opacity(0.6) : Color(.slate200).opacity(0.4))
+                .fill(isOverBudget ? Color(.red300).opacity(0.6) : Color(.slate200).opacity(0.6))
+                /*
                 .overlay(
                     TopLineShape(curveShape: curveShape)
                         .stroke(isOverBudget ? Color(.red600) : Color(.slate500), style: StrokeStyle(lineWidth: 0.5, lineCap: .round, lineJoin: .round))
                 )
+                 */
         }
     }
 
