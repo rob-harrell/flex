@@ -19,17 +19,28 @@ struct TransactionDateView: View {
 
     var body: some View {
         if !transactions.isEmpty {
+            
+            let discretionaryAmount = transactions.filter { $0.budgetCategory == "Flex" }.reduce(0){ $0 + $1.amount }
+            let billsAmount = transactions.filter {$0.budgetCategory == "Fixed"}.reduce(0){ $0 + $1.amount }
+            
             VStack(alignment: .leading) {
                 HStack {
                     Text(dateFormatter.string(from: date))
                         .font(.system(size: 17))
                         .fontWeight(.semibold)
                     Spacer()
-                    let totalAmount = transactions.reduce(0) { $0 + $1.amount }
-                    Text(totalAmount < 0 ? "+$\(Int(round(abs(totalAmount))))" : "$\(Int(round(totalAmount)))")
-                        .foregroundColor(totalAmount < 0 ? Color.emerald600 : Color.black)
-                        .font(.system(size: 17))
-                        .fontWeight(.semibold)
+                    VStack (alignment: .trailing) {
+                        Text(discretionaryAmount < 0 ? "+$\(Int(round(abs(discretionaryAmount))))" : "$\(Int(round(discretionaryAmount)))")
+                            .foregroundColor(discretionaryAmount < 0 ? Color.emerald600 : Color.black)
+                            .font(.system(size: 17))
+                            .fontWeight(.semibold)
+                            .padding(.bottom, 0.5)
+                        if billsAmount > 0 {
+                            Text("and $\(Int(billsAmount)) bills")
+                                .font(.system(size: 12))
+                                .foregroundColor(.slate500)
+                        }
+                    }
                 }
 
                 ForEach(transactions, id: \.id) { transaction in
@@ -40,7 +51,7 @@ struct TransactionDateView: View {
                                 .frame(width: 36, height: 36)
                                 .clipShape(Circle())
                         } placeholder: {
-                            Image(systemName: "photo") // Placeholder for the merchant logo
+                            Image(systemName: "photo")
                                 .frame(width: 36, height: 36)
                                 .clipShape(Circle())
                         }
@@ -54,17 +65,12 @@ struct TransactionDateView: View {
                         HStack {
                             Text(transaction.budgetCategory == "Income" ? "Income" : transaction.productCategory)
                                 .font(.caption)
-                                .foregroundColor(transaction.budgetCategory == "Fixed" ? Color.slate400 : Color.black)
+                                .foregroundColor(transaction.budgetCategory == "Fixed" ? Color.slate500 : Color.black)
                                 .padding(EdgeInsets(top: 4, leading: 8, bottom: 4, trailing: 8)) // Add padding around the text
                                 .background(transaction.budgetCategory == "Income" ? Color.emerald200 : Color.slate100) // Set the background color
                                 .clipShape(RoundedRectangle(cornerRadius: 12)) // Clip the background to a rounded rectangle
-                            if transaction.budgetCategory == "Fixed" {
-                                Image(.lock)
-                                    .padding(.trailing, -4)
-                                    .foregroundColor(.slate400)
-                            }
                             Text("\(transaction.budgetCategory == "Income" ? "+" : transaction.amount < 0 ? "+" : "")$\(abs(Int(transaction.amount)))")
-                                .foregroundColor(transaction.budgetCategory == "Fixed" ? Color.slate400 : transaction.budgetCategory == "Income" ? Color.emerald600 : Color.black)
+                                .foregroundColor(transaction.budgetCategory == "Fixed" ? Color.slate500 : transaction.budgetCategory == "Income" ? Color.emerald600 : Color.black)
                                 
                         }
                         .font(.subheadline)
