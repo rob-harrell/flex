@@ -22,13 +22,13 @@ struct TransactionDateView: View {
             VStack(alignment: .leading) {
                 HStack {
                     Text(dateFormatter.string(from: date))
-                        .font(.title3)
+                        .font(.system(size: 17))
                         .fontWeight(.semibold)
                     Spacer()
                     let totalAmount = transactions.reduce(0) { $0 + $1.amount }
                     Text(totalAmount < 0 ? "+$\(Int(round(abs(totalAmount))))" : "$\(Int(round(totalAmount)))")
                         .foregroundColor(totalAmount < 0 ? Color.emerald600 : Color.black)
-                        .font(.title3)
+                        .font(.system(size: 17))
                         .fontWeight(.semibold)
                 }
 

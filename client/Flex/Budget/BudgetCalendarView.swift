@@ -128,15 +128,13 @@ struct BudgetCalendarView: View {
                     
                     Group {
                         switch selectedSpendFilter {
-                            /*
-                        case .discretionary where flexSpend > 0:
+                        case .discretionary where flexSpend > 0 && userViewModel.hasToggledDailySpend:
                             Text(formatBudgetNumber(flexSpend))
                                 .font(.caption)
                                 .foregroundColor(cellDate == dateViewModel.selectedDay && showingOverlay ? Color.white : isDayOverBudget ? Color.red600 : Color.black)
                                 .fixedSize(horizontal: false, vertical: true)
                                 .fontWeight(.semibold)
                                 .transition(.identity)
-                             */
                         case .bills where fixedSpend > 0:
                             Text(formatBudgetNumber(fixedSpend))
                                 .font(.caption)
@@ -150,14 +148,12 @@ struct BudgetCalendarView: View {
                                 .fixedSize(horizontal: false, vertical: true)
                                 .fontWeight(.semibold)
                                 .transition(.identity)
-                            /*
-                        case .allSpend where fixedSpend + flexSpend > 0:
+                        case .allSpend where fixedSpend + flexSpend > 0 && userViewModel.hasToggledDailySpend:
                             Text(formatBudgetNumber(abs(flexSpend + fixedSpend)))
                                 .font(.caption)
                                 .fixedSize(horizontal: false, vertical: true)
                                 .fontWeight(.semibold)
                                 .transition(.identity)
-                             */
                         default:
                             EmptyView()
                         }
@@ -176,7 +172,7 @@ struct BudgetCalendarView: View {
             if hasTapped {
                 TransactionsListOverlay(selectedSpendFilter: $selectedSpendFilter, date: dateViewModel.selectedDay)
                     .environmentObject(budgetViewModel)
-                    .presentationDetents([.fraction(0.35), .fraction(1.0)])
+                    .presentationDetents([.fraction(0.5), .fraction(1.0)])
                     .presentationCornerRadius(24)
             }
         }
@@ -187,7 +183,7 @@ struct BudgetCalendarView: View {
                 if !isFuture && (selectedSpendFilter == .discretionary || selectedSpendFilter == .allSpend)  {
                     BudgetCurveView(dataPoints: curveDataPoints, isOverBudget: isDayOverBudget)
                         .opacity(0.4)
-                    if !isToday && isInSelectedMonth {
+                    if !isToday && isInSelectedMonth && !userViewModel.hasToggledDailySpend {
                         GeometryReader { geometry in
                             Rectangle()
                                 .fill(isDayOverBudget ? Color.red500 : Color.slate500)
@@ -243,7 +239,7 @@ struct BudgetCalendarView: View {
                     }
                     .padding(.top, 24)
                 }
-                if (isToday || isFirstDayOfPreviousMonth) && (selectedSpendFilter == .discretionary || selectedSpendFilter == .allSpend) {
+                if (isToday || isFirstDayOfPreviousMonth) && (selectedSpendFilter == .discretionary || selectedSpendFilter == .allSpend) && !userViewModel.hasToggledDailySpend {
                     GeometryReader { geometry in
                         Text(formatBudgetNumber(budgetViewModel.selectedMonthAvgFlexSpend))
                             .font(.system(size: 14))

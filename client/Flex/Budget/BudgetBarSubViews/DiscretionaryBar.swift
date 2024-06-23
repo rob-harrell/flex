@@ -19,8 +19,8 @@ struct DiscretionaryBar: View {
         let selectedMonthIncome = budgetViewModel.selectedMonthIncome
         
         let totalBudget = isCurrentMonth ? max(userViewModel.monthlyIncome, userViewModel.monthlyFixedSpend + selectedMonthFlex, selectedMonthFixed + selectedMonthFlex, 1.0) : max(selectedMonthIncome, selectedMonthFixed + selectedMonthFlex, 1.0)
-        let overSpend = isCurrentMonth ? selectedMonthFlex - (userViewModel.monthlyIncome - userViewModel.monthlyFixedSpend) : selectedMonthFlex - (selectedMonthIncome - selectedMonthFixed)
-        let flexBudget = isCurrentMonth ? max(userViewModel.monthlyIncome - userViewModel.monthlyFixedSpend, 0) : max(selectedMonthIncome - selectedMonthFixed, 0)
+        let flexBudget = isCurrentMonth ? max(userViewModel.monthlyIncome - max(userViewModel.monthlyFixedSpend, selectedMonthFixed), 0) : max(selectedMonthIncome - selectedMonthFixed, 0)
+        let overSpend = selectedMonthFlex - flexBudget
         let flexOffsetUnderspent = isCurrentMonth ? max(userViewModel.monthlyFixedSpend/userViewModel.monthlyIncome, selectedMonthFixed/userViewModel.monthlyIncome) : selectedMonthFixed/selectedMonthIncome
         let flexOffsetOverspent = isCurrentMonth ? max(userViewModel.monthlyFixedSpend/totalBudget, selectedMonthFixed/totalBudget) : selectedMonthFixed/totalBudget
         let billsForString = isCurrentMonth ? max(userViewModel.monthlyFixedSpend, selectedMonthFixed) : selectedMonthFixed

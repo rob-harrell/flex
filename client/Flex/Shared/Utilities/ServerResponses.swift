@@ -42,6 +42,7 @@ struct UserInfoResponse: Codable {
     let smsNotificationsEnabled: Bool
     let hasEditedBudgetPreferences: Bool
     let hasCompletedBudgetCustomization: Bool
+    let hasToggledDailySpend: Bool
     
     enum CodingKeys: String, CodingKey {
         case id, phone
@@ -57,6 +58,7 @@ struct UserInfoResponse: Codable {
         case smsNotificationsEnabled = "sms_notifications_enabled"
         case hasEditedBudgetPreferences = "has_edited_budget_preferences"
         case hasCompletedBudgetCustomization = "has_completed_budget_customization"
+        case hasToggledDailySpend = "has_toggled_daily_spend"
     }
 }
 

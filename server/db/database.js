@@ -3,7 +3,7 @@ const { Pool } = pg;
 const pgTypes = require('pg').types;
 const pgp = require('pg-promise')();
 const { queryResultErrorCode } = pgp.errors;
-const cs = new pgp.helpers.ColumnSet(['?id', 'firstname', 'lastname', 'phone', 'monthly_income', 'monthly_fixed_spend', 'birth_date', 'has_entered_user_details', 'has_completed_account_creation', 'has_completed_notification_selection', 'push_notifications_enabled', 'sms_notifications_enabled', 'has_edited_budget_preferences', 'has_completed_budget_customization'], {table: 'users'});
+const user_columns = new pgp.helpers.ColumnSet(['?id', 'firstname', 'lastname', 'phone', 'monthly_income', 'monthly_fixed_spend', 'birth_date', 'has_entered_user_details', 'has_completed_account_creation', 'has_completed_notification_selection', 'push_notifications_enabled', 'sms_notifications_enabled', 'has_edited_budget_preferences', 'has_completed_budget_customization', 'has_toggled_daily_spend'], {table: 'users'});
 const csBudgetPreferences = new pgp.helpers.ColumnSet(['?id', 'user_id', 'category', 'sub_category', 'budget_category', 'created', 'updated', 'product_category', 'fixed_amount'], {table: 'budget_preferences'});
 const transaction_columns = [
   'plaid_transaction_id',
@@ -52,7 +52,7 @@ async function updateDBSessionToken(userId, sessionToken) {
 
 async function updateUser(userData) {
   userData.birth_date = new Date(userData.birth_date);
-  const update = pgp.helpers.update(userData, cs) + ' WHERE id = ${id} RETURNING *';
+  const update = pgp.helpers.update(userData, user_columns) + ' WHERE id = ${id} RETURNING *';
   const user = await db.one(update, userData);
   return user;
 }

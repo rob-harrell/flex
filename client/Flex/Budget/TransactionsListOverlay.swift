@@ -9,6 +9,8 @@ import SwiftUI
 
 struct TransactionsListOverlay: View {
     @EnvironmentObject var budgetViewModel: BudgetViewModel
+    @EnvironmentObject var dateViewModel: DateViewModel
+    @EnvironmentObject var userViewModel: UserViewModel
     @Environment(\.presentationMode) var presentationMode
     @Binding var selectedSpendFilter: SpendFilter
     @State private var animateButton = false
@@ -38,10 +40,12 @@ struct TransactionsListOverlay: View {
 
         let sortedDates = dailyFilteredTransactions.keys.sorted()
         
+        let month = dateViewModel.stringForDate(dateViewModel.selectedMonth, format: "MMMM")
+        
         ZStack {
             VStack {
                 ZStack {
-                    Text("Daily transactions")
+                    Text("\(month) transactions")
                         .font(.title3)
                         .fontWeight(.semibold)
                         .frame(maxWidth: .infinity)
@@ -76,8 +80,9 @@ struct TransactionsListOverlay: View {
                             // Check if the current date is not the last date
                             if date != sortedDates.last {
                                 Rectangle()
-                                    .fill(Color.slate100)
-                                    .frame(height: 8)
+                                    .fill(Color.slate200)
+                                    .frame(height: 0.5)
+                                    .padding(.horizontal)
                             }
                         }
                     }
@@ -98,7 +103,21 @@ struct TransactionsListOverlay: View {
                         }
                     }
                 }
-                Spacer()
+                HStack {
+                    Text("Show daily totals on calendar")
+                        .font(.system(size: 16))
+                        .fontWeight(.medium)
+                    Spacer()
+                    Toggle("", isOn: $userViewModel.hasToggledDailySpend)
+                        .labelsHidden()
+                }
+                .padding(.horizontal)
+                .padding(.vertical, 8)
+                .background(Color.white)
+                .shadow(color: Color.black.opacity(0.02), radius: 5, x: 0, y: -5)
+                .onChange(of: userViewModel.hasToggledDailySpend) { 
+                    userViewModel.updateUserOnServer()
+                }
             }
             VStack {
                 Spacer()
@@ -118,11 +137,11 @@ struct TransactionsListOverlay: View {
                     .clipShape(RoundedRectangle(cornerRadius: 30))
                     .overlay(
                         RoundedRectangle(cornerRadius: 30)
-                            .stroke(Color(.slate200), lineWidth: 1)
+                            .stroke(Color(.slate200), lineWidth: 0.5)
                     )
-                    .shadow(color: Color.black.opacity(0.08), radius: 10, x: 0, y: 10)
+                    .shadow(color: Color.black.opacity(0.08), radius: 5, x: 0, y: 5)
                 }
-                .padding(.bottom, 12)
+                .padding(.bottom, 54)
                 .opacity(animateButton ? 1 : 0)
                 .animation(.easeInOut(duration: 0.4), value: animateButton)
             }

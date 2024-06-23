@@ -508,13 +508,13 @@ class BudgetViewModel: ObservableObject {
 
         // Calculate total fixed and flexible spending and income for the month
         self.selectedMonthFlexSpend = self.selectedMonthFlexSpendPerDay.values.reduce(0, +)
+        print("This month's flex spend: \(self.selectedMonthFlexSpend)")
         self.selectedMonthIncome = self.selectedMonthIncomePerDay.values.reduce(0, +)
+        print("This month's expected budget: \(monthlyIncome - monthlyFixedSpend)")
                         
         // Call prepareBezierPathInputs after flexSpendPerDay is populated
         let spendPerDay = self.selectedMonthFlexSpendPerDay.mapValues { CGFloat($0) }
         self.budgetCurvePoints = prepareBudgetCurveInputs(spendPerDay: spendPerDay, exponent: 0.5)
-        print("bezier inputs")
-        print(self.budgetCurvePoints)
         
         // Use for remaining budget curve height
         let maxDayFlexSpend = spendPerDay.values.max() ?? 1.0
@@ -524,8 +524,8 @@ class BudgetViewModel: ObservableObject {
         self.selectedMonthAvgFlexSpend = self.selectedMonthFlexSpend / Double(currentDayOfMonth)
         print("Average daily flex spend: \(self.selectedMonthAvgFlexSpend)")
         self.avgFlexSpendHeight = self.selectedMonthAvgFlexSpend / maxDayFlexSpend
-        print("Average remaining spend height multiplier: \(self.avgFlexSpendHeight)")
         self.remainingDailyFlex = remainingFlex / Double(remainingDaysInMonth)
+        print("Average remaining daily flex: \(self.remainingDailyFlex)")
         self.remainingBudgetHeight = max(remainingDailyFlex / Double(maxDayFlexSpend), 0)
        
         self.isCalculatingMetrics = false

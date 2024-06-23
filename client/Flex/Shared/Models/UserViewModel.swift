@@ -28,6 +28,7 @@ class UserViewModel: ObservableObject {
     @Published var smsNotificationsEnabled: Bool = false
     @Published var hasEditedBudgetPreferences: Bool = false
     @Published var hasCompletedBudgetCustomization: Bool = false
+    @Published var hasToggledDailySpend: Bool = false
     var isSignedIn: Bool {
         UserDefaults.standard.object(forKey: "currentUserId") != nil
     }
@@ -161,6 +162,7 @@ class UserViewModel: ObservableObject {
                     self.smsNotificationsEnabled = data.smsNotificationsEnabled
                     self.hasEditedBudgetPreferences = data.hasEditedBudgetPreferences
                     self.hasCompletedBudgetCustomization = data.hasCompletedBudgetCustomization
+                    self.hasToggledDailySpend = data.hasToggledDailySpend
                 
                     // If user has entered details, update user in CoreData
                     // Otherwise, create user in CoreData
@@ -185,7 +187,7 @@ class UserViewModel: ObservableObject {
             return
         }
         let path = "/user/\(self.id)"
-        let params = ["id": String(self.id), "firstname": self.firstName, "lastname": self.lastName, "phone": self.phone, "birth_date": self.birthDate, "monthly_income": self.monthlyIncome, "monthly_fixed_spend": self.monthlyFixedSpend, "has_entered_user_details": self.hasEnteredUserDetails, "has_completed_account_creation": self.hasCompletedAccountCreation, "has_completed_notification_selection": self.hasCompletedNotificationSelection, "push_notifications_enabled": self.pushNotificationsEnabled, "sms_notifications_enabled": self.smsNotificationsEnabled, "has_edited_budget_preferences": self.hasEditedBudgetPreferences, "has_completed_budget_customization": self.hasCompletedBudgetCustomization] as [String : Any]
+        let params = ["id": String(self.id), "firstname": self.firstName, "lastname": self.lastName, "phone": self.phone, "birth_date": self.birthDate, "monthly_income": self.monthlyIncome, "monthly_fixed_spend": self.monthlyFixedSpend, "has_entered_user_details": self.hasEnteredUserDetails, "has_completed_account_creation": self.hasCompletedAccountCreation, "has_completed_notification_selection": self.hasCompletedNotificationSelection, "push_notifications_enabled": self.pushNotificationsEnabled, "sms_notifications_enabled": self.smsNotificationsEnabled, "has_edited_budget_preferences": self.hasEditedBudgetPreferences, "has_completed_budget_customization": self.hasCompletedBudgetCustomization, "has_toggled_daily_spend": self.hasToggledDailySpend] as [String : Any]
         ServerCommunicator.shared.callMyServer(path: path, httpMethod: .put, params: params, sessionToken: self.sessionToken) { (result: Result<UserInfoResponse, ServerCommunicator.Error>) in
             switch result {
             case .success:
@@ -264,6 +266,7 @@ class UserViewModel: ObservableObject {
                     self.smsNotificationsEnabled = user.smsNotificationsEnabled
                     self.hasEditedBudgetPreferences = user.hasEditedBudgetPreferences
                     self.hasCompletedBudgetCustomization = user.hasCompletedBudgetCustomization
+                    self.hasToggledDailySpend = user.hasToggledDailySpend
 
                     // Fetch accounts and populate bankAccounts array
                     if let accounts = user.accounts as? Set<Account> {
@@ -329,6 +332,7 @@ class UserViewModel: ObservableObject {
                 existingUser.smsNotificationsEnabled = self.smsNotificationsEnabled
                 existingUser.hasEditedBudgetPreferences = self.hasEditedBudgetPreferences
                 existingUser.hasCompletedBudgetCustomization = self.hasCompletedBudgetCustomization
+                existingUser.hasToggledDailySpend = self.hasToggledDailySpend
                 try context.save()
             } else {
                 print("No user found in Core Data with ID \(self.id)")
@@ -451,6 +455,7 @@ class UserViewModel: ObservableObject {
         self.smsNotificationsEnabled = false
         self.hasEditedBudgetPreferences = false
         self.hasCompletedBudgetCustomization = false
+        self.hasToggledDailySpend = false
         self.bankAccounts = []
     }
 }

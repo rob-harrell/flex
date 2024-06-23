@@ -17,10 +17,9 @@ struct AllSpendBar: View {
         let selectedMonthFixed = budgetViewModel.selectedMonthFixedSpend
         let selectedMonthFlex = budgetViewModel.selectedMonthFlexSpend
         let selectedMonthIncome = budgetViewModel.selectedMonthIncome
-        
-        let overSpend = isCurrentMonth ? selectedMonthFlex - (userViewModel.monthlyIncome - userViewModel.monthlyFixedSpend) : selectedMonthFlex - (selectedMonthIncome - selectedMonthFixed)
+        let allSpend = isCurrentMonth ? selectedMonthFlex + max(userViewModel.monthlyFixedSpend, selectedMonthFixed) : selectedMonthFlex + selectedMonthFixed
         let income = isCurrentMonth ? userViewModel.monthlyIncome : selectedMonthIncome
-        let allSpend = isCurrentMonth ? max(userViewModel.monthlyFixedSpend + selectedMonthFlex, selectedMonthFlex + selectedMonthFixed) : selectedMonthFlex + selectedMonthFixed
+        let overSpend = allSpend - income
         
         GeometryReader { geometry in
             VStack (alignment: .leading) {
@@ -68,7 +67,7 @@ struct AllSpendBar: View {
                             )
                         RoundedRectangle(cornerRadius: 16)
                             .fill(Color.slate100)
-                            .frame(width: geometry.size.width * CGFloat((allSpend - income)/allSpend), height: 54)
+                            .frame(width: geometry.size.width * CGFloat(income/allSpend), height: 54)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 16)
                                     .stroke(Color.slate400, lineWidth: 0.5)
