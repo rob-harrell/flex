@@ -14,14 +14,13 @@ struct MainTabView: View {
     @EnvironmentObject var budgetViewModel: BudgetViewModel
     @State private var selectedTab: Tab = .budget
     @State private var showingMonthSelection = false
-    @State private var budgetCustomizationStep: BudgetCustomizationStep = .income
-    @State private var showingBudgetConfigSheet = false
-    @State private var selectedBudgetConfigTab: BudgetConfigTab = .income
+    @State private var budgetCustomizationStep: BudgetCustomizationStep = .start
+    @State private var showingEditBudgetSheet = false
     
     var body: some View {
         NavigationView {
             TabView(selection: $selectedTab) {
-                BudgetView(selectedBudgetConfigTab: $selectedBudgetConfigTab, showingBudgetConfigSheet: $showingBudgetConfigSheet)
+                BudgetView()
                     .tabItem {
                         Label("Budget", image: "Budget")
                     }
@@ -69,9 +68,8 @@ struct MainTabView: View {
                                 .presentationContentInteraction(.scrolls)
                         }
                         
-                        //Income button
                         Button(action: {
-                            //showingBudgetConfigSheet.toggle()
+                            showingEditBudgetSheet.toggle()
                         }) {
                             HStack{
                                 Text("Edit Budget")
@@ -85,9 +83,13 @@ struct MainTabView: View {
                         .padding(.horizontal, 8)
                         .padding(.vertical, 6)
                         .background(RoundedRectangle(cornerRadius: 24).stroke(Color.slate200, lineWidth: 0.5))
-                        .sheet(isPresented: $showingBudgetConfigSheet, onDismiss: {
+                        .sheet(isPresented: $showingEditBudgetSheet, onDismiss: {
                         }) {
-                            BudgetConfigTabView(selectedTab: $selectedBudgetConfigTab)
+                            EditBudgetView(showingEditBudgetSheet: $showingEditBudgetSheet)
+                                .padding(16)
+                                .presentationDetents([.fraction(0.8)])
+                                .presentationDragIndicator(.visible)
+                                .presentationCornerRadius(24)
                         }
                     }
                 }
@@ -102,28 +104,26 @@ struct MainTabView: View {
             .onAppear {
                 UITabBarItem.appearance().setTitleTextAttributes([NSAttributedString.Key.font: UIFont.systemFont(ofSize: 12)], for: .normal)
                 UITabBarItem.appearance().setTitleTextAttributes([NSAttributedString.Key.font: UIFont.systemFont(ofSize: 12)], for: .selected)
-                budgetViewModel.isCalculatingMetrics = true
-                budgetViewModel.fetchNewTransactionsFromServer(userId: userViewModel.id) { success in
-                    if success {
-                        print("hasFetchedFullTransactionHistory \(UserDefaults.standard.bool(forKey: "hasFetchedFullTransactionHistory"))")
-                        if !UserDefaults.standard.bool(forKey: "hasFetchedFullTransactionHistory") {
-                            budgetViewModel.fetchTransactionHistoryFromServer(userId: userViewModel.id, bankAccounts: userViewModel.bankAccounts) { _ in
-                                print("fetching full transaction history")
-                                self.updateAndCalculateBudgetMetrics()
+                if(userViewModel.hasCompletedBudgetCustomization) {
+                    budgetViewModel.isCalculatingMetrics = true
+                    budgetViewModel.fetchNewTransactionsFromServer(userId: userViewModel.id) { success in
+                        if success {
+                            print("hasFetchedFullTransactionHistory \(UserDefaults.standard.bool(forKey: "hasFetchedFullTransactionHistory"))")
+                            if !UserDefaults.standard.bool(forKey: "hasFetchedFullTransactionHistory") {
+                                budgetViewModel.fetchTransactionHistoryFromServer(userId: userViewModel.id, bankAccounts: userViewModel.bankAccounts) { _ in
+                                    print("fetching full transaction history")
+                                    budgetViewModel.calculateSelectedMonthBudgetMetrics(for: dateViewModel.selectedMonth, monthlyIncome: userViewModel.monthlyIncome, monthlyFixedSpend: userViewModel.monthlyFixedSpend)
+                                }
+                            } else {
+                                budgetViewModel.calculateSelectedMonthBudgetMetrics(for: dateViewModel.selectedMonth, monthlyIncome: userViewModel.monthlyIncome, monthlyFixedSpend: userViewModel.monthlyFixedSpend)
                             }
                         } else {
-                            self.updateAndCalculateBudgetMetrics()
+                            // Display warning to user that they're disconnected
+                            budgetViewModel.calculateSelectedMonthBudgetMetrics(for: dateViewModel.selectedMonth, monthlyIncome: userViewModel.monthlyIncome, monthlyFixedSpend: userViewModel.monthlyFixedSpend)
                         }
-                    } else {
-                        // Display warning to user that they're disconnected
-                        self.updateAndCalculateBudgetMetrics()
                     }
                 }
             }
-            .onChange(of: userViewModel.bankAccounts) {
-                self.updateAndCalculateBudgetMetrics()
-            }
-            
         }
         .padding(.top, 4)
         .sheet(isPresented: Binding<Bool>(
@@ -132,8 +132,10 @@ struct MainTabView: View {
         )) {
             VStack {
                 switch budgetCustomizationStep {
+                case .start:
+                    BudgetCustomizationStart(nextAction: {budgetCustomizationStep = .income})
                 case .income:
-                    IncomeConfirmationView(nextAction: { budgetCustomizationStep = .connectAccounts })
+                    EditIncomeView(nextAction: { budgetCustomizationStep = .connectAccounts }, backAction: {budgetCustomizationStep = .start})
                 case .connectAccounts:
                     AccountConnectionView(nextAction: { budgetCustomizationStep = .fixedSpend }, backAction: {budgetCustomizationStep = .income })
                 case .fixedSpend:
@@ -162,26 +164,12 @@ struct MainTabView: View {
     }
     
     enum BudgetCustomizationStep {
+        case start
         case income
         case connectAccounts
         case fixedSpend
         case confirmBudget
         case notifications
-    }
-    
-    private func updateAndCalculateBudgetMetrics() {
-        DispatchQueue.main.async {
-            if UserDefaults.standard.object(forKey: "FirstTransactionDate") == nil {
-                print("First transaction date not found in user defaults; checking transactions history to store it")
-                dateViewModel.updateAllTransactionDates()
-            }
-            budgetViewModel.calculateSelectedMonthBudgetMetrics(for: dateViewModel.selectedMonth, monthlyIncome: userViewModel.monthlyIncome, monthlyFixedSpend: userViewModel.monthlyFixedSpend)
-            budgetViewModel.calculateRecentBudgetStats()
-            if !userViewModel.hasCompletedBudgetCustomization {
-                userViewModel.monthlyIncome = budgetViewModel.avgTotalRecentIncome
-                userViewModel.monthlyFixedSpend = budgetViewModel.avgTotalRecentFixedSpend
-            }
-        }
     }
 }
 

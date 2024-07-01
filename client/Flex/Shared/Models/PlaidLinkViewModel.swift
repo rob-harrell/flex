@@ -32,7 +32,9 @@ class PlaidLinkViewModel: ObservableObject {
         var linkTokenConfig = LinkTokenConfiguration(token: linkToken) { success in
             print("Link was finished successfully! \(success)")
             self.exchangePublicTokenForAccessToken(success.publicToken, userId: userId, sessionToken: sessionToken) {
-                completion()
+                //DispatchQueue.main.asyncAfter(deadline: .now() + 30) {
+                    completion()
+                //}
             }
             self.onLinkFinished?()
             DispatchQueue.main.async {

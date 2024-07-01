@@ -50,19 +50,29 @@ struct FixedSpendConfirmationView: View {
             ("Nursing Costs", budgetViewModel.recentNursingCosts, "Housing")
         ]
 
-        HStack {
-            Button(action: {
-                self.backAction()
-            }) {
-                Image(systemName: "chevron.left")
-                    .resizable()
-                    .frame(width: 12, height: 21)
+        ZStack {
+            HStack {
+                Spacer()
+                Text("Confirm monthly bills")
+                    .font(.title2)
                     .fontWeight(.semibold)
+                    .frame(maxWidth: .infinity)
+                Spacer()
             }
-            .padding(.vertical, 4)
-            .padding(.bottom, 4)
-            Spacer()
+            HStack {
+                Button(action: {
+                    self.backAction()
+                }) {
+                    Image(systemName: "chevron.left")
+                        .resizable()
+                        .frame(width: 12, height: 21)
+                        .fontWeight(.semibold)
+                }
+                Spacer()
+            }
         }
+        .padding(.vertical, 8)
+        .padding(.bottom, 8)
         
         ScrollView {
             VStack (alignment: .leading) {                
@@ -257,7 +267,7 @@ struct FixedSpendConfirmationView: View {
                     if isFocused {
                         Button(action: {
                             if let value = Double(manualFixedString), value > 0 {
-                                userViewModel.monthlyFixedSpend = budgetViewModel.avgTotalRecentFixedSpend + value
+                                userViewModel.monthlyFixedSpend = budgetViewModel.totalRecentFixedSpend + value
                                 print(userViewModel.monthlyIncome)
                                 isFocused = false
                             } else {

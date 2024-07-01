@@ -16,6 +16,7 @@ class UserViewModel: ObservableObject {
     @Published var phone: String = ""
     @Published var monthlyIncome: Double = 0.0
     @Published var monthlyFixedSpend: Double = 0.0
+    @Published var monthlySavings: Double = 0.0
     @Published var birthDate: String = ""
     @Published var sessionToken: String = ""
     @Published var bankAccounts: [BankAccount] = []
@@ -154,6 +155,7 @@ class UserViewModel: ObservableObject {
                     self.phone = data.phone
                     self.monthlyIncome = data.monthlyIncome
                     self.monthlyFixedSpend = data.monthlyFixedSpend
+                    self.monthlySavings = data.monthlySavings
                     self.birthDate = data.birthDate
                     self.hasEnteredUserDetails = data.hasEnteredUserDetails
                     self.hasCompletedAccountCreation = data.hasCompletedAccountCreation
@@ -187,7 +189,7 @@ class UserViewModel: ObservableObject {
             return
         }
         let path = "/user/\(self.id)"
-        let params = ["id": String(self.id), "firstname": self.firstName, "lastname": self.lastName, "phone": self.phone, "birth_date": self.birthDate, "monthly_income": self.monthlyIncome, "monthly_fixed_spend": self.monthlyFixedSpend, "has_entered_user_details": self.hasEnteredUserDetails, "has_completed_account_creation": self.hasCompletedAccountCreation, "has_completed_notification_selection": self.hasCompletedNotificationSelection, "push_notifications_enabled": self.pushNotificationsEnabled, "sms_notifications_enabled": self.smsNotificationsEnabled, "has_edited_budget_preferences": self.hasEditedBudgetPreferences, "has_completed_budget_customization": self.hasCompletedBudgetCustomization, "has_toggled_daily_spend": self.hasToggledDailySpend] as [String : Any]
+        let params = ["id": String(self.id), "firstname": self.firstName, "lastname": self.lastName, "phone": self.phone, "birth_date": self.birthDate, "monthly_income": self.monthlyIncome, "monthly_fixed_spend": self.monthlyFixedSpend, "has_entered_user_details": self.hasEnteredUserDetails, "has_completed_account_creation": self.hasCompletedAccountCreation, "has_completed_notification_selection": self.hasCompletedNotificationSelection, "push_notifications_enabled": self.pushNotificationsEnabled, "sms_notifications_enabled": self.smsNotificationsEnabled, "has_edited_budget_preferences": self.hasEditedBudgetPreferences, "has_completed_budget_customization": self.hasCompletedBudgetCustomization, "has_toggled_daily_spend": self.hasToggledDailySpend, "monthly_savings": self.monthlySavings] as [String : Any]
         ServerCommunicator.shared.callMyServer(path: path, httpMethod: .put, params: params, sessionToken: self.sessionToken) { (result: Result<UserInfoResponse, ServerCommunicator.Error>) in
             switch result {
             case .success:
@@ -258,6 +260,7 @@ class UserViewModel: ObservableObject {
                     self.phone = user.phone ?? ""
                     self.monthlyIncome = user.monthlyIncome
                     self.monthlyFixedSpend = user.monthlyFixedSpend
+                    self.monthlySavings = user.monthlySavings
                     self.birthDate = user.birthDate ?? ""
                     self.hasEnteredUserDetails = user.hasEnteredUserDetails
                     self.hasCompletedAccountCreation = user.hasCompletedAccountCreation
@@ -325,6 +328,7 @@ class UserViewModel: ObservableObject {
                 existingUser.birthDate = self.birthDate
                 existingUser.monthlyIncome = self.monthlyIncome
                 existingUser.monthlyFixedSpend = self.monthlyFixedSpend
+                existingUser.monthlySavings = self.monthlySavings
                 existingUser.hasEnteredUserDetails = self.hasEnteredUserDetails
                 existingUser.hasCompletedAccountCreation = self.hasCompletedAccountCreation
                 existingUser.hasCompletedNotificationSelection = self.hasCompletedNotificationSelection
@@ -409,14 +413,6 @@ class UserViewModel: ObservableObject {
         } catch {
             print("Failed to fetch or save account: \(error)")
         }
-        
-        // Fetch all accounts from CoreData and print them
-        let allAccountsFetchRequest: NSFetchRequest<Account> = Account.fetchRequest()
-        do {
-            let allAccounts = try context.fetch(allAccountsFetchRequest)
-        } catch {
-            print("Failed to fetch accounts from CoreData: \(error)")
-        }
     }
 
     // MARK: - User Session
@@ -446,6 +442,7 @@ class UserViewModel: ObservableObject {
         self.phone = ""
         self.monthlyIncome = 0
         self.monthlyFixedSpend = 0
+        self.monthlySavings = 0
         self.birthDate = ""
         self.sessionToken = ""
         self.hasEnteredUserDetails = false

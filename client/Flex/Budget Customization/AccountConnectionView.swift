@@ -20,26 +20,36 @@ struct AccountConnectionView: View {
     let backAction: () -> Void
     
     var body: some View {
-        HStack {
-            Button(action: {
-                self.backAction()
-            }) {
-                Image(systemName: "chevron.left")
-                    .resizable()
-                    .frame(width: 12, height: 21)
+        ZStack {
+            HStack {
+                Spacer()
+                Text("Bank connections")
+                    .font(.title2)
                     .fontWeight(.semibold)
+                    .frame(maxWidth: .infinity)
+                Spacer()
             }
-            .padding(.vertical, 4)
-            .padding(.bottom, 4)
-            Spacer()
+            HStack {
+                Button(action: {
+                    self.backAction()
+                }) {
+                    Image(systemName: "chevron.left")
+                        .resizable()
+                        .frame(width: 12, height: 21)
+                        .fontWeight(.semibold)
+                }
+                Spacer()
+            }
         }
+        .padding(.vertical, 8)
+        .padding(.bottom, 8)
         
         ScrollView {
             VStack (alignment: .leading) {
-                Text("Next, connect your spending\ncards and accounts")
+                Text("Next, connect all accounts you\nuse for spending")
                     .font(.system(size: 24))
                     .fontWeight(.semibold)
-                    .padding(.bottom, 8)
+                    .padding(.bottom, 4)
                     .lineSpacing(4.0)
                 
                 Text("The more accounts you add, the more accurate\nyour budget will be.")
@@ -109,6 +119,7 @@ struct AccountConnectionView: View {
                     .font(.system(size: 18))
                     .fontWeight(.semibold)
                     .padding(.bottom, 12)
+                    .padding(.top, 8)
                 
                 Button(action: {
                     plaidLinkViewModel.fetchLinkToken (userId: userViewModel.id, sessionToken: userViewModel.sessionToken) {
@@ -203,13 +214,15 @@ struct AccountConnectionView: View {
             return .failure(error)
         }
         let configuration = plaidLinkViewModel.createLinkConfiguration(linkToken: linkToken, userId: userViewModel.id, sessionToken: userViewModel.sessionToken) {
-            self.userViewModel.fetchBankAccountsFromServer() { success in
+            userViewModel.fetchBankAccountsFromServer() { success in
                 if success {
                     print("Successfully fetched bank accounts for user \(self.userViewModel.id)")
-                    self.budgetViewModel.fetchNewTransactionsFromServer(userId: self.userViewModel.id) { success in
+                    budgetViewModel.fetchNewTransactionsFromServer(userId: self.userViewModel.id) { success in
                         if success {
-                            dateViewModel.updateAllTransactionDates()
                             print("Successfully fetched new transactions for user \(self.userViewModel.id)")
+                            dateViewModel.updateAllTransactionDates()
+                            budgetViewModel.calculateSelectedMonthBudgetMetrics(for: dateViewModel.selectedMonth, monthlyIncome: userViewModel.monthlyIncome, monthlyFixedSpend: userViewModel.monthlyFixedSpend)
+                            budgetViewModel.calculateRecentBudgetStats()
                         } else {
                             print("Failed to fetch new transactions for user \(self.userViewModel.id)")
                         }
@@ -219,7 +232,6 @@ struct AccountConnectionView: View {
                 }
             }
         }
-
         // This only results in an error if the token is malformed.
         return Plaid.create(configuration).mapError { $0 as Error }
     }

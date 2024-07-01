@@ -23,11 +23,11 @@ class BudgetViewModel: ObservableObject {
     @Published var selectedMonthIncome: Double = 1
 
     //Income breakdown metrics
-    @Published var avgRecentWorkIncome: Double = 0
-    @Published var avgRecentBenefitsIncome: Double = 0
-    @Published var avgRecentAccrualsIncome: Double = 0
-    @Published var avgRecentPensionIncome: Double = 0
-    @Published var avgTotalRecentIncome: Double = 0
+    @Published var recentWorkIncome: Double = 0
+    @Published var recentBenefitsIncome: Double = 0
+    @Published var recentAccrualsIncome: Double = 0
+    @Published var recentPensionIncome: Double = 0
+    @Published var totalRecentIncome: Double = 0
     
     @Published var isCalculatingMetrics = false
     
@@ -45,7 +45,7 @@ class BudgetViewModel: ObservableObject {
     @Published var recentOtherUtilities: Double = 0
     @Published var recentStorageCosts: Double = 0
     @Published var recentNursingCosts: Double = 0
-    @Published var avgTotalRecentFixedSpend: Double = 0
+    @Published var totalRecentFixedSpend: Double = 0
     
     //Day cell visual arrays
     @Published var budgetCurvePoints: [Date: [CGFloat]] = [:]
@@ -343,7 +343,7 @@ class BudgetViewModel: ObservableObject {
     
     //Call every time user opens app or adds a new account
     func fetchNewTransactionsFromServer(userId: Int64, completion: @escaping (Bool) -> Void) {
-        print("fetchNewTransactionsFromServer started")
+        //print("fetchNewTransactionsFromServer started")
         let keychain = Keychain(service: "robharrell.Flex")
         let sessionToken = keychain["sessionToken"] ?? ""
 
@@ -508,25 +508,21 @@ class BudgetViewModel: ObservableObject {
 
         // Calculate total fixed and flexible spending and income for the month
         self.selectedMonthFlexSpend = self.selectedMonthFlexSpendPerDay.values.reduce(0, +)
-        print("This month's flex spend: \(self.selectedMonthFlexSpend)")
         self.selectedMonthIncome = self.selectedMonthIncomePerDay.values.reduce(0, +)
-        print("This month's expected budget: \(monthlyIncome - monthlyFixedSpend)")
                         
         // Call prepareBezierPathInputs after flexSpendPerDay is populated
         let spendPerDay = self.selectedMonthFlexSpendPerDay.mapValues { CGFloat($0) }
         self.budgetCurvePoints = prepareBudgetCurveInputs(spendPerDay: spendPerDay, exponent: 0.5)
         
         // Use for remaining budget curve height
-        let maxDayFlexSpend = spendPerDay.values.max() ?? 1.0
+        let maxDayFlexSpend = max(spendPerDay.values.max() ?? 1.0, 1.0)
         let currentDayOfMonth = calendar.component(.day, from: Date())
         let remainingDaysInMonth = range.count - currentDayOfMonth
         let remainingFlex = monthlyIncome - max(monthlyFixedSpend, selectedMonthFixedSpend) - self.selectedMonthFlexSpend
         self.selectedMonthAvgFlexSpend = self.selectedMonthFlexSpend / Double(currentDayOfMonth)
-        print("Average daily flex spend: \(self.selectedMonthAvgFlexSpend)")
         self.avgFlexSpendHeight = self.selectedMonthAvgFlexSpend / maxDayFlexSpend
         self.remainingDailyFlex = remainingFlex / Double(remainingDaysInMonth)
-        print("Average remaining daily flex: \(self.remainingDailyFlex)")
-        self.remainingBudgetHeight = max(remainingDailyFlex / Double(maxDayFlexSpend), 0)
+        self.remainingBudgetHeight = max(remainingDailyFlex / Double(maxDayFlexSpend), 0.0)
        
         self.isCalculatingMetrics = false
         print("finished calculating budget metrics")
@@ -534,71 +530,48 @@ class BudgetViewModel: ObservableObject {
     }
     
     func calculateRecentBudgetStats() {
-        // Create a date range for the past two complete months
+        // Get transactions for past month up until yesterday
         let calendar = Calendar.current
-        let startOfCurrentMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: Date()))!
-        let startOfPreviousMonth = calendar.date(byAdding: .month, value: -1, to: startOfCurrentMonth)!
-        let startOfTwoMonthsAgo = calendar.date(byAdding: .month, value: -1, to: startOfPreviousMonth)!
-        let endOfPreviousMonth = calendar.date(byAdding: .day, value: -1, to: startOfCurrentMonth)!
-
-        // Fetch transactions from Core Data for the past two complete months
-        let recentTransactions = self.fetchTransactionsFromCoreData(from: startOfTwoMonthsAgo, to: endOfPreviousMonth)
-
-        // Define income and fixed spend sources to show
-        var recentWorkIncome = 0.0
-        var recentBenefitsIncome = 0.0
-        var recentAccrualsIncome = 0.0
-        var recentPensionIncome = 0.0
-        var recentHousingCosts = 0.0
-        var recentInsuranceCosts = 0.0
-        var recentStudentLoans = 0.0
-        var recentOtherLoans = 0.0
-        var recentCarPayment = 0.0
-        var recentGasAndElectrical = 0.0
-        var recentInternetAndCable = 0.0
-        var recentSewageAndWaste = 0.0
-        var recentPhoneBill = 0.0
-        var recentWaterBill = 0.0
-        var recentOtherUtilities = 0.0
-        var recentStorageCosts = 0.0
-        var recentNursingCosts = 0.0
+        let yesterday = calendar.date(byAdding: .day, value: -1, to: Date())!
+        let startOfLastMonthFromYesterday = calendar.date(byAdding: .month, value: -1, to: yesterday)!
+        let recentTransactions = self.fetchTransactionsFromCoreData(from: startOfLastMonthFromYesterday, to: yesterday)
 
         for transaction in recentTransactions {
             switch transaction.productCategory {
             case "Paycheck":
-                recentWorkIncome += transaction.amount
+                self.recentWorkIncome += abs(transaction.amount)
             case "Benefits":
-                recentBenefitsIncome += transaction.amount
+                self.recentBenefitsIncome += abs(transaction.amount)
             case "Dividends & Interest":
-                recentAccrualsIncome += transaction.amount
+                self.recentAccrualsIncome += abs(transaction.amount)
             case "Pension":
-                recentPensionIncome += transaction.amount
+                self.recentPensionIncome += abs(transaction.amount)
             case "Housing":
-                recentHousingCosts += transaction.amount
+                self.recentHousingCosts += transaction.amount
             case "Insurance":
-                recentInsuranceCosts += transaction.amount
+                self.recentInsuranceCosts += transaction.amount
             case "Sudent Loan":
-                recentStudentLoans += transaction.amount
+                self.recentStudentLoans += transaction.amount
             case "Other Loans":
-                recentOtherLoans += transaction.amount
+                self.recentOtherLoans += transaction.amount
             case "Auto Loan":
-                recentCarPayment += transaction.amount
+                self.recentCarPayment += transaction.amount
             case "Gas & Electricity":
-                recentGasAndElectrical += transaction.amount
+                self.recentGasAndElectrical += transaction.amount
             case "Internet & Cable":
-                recentInternetAndCable += transaction.amount
+                self.recentInternetAndCable += transaction.amount
             case "Sewage & Waste Management":
-                recentSewageAndWaste += transaction.amount
+                self.recentSewageAndWaste += transaction.amount
             case "Phone Bill":
-                recentPhoneBill += transaction.amount
+                self.recentPhoneBill += transaction.amount
             case "Water Bill":
-                recentWaterBill += transaction.amount
+                self.recentWaterBill += transaction.amount
             case "Other Utilities":
-                recentOtherUtilities += transaction.amount
+                self.recentOtherUtilities += transaction.amount
             case "Storage":
-                recentStorageCosts += transaction.amount
+                self.recentStorageCosts += transaction.amount
             case "Nursing Care":
-                recentNursingCosts += transaction.amount
+                self.recentNursingCosts += transaction.amount
                 
             default:
                 break
@@ -606,14 +579,13 @@ class BudgetViewModel: ObservableObject {
         }
 
         // Calculate recent income averages
-        self.avgRecentWorkIncome = recentWorkIncome / 2
-        self.avgRecentBenefitsIncome = recentBenefitsIncome / 2
-        self.avgRecentAccrualsIncome = recentAccrualsIncome / 2
-        self.avgRecentPensionIncome = recentPensionIncome / 2
-        self.avgTotalRecentIncome = abs(self.avgRecentWorkIncome + self.avgRecentBenefitsIncome + self.avgRecentAccrualsIncome + self.avgRecentPensionIncome)
+        self.totalRecentIncome = abs(self.recentWorkIncome + self.recentBenefitsIncome + self.recentAccrualsIncome + self.recentPensionIncome)
+        
+        print("avgRecentWorkIncome \(self.recentWorkIncome)")
+        print("avgTotalRecentIncome \(self.totalRecentIncome)")
 
         //Calculate recent fixed spend averages
-        self.recentHousingCosts = recentHousingCosts / 2
+        self.recentHousingCosts = recentHousingCosts
         self.recentInsuranceCosts = recentInsuranceCosts / 2
         self.recentStudentLoans = recentStudentLoans / 2
         self.recentOtherLoans = recentOtherLoans / 2
@@ -626,7 +598,7 @@ class BudgetViewModel: ObservableObject {
         self.recentOtherUtilities = recentOtherUtilities / 2
         self.recentStorageCosts = recentStorageCosts / 2
         self.recentNursingCosts = recentNursingCosts / 2
-        self.avgTotalRecentFixedSpend = (self.recentHousingCosts + self.recentInsuranceCosts + self.recentStudentLoans + self.recentOtherLoans + self.recentCarPayment + self.recentGasAndElectrical + self.recentInternetAndCable + self.recentSewageAndWaste + self.recentPhoneBill + self.recentWaterBill + self.recentOtherUtilities + self.recentStorageCosts + self.recentNursingCosts)
+        self.totalRecentFixedSpend = (self.recentHousingCosts + self.recentInsuranceCosts + self.recentStudentLoans + self.recentOtherLoans + self.recentCarPayment + self.recentGasAndElectrical + self.recentInternetAndCable + self.recentSewageAndWaste + self.recentPhoneBill + self.recentWaterBill + self.recentOtherUtilities + self.recentStorageCosts + self.recentNursingCosts)
 
     }
     

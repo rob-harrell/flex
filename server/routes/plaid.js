@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const { Configuration, PlaidEnvironments, PlaidApi } = require("plaid");
 const userServices = require('../services/userServices');
+const { getItemById, saveTransactions, saveCursor, getAccountsByItemId } = require('../db/database.js');
+const { processTransactions } = require('../services/budgetServices.js')
+const accountTypes = ["checking", "savings", "credit card"];
 
 // Set up the Plaid client
 const plaidConfig = new Configuration({
@@ -23,6 +26,10 @@ const plaidClient = new PlaidApi(plaidConfig);
 router.post("/generate_link_token", async (req, res, next) => {
   try {
     const userId = String(req.body.userId);
+
+    // Determine the base URL based on the environment
+    const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://e7c2-75-223-247-250.ngrok-free.app';
+
     const createTokenResponse = await plaidClient.linkTokenCreate({
       user: {
         client_user_id: userId,
@@ -31,7 +38,7 @@ router.post("/generate_link_token", async (req, res, next) => {
       country_codes: ["US"],
       language: "en",
       products: ["transactions"],
-      webhook: "https://sample-webhook-uri.com",
+      webhook: `${baseUrl}/plaid/transactions_webhook`,
       redirect_uri: "https://rob-harrell.github.io/flex/",
     });
     // The redirect_uri above should match a Redirect URI in your Dashboard, or this request
@@ -75,12 +82,74 @@ router.post("/swap_public_token", async (req, res, next) => {
     // Call the getPlaidInfo function to add institution data and create accounts
     await userServices.getPlaidAccountInfo(newItem.id, accessToken, plaidClient);
 
+    // Trigger initial sync of transactions
+    const initialCursor = '';
+    await syncTransactions(accessToken, initialCursor);
+
     res.status(200).json({ success: true });
   } catch (error) {
     next(error);
   }
 });
 
+//Listens to update events for accounts
+router.post("/transactions_webhook", async (req, res) => {
+  const { webhook_code, item_id } = req.body;
+
+  // Check if the webhook event is for sync updates available
+  if (webhook_code === "SYNC_UPDATES_AVAILABLE") {
+    console.log(`Received SYNC_UPDATES_AVAILABLE webhook at ${new Date().toISOString()}`);
+    console.log("Webhook body:", req.body);
+
+    try {
+      // Look up the item in the database
+      const item = await getItemById(item_id);
+      if (!item) {
+        console.error(`Item with ID ${item_id} not found.`);
+        return res.status(404).send('Item not found');
+      }
+    
+      // Check if the cursor is null
+      if (item.cursor === null) {
+        // Get accounts by item ID
+        const accounts = await getAccountsByItemId(item_id);
+
+        // Filter accounts with specific account types (assuming accountTypes is defined)
+        const filteredAccounts = accounts.filter(account => accountTypes.includes(account.sub_type.toLowerCase()));
+
+        // Call syncTransactions with null cursor
+        const transactionsResponse = await syncTransactions(item.access_token, null);
+    
+        // Process the added transactions
+        const processedTransactions = await processTransactions(transactionsResponse.added);
+    
+        // Save the processed transactions to the database
+        await saveTransactions(item_id, processedTransactions);
+    
+        // Save the new cursor if provided
+        if (transactionsResponse.next_cursor) {
+          await saveCursor(item_id, transactionsResponse.next_cursor);
+        }
+    
+        console.log('Transactions synced and processed successfully.');
+      } else {
+        // If the cursor is not null, the process has already occurred
+        console.log('Process has already occurred, no action needed.');
+      }
+    } catch (error) {
+      console.error('Error processing transactions', error);
+      return res.status(500).send('Internal Server Error');
+    }
+
+  } else {
+    console.log(`Received webhook: ${webhook_code} at ${new Date().toISOString()} for item: ${item_id}`);
+  }
+
+  // Respond to the webhook immediately to acknowledge receipt
+  res.status(200).send("Webhook received");
+});
+
+//Function to get the latest transactions from Plaid
 async function syncTransactions(accessToken, initialCursor) {
   let added = [];
   let modified = [];

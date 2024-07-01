@@ -61,6 +61,7 @@
         <attribute name="lastName" optional="YES" attributeType="String"/>
         <attribute name="monthlyFixedSpend" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="monthlyIncome" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="monthlySavings" optional="YES" attributeType="Double" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="phone" optional="YES" attributeType="String"/>
         <attribute name="pushNotificationsEnabled" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="smsNotificationsEnabled" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>

@@ -26,8 +26,12 @@ const twilioRoutes = require('./routes/twilio');
 const { validateSessionToken } = require('./services/userServices');
 
 async function checkSessionToken(req, res, next) {
-  console.log('Received a request');
-  
+  // Bypass token check for the webhook route
+  if (req.path === '/transactions_webhook') {
+    console.log('Webhook request bypassing token check:', req.path);
+    return next();
+  }
+
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -36,12 +40,12 @@ async function checkSessionToken(req, res, next) {
 
   const sessionToken = authHeader.replace('Bearer ', '');
 
-  const isValid = await validateSessionToken(sessionToken);
-  if (!isValid) {
-    return res.status(401).json({ message: 'Invalid session token' });
-  }
-
-  next();
+  validateSessionToken(sessionToken).then(isValid => {
+    if (!isValid) {
+      return res.status(401).json({ message: 'Invalid session token' });
+    }
+    next();
+  });
 }
 
 // Use the routes as middleware
@@ -67,3 +71,11 @@ app.use(errorHandler);
 
 // Export the app object
 module.exports = app;
+
+// Check if not running on Vercel
+if (!process.env.VERCEL) {
+  const port = process.env.PORT || 3000;
+  app.listen(port, () => {
+    console.log(`Listening on port ${port}`);
+  });
+}

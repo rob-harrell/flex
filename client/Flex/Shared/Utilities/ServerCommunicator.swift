@@ -42,7 +42,13 @@ class ServerCommunicator {
         }
     }
 
+    /*
     init(baseURL: String = "https://flex-wheat.vercel.app/") {
+        self.baseURL = baseURL
+    }
+    */
+    
+    init(baseURL: String = "http://localhost:3000/") {
         self.baseURL = baseURL
     }
 

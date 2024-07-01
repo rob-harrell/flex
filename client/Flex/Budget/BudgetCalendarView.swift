@@ -197,7 +197,7 @@ struct BudgetCalendarView: View {
                             Spacer()
                             Rectangle()
                                 .fill(Color("emerald50"))
-                                .frame(height: max(geometry.size.height * CGFloat(remainingBudgetHeight), geometry.size.height * 0.08))
+                                .frame(height: max(geometry.size.height * CGFloat(budgetViewModel.remainingBudgetHeight), geometry.size.height * 0.08))
                                 .overlay(Divider().background(Color("emerald500")), alignment: .top)
                         }
                         if calendar.isDate(cellDate, inSameDayAs: Calendar.current.date(byAdding: .day, value: 1, to: today)!) {

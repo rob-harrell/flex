@@ -11,8 +11,6 @@ struct BudgetView: View {
     @EnvironmentObject var userViewModel: UserViewModel
     @EnvironmentObject var dateViewModel: DateViewModel
     @EnvironmentObject var budgetViewModel: BudgetViewModel
-    @Binding var selectedBudgetConfigTab: BudgetConfigTab
-    @Binding var showingBudgetConfigSheet: Bool
     @State private var showingSpendFilter = false
     @State private var selectedSpendFilter: SpendFilter = .discretionary
     @State private var isDragging = false
@@ -131,7 +129,7 @@ enum SpendFilter: String, CaseIterable {
 }
 
 #Preview {
-    BudgetView(selectedBudgetConfigTab: .constant(.income), showingBudgetConfigSheet: .constant(false))
+    BudgetView()
         .environmentObject(UserViewModel())
         .environmentObject(DateViewModel())
         .environmentObject(BudgetViewModel())

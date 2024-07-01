@@ -32,15 +32,12 @@
 		D451FA5D2C1F652000B46548 /* BillsBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D451FA5C2C1F652000B46548 /* BillsBar.swift */; };
 		D451FA5F2C1F652A00B46548 /* DiscretionaryBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D451FA5E2C1F652A00B46548 /* DiscretionaryBar.swift */; };
 		D45892832B8AB09600A8BA32 /* LinkKit in Frameworks */ = {isa = PBXBuildFile; productRef = D45892822B8AB09600A8BA32 /* LinkKit */; };
-		D462342C2BDD872400818169 /* IncomeConfirmationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D462342B2BDD872400818169 /* IncomeConfirmationView.swift */; };
+		D462342C2BDD872400818169 /* EditIncomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D462342B2BDD872400818169 /* EditIncomeView.swift */; };
 		D462342E2BDD873100818169 /* FixedSpendConfirmationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D462342D2BDD873100818169 /* FixedSpendConfirmationView.swift */; };
 		D46234302BDD873D00818169 /* FinalConfirmationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D462342F2BDD873D00818169 /* FinalConfirmationView.swift */; };
 		D46234342BF18AAE00818169 /* BudgetPreferencesViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46234332BF18AAE00818169 /* BudgetPreferencesViewModel.swift */; };
 		D46234362BF51E9200818169 /* ConfirmBudgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46234352BF51E9200818169 /* ConfirmBudgetView.swift */; };
-		D46234382BF5721000818169 /* IncomeConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46234372BF5721000818169 /* IncomeConfigView.swift */; };
-		D462343A2BF5721F00818169 /* FixedSpendConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46234392BF5721F00818169 /* FixedSpendConfigView.swift */; };
-		D462343C2BF5723200818169 /* FlexSpendConfigView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D462343B2BF5723200818169 /* FlexSpendConfigView.swift */; };
-		D462343E2BF5725100818169 /* BudgetConfigTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D462343D2BF5725100818169 /* BudgetConfigTabView.swift */; };
+		D462343A2BF5721F00818169 /* EditBillsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46234392BF5721F00818169 /* EditBillsView.swift */; };
 		D46B23722BACA2350091C54D /* KeychainAccess in Frameworks */ = {isa = PBXBuildFile; productRef = D46B23712BACA2350091C54D /* KeychainAccess */; };
 		D46B23742BAE1EAB0091C54D /* LoginSignupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46B23732BAE1EAB0091C54D /* LoginSignupView.swift */; };
 		D46B23772BAE1F140091C54D /* OTPView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46B23762BAE1F140091C54D /* OTPView.swift */; };
@@ -49,6 +46,9 @@
 		D46B237D2BB10B5F0091C54D /* AccountConnectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46B237C2BB10B5F0091C54D /* AccountConnectionView.swift */; };
 		D46EDED92BA51721002FF9BE /* FlexClientDataModel.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = D46EDED72BA51721002FF9BE /* FlexClientDataModel.xcdatamodeld */; };
 		D46EDF0B2BA93FF3002FF9BE /* CoreDataStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = D46EDF0A2BA93FF3002FF9BE /* CoreDataStack.swift */; };
+		D473D58F2C28B764001DE477 /* EditBudgetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D473D58E2C28B764001DE477 /* EditBudgetView.swift */; };
+		D473D5912C29D532001DE477 /* EditBudgetBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D473D5902C29D532001DE477 /* EditBudgetBar.swift */; };
+		D473D5932C2D0C62001DE477 /* BudgetCustomizationStart.swift in Sources */ = {isa = PBXBuildFile; fileRef = D473D5922C2D0C62001DE477 /* BudgetCustomizationStart.swift */; };
 		D47B9D512BBF51460020228F /* NotificationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D47B9D502BBF51460020228F /* NotificationView.swift */; };
 		D47B9D542BC19FC90020228F /* SwiftCSV in Frameworks */ = {isa = PBXBuildFile; productRef = D47B9D532BC19FC90020228F /* SwiftCSV */; };
 		D47B9D5A2BC37D480020228F /* DefaultBudgetPreferences.json in Resources */ = {isa = PBXBuildFile; fileRef = D47B9D592BC37D480020228F /* DefaultBudgetPreferences.json */; };
@@ -106,15 +106,12 @@
 		D451FA5A2C1F651700B46548 /* AllSpendBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AllSpendBar.swift; sourceTree = "<group>"; };
 		D451FA5C2C1F652000B46548 /* BillsBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BillsBar.swift; sourceTree = "<group>"; };
 		D451FA5E2C1F652A00B46548 /* DiscretionaryBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscretionaryBar.swift; sourceTree = "<group>"; };
-		D462342B2BDD872400818169 /* IncomeConfirmationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IncomeConfirmationView.swift; sourceTree = "<group>"; };
+		D462342B2BDD872400818169 /* EditIncomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditIncomeView.swift; sourceTree = "<group>"; };
 		D462342D2BDD873100818169 /* FixedSpendConfirmationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FixedSpendConfirmationView.swift; sourceTree = "<group>"; };
 		D462342F2BDD873D00818169 /* FinalConfirmationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FinalConfirmationView.swift; sourceTree = "<group>"; };
 		D46234332BF18AAE00818169 /* BudgetPreferencesViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetPreferencesViewModel.swift; sourceTree = "<group>"; };
 		D46234352BF51E9200818169 /* ConfirmBudgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfirmBudgetView.swift; sourceTree = "<group>"; };
-		D46234372BF5721000818169 /* IncomeConfigView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IncomeConfigView.swift; sourceTree = "<group>"; };
-		D46234392BF5721F00818169 /* FixedSpendConfigView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FixedSpendConfigView.swift; sourceTree = "<group>"; };
-		D462343B2BF5723200818169 /* FlexSpendConfigView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlexSpendConfigView.swift; sourceTree = "<group>"; };
-		D462343D2BF5725100818169 /* BudgetConfigTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetConfigTabView.swift; sourceTree = "<group>"; };
+		D46234392BF5721F00818169 /* EditBillsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditBillsView.swift; sourceTree = "<group>"; };
 		D46B23732BAE1EAB0091C54D /* LoginSignupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginSignupView.swift; sourceTree = "<group>"; };
 		D46B23762BAE1F140091C54D /* OTPView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OTPView.swift; sourceTree = "<group>"; };
 		D46B23782BAE1F330091C54D /* UserDetailsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDetailsView.swift; sourceTree = "<group>"; };
@@ -122,6 +119,9 @@
 		D46B237C2BB10B5F0091C54D /* AccountConnectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountConnectionView.swift; sourceTree = "<group>"; };
 		D46EDED82BA51721002FF9BE /* FlexClientDataModel.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = FlexClientDataModel.xcdatamodel; sourceTree = "<group>"; };
 		D46EDF0A2BA93FF3002FF9BE /* CoreDataStack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoreDataStack.swift; sourceTree = "<group>"; };
+		D473D58E2C28B764001DE477 /* EditBudgetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditBudgetView.swift; sourceTree = "<group>"; };
+		D473D5902C29D532001DE477 /* EditBudgetBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditBudgetBar.swift; sourceTree = "<group>"; };
+		D473D5922C2D0C62001DE477 /* BudgetCustomizationStart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetCustomizationStart.swift; sourceTree = "<group>"; };
 		D47B9D502BBF51460020228F /* NotificationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationView.swift; sourceTree = "<group>"; };
 		D47B9D592BC37D480020228F /* DefaultBudgetPreferences.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = DefaultBudgetPreferences.json; sourceTree = "<group>"; };
 		D47B9D5D2BCA05DD0020228F /* MoneyFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoneyFormatter.swift; sourceTree = "<group>"; };
@@ -324,14 +324,14 @@
 			children = (
 				D47B9D502BBF51460020228F /* NotificationView.swift */,
 				D46B237C2BB10B5F0091C54D /* AccountConnectionView.swift */,
-				D462342B2BDD872400818169 /* IncomeConfirmationView.swift */,
+				D462342B2BDD872400818169 /* EditIncomeView.swift */,
 				D462342D2BDD873100818169 /* FixedSpendConfirmationView.swift */,
 				D462342F2BDD873D00818169 /* FinalConfirmationView.swift */,
 				D46234352BF51E9200818169 /* ConfirmBudgetView.swift */,
-				D46234372BF5721000818169 /* IncomeConfigView.swift */,
-				D46234392BF5721F00818169 /* FixedSpendConfigView.swift */,
-				D462343B2BF5723200818169 /* FlexSpendConfigView.swift */,
-				D462343D2BF5725100818169 /* BudgetConfigTabView.swift */,
+				D46234392BF5721F00818169 /* EditBillsView.swift */,
+				D473D58E2C28B764001DE477 /* EditBudgetView.swift */,
+				D473D5902C29D532001DE477 /* EditBudgetBar.swift */,
+				D473D5922C2D0C62001DE477 /* BudgetCustomizationStart.swift */,
 			);
 			path = "Budget Customization";
 			sourceTree = "<group>";
@@ -501,13 +501,14 @@
 				D451FA5B2C1F651700B46548 /* AllSpendBar.swift in Sources */,
 				D4005AB32B66216900652FCA /* BalancesView.swift in Sources */,
 				D417A3612BD0D03C001D61F6 /* TransactionDateView.swift in Sources */,
+				D473D58F2C28B764001DE477 /* EditBudgetView.swift in Sources */,
+				D473D5932C2D0C62001DE477 /* BudgetCustomizationStart.swift in Sources */,
 				D47B9D5E2BCA05DD0020228F /* MoneyFormatter.swift in Sources */,
 				D451FA5F2C1F652A00B46548 /* DiscretionaryBar.swift in Sources */,
 				D46B237D2BB10B5F0091C54D /* AccountConnectionView.swift in Sources */,
 				D462342E2BDD873100818169 /* FixedSpendConfirmationView.swift in Sources */,
 				D47B9D512BBF51460020228F /* NotificationView.swift in Sources */,
 				D4129F182B8C20F300BB2B7D /* PlaidLinkViewModel.swift in Sources */,
-				D462343E2BF5725100818169 /* BudgetConfigTabView.swift in Sources */,
 				D49D59D12B785501001C0D0A /* MonthSelectorView.swift in Sources */,
 				D451FA592C1F650C00B46548 /* IncomeBar.swift in Sources */,
 				D49D59CF2B7815E4001C0D0A /* DateViewModel.swift in Sources */,
@@ -521,13 +522,12 @@
 				D46B23792BAE1F330091C54D /* UserDetailsView.swift in Sources */,
 				D48EF48E2B95759000117E8B /* UserViewModel.swift in Sources */,
 				D46EDED92BA51721002FF9BE /* FlexClientDataModel.xcdatamodeld in Sources */,
-				D462343C2BF5723200818169 /* FlexSpendConfigView.swift in Sources */,
-				D46234382BF5721000818169 /* IncomeConfigView.swift in Sources */,
-				D462343A2BF5721F00818169 /* FixedSpendConfigView.swift in Sources */,
+				D462343A2BF5721F00818169 /* EditBillsView.swift in Sources */,
 				D4129F1A2B8C21B300BB2B7D /* ServerCommunicator.swift in Sources */,
-				D462342C2BDD872400818169 /* IncomeConfirmationView.swift in Sources */,
+				D462342C2BDD872400818169 /* EditIncomeView.swift in Sources */,
 				D4005AA82B65F6F600652FCA /* MainTabView.swift in Sources */,
 				D4005A7E2B65F69D00652FCA /* FlexApp.swift in Sources */,
+				D473D5912C29D532001DE477 /* EditBudgetBar.swift in Sources */,
 				D4DD3F112B7C701500D6E987 /* BudgetBarView.swift in Sources */,
 				D417A35F2BCDF4EC001D61F6 /* TransactionsListOverlay.swift in Sources */,
 				D4005ACC2B67249400652FCA /* BudgetViewModel.swift in Sources */,

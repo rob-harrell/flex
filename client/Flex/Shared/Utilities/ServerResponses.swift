@@ -34,6 +34,7 @@ struct UserInfoResponse: Codable {
     let phone: String
     let monthlyIncome: Double
     let monthlyFixedSpend: Double
+    let monthlySavings: Double
     let birthDate: String
     let hasEnteredUserDetails: Bool
     let hasCompletedAccountCreation: Bool
@@ -48,6 +49,7 @@ struct UserInfoResponse: Codable {
         case id, phone
         case monthlyIncome = "monthly_income"
         case monthlyFixedSpend = "monthly_fixed_spend"
+        case monthlySavings = "monthly_savings"
         case birthDate = "birth_date"
         case firstName = "firstname"
         case lastName = "lastname"

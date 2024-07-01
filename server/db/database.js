@@ -3,8 +3,42 @@ const { Pool } = pg;
 const pgTypes = require('pg').types;
 const pgp = require('pg-promise')();
 const { queryResultErrorCode } = pgp.errors;
-const user_columns = new pgp.helpers.ColumnSet(['?id', 'firstname', 'lastname', 'phone', 'monthly_income', 'monthly_fixed_spend', 'birth_date', 'has_entered_user_details', 'has_completed_account_creation', 'has_completed_notification_selection', 'push_notifications_enabled', 'sms_notifications_enabled', 'has_edited_budget_preferences', 'has_completed_budget_customization', 'has_toggled_daily_spend'], {table: 'users'});
-const csBudgetPreferences = new pgp.helpers.ColumnSet(['?id', 'user_id', 'category', 'sub_category', 'budget_category', 'created', 'updated', 'product_category', 'fixed_amount'], {table: 'budget_preferences'});
+
+//Switch between local & vercel
+const db = pgp('postgres://rob@localhost:5432/flex_db');
+//const db = pgp(process.env.POSTGRES_URL);
+
+const user_columns = new pgp.helpers.ColumnSet([
+  '?id', 
+  'firstname', 
+  'lastname', 
+  'phone', 
+  'monthly_income', 
+  'monthly_fixed_spend', 
+  'birth_date', 
+  'has_entered_user_details', 
+  'has_completed_account_creation', 
+  'has_completed_notification_selection', 
+  'push_notifications_enabled', 
+  'sms_notifications_enabled', 
+  'has_edited_budget_preferences', 
+  'has_completed_budget_customization', 
+  'has_toggled_daily_spend', 
+  'monthly_savings'
+], {table: 'users'});
+
+const csBudgetPreferences = new pgp.helpers.ColumnSet([
+  '?id', 
+  'user_id', 
+  'category', 
+  'sub_category', 
+  'budget_category', 
+  'created', 
+  'updated', 
+  'product_category', 
+  'fixed_amount'
+], {table: 'budget_preferences'});
+
 const transaction_columns = [
   'plaid_transaction_id',
   'plaid_account_id',
@@ -30,10 +64,6 @@ pgTypes.setTypeParser(pgTypes.builtins.INT8, parseInt);
 pgTypes.setTypeParser(pgTypes.builtins.FLOAT8, parseFloat);
 pgTypes.setTypeParser(pgTypes.builtins.NUMERIC, parseFloat);
 pgTypes.setTypeParser(pgTypes.builtins.TIMESTAMP, str => new Date(str));
-
-//const db = pgp('postgres://rob@localhost:5432/flex_db');
-//comment
-const db = pgp(process.env.POSTGRES_URL);
 
 async function createUser(phoneNumber, sessionToken) {
   const user = await db.one(`
@@ -96,6 +126,27 @@ async function getUserAccounts(userId) {
       WHERE items.user_id = $1
     `, [userId]);
     return accounts;
+}
+
+async function getAccountsByItemId(itemId) {
+  const accounts = await db.any(`
+    SELECT 
+      accounts.id as id,
+      accounts.plaid_account_id, 
+      accounts.name, 
+      accounts.masked_account_number, 
+      accounts.friendly_account_name,
+      accounts.type,
+      accounts.sub_type,
+      institutions.institution_name as bank_name, 
+      institutions.logo_url,
+      items.is_active
+    FROM accounts
+    INNER JOIN items ON items.id = accounts.item_id
+    INNER JOIN institutions ON items.institution_id = institutions.id
+    WHERE accounts.item_id = $1
+  `, [itemId]);
+  return accounts;
 }
 
 async function getUserBySessionToken(sessionToken) {
@@ -199,6 +250,16 @@ async function getItemsForUser(userId) {
   try {
     const items = await db.any('SELECT * FROM items WHERE user_id = $1', [userId]);
     return items;
+  } catch (error) {
+    console.error('Error executing query', error);
+  }
+}
+
+// Function to get an item by its ID
+async function getItemById(itemId) {
+  try {
+    const item = await db.oneOrNone('SELECT * FROM items WHERE id = $1', [itemId]);
+    return item;
   } catch (error) {
     console.error('Error executing query', error);
   }
@@ -320,7 +381,8 @@ async function getTransactionHistoryForAccount(accountId) {
 module.exports = { 
   getUserRecord, 
   getUserRecordByPhone, 
-  getUserAccounts, 
+  getUserAccounts,
+  getAccountsByItemId, 
   createItem,
   updateDBSessionToken, 
   updateUser, 
@@ -328,6 +390,7 @@ module.exports = {
   updateItem, 
   createAccount, 
   getInstitutionByPlaidId, 
+  getItemById,
   createInstitution, 
   invalidateSessionToken, 
   getUserBySessionToken,

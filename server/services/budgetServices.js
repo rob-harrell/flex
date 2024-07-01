@@ -68,12 +68,18 @@ exports.getNewTransactionsForUser = async (req, res, next) => {
         let allRemoved = [];
 
         // Iterate over each item
-        for (let currentItem of items) {        
+        for (let currentItem of items) {  
+            console.log(`Syncing transactions for item ID: ${currentItem.id} with access token: ${currentItem.access_token} and transactions cursor: 
+                ${currentItem.transaction_cursor}`);
+            
             // Fetch transactions from Plaid
             const response = await syncTransactions(
                 currentItem.access_token,
                 currentItem.transaction_cursor || null
             );
+            
+            // After fetching transactions from Plaid
+            console.log(`Transactions fetched from Plaid for item ID: ${currentItem.id}`, response);
         
             // Filter the transactions by account ID
             response.added = response.added.filter(transaction => filteredAccountIds.has(transaction.account_id));
@@ -83,9 +89,17 @@ exports.getNewTransactionsForUser = async (req, res, next) => {
             // Add internal account ID to each transaction and remove payment meta
             response.added = await processTransactions(response.added, accountIdMapping);
             response.modified = await processTransactions(response.modified, accountIdMapping);
+
+            // After filtering the transactions
+            console.log(`Added transactions after filtering for item ID: ${currentItem.id}:`, response.added);
+            console.log(`Modified transactions after filtering for item ID: ${currentItem.id}:`, response.modified);
+            console.log(`Removed transactions after filtering for item ID: ${currentItem.id}:`, response.removed);
         
             // Save transactions and cursor to the database
             let savedTransactions = await db.saveTransactions(userId, currentItem.id, response.added, response.modified, response.removed);
+
+            // After saving transactions to the database
+            console.log(`Transactions saved to DB for item ID: ${currentItem.id}:`, savedTransactions);
             
             await db.saveCursor(currentItem.id, response.next_cursor);
         
